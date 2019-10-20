@@ -1,10 +1,10 @@
 package com.example.e33.entity;
 
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
+import com.example.e33.core.ModSounds;
+import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 
@@ -23,8 +23,27 @@ public class EntityGolemShooter extends AnimalEntity {
         return null;
     }
 
-    @Override
-    public EntitySize getSize(Pose poseIn) {
-        return new EntitySize(2F, 2.5F, true);
+    public void fall(float distance, float damageMultiplier) {
+    }
+
+    protected void registerAttributes() {
+        super.registerAttributes();
+        this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(100.0D);
+        this.getAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0D);
+    }
+
+    public boolean canDespawn(double distanceToClosestPlayer) {
+        return false;
+    }
+
+    /**
+     * Decrements the entity's air supply when underwater
+     */
+    protected int decreaseAirSupply(int air) {
+        return air;
+    }
+
+    protected SoundEvent getHurtSound(DamageSource damageSourceIn) {
+        return ModSounds.ENTITY_GOLEM_HURT;
     }
 }

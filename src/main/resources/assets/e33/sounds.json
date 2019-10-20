@@ -1,0 +1,8 @@
+{
+  "entity_golem_hurt": {
+    "category": "animal",
+    "sounds": [
+      "e33:entity/hurt"
+    ]
+  }
+}
