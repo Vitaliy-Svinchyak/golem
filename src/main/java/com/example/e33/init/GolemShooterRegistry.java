@@ -28,7 +28,6 @@ public class GolemShooterRegistry {
     public static final EntityType<EntityGolemShooter> GOLEM = createEntity(EntityGolemShooter.class, EntityGolemShooter::new);
 
     private static <T extends AnimalEntity> EntityType<T> createEntity(Class<T> entityClass, EntityType.IFactory<T> factory) {
-        LOGGER.info("GolemShooterRegistry.createEntity");
         ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(entityClass));
         EntityType<T> entity = EntityType.Builder
                 .create(factory, EntityClassification.CREATURE)
@@ -48,13 +47,11 @@ public class GolemShooterRegistry {
 
     @SubscribeEvent
     public static void onRegisterSounds(RegistryEvent.Register<SoundEvent> event) {
-        LOGGER.info("GolemShooterRegistry.onRegisterSounds");
         ModSounds.registerSounds(event.getRegistry());
     }
 
     @SubscribeEvent
     public static void registerGolemShooters(RegistryEvent.Register<EntityType<?>> event) {
-        LOGGER.info("GolemShooterRegistry.registerGolemShooters");
         for (EntityType entity : entities) {
             Preconditions.checkNotNull(entity.getRegistryName(), "registryName");
             event.getRegistry().register(entity);

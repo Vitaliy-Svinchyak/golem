@@ -1,10 +1,11 @@
 package com.example.e33.entity;
 
 import com.example.e33.core.ModSounds;
-import com.example.e33.goal.PatrollingGoal;
-import net.minecraft.block.AnvilBlock;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.goal.*;
+import com.example.e33.goal.AttackSlimeGoal;
+import com.example.e33.goal.ShootBadGuysGoal;
+import net.minecraft.entity.AgeableEntity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
@@ -34,7 +35,10 @@ public class EntityGolemShooter extends AnimalEntity {
     @Override
     protected void registerGoals() {
 
-        this.goalSelector.addGoal(7, new PatrollingGoal(this, 0.5D, AnvilBlock.class));
+//        this.goalSelector.addGoal(7, new PatrollingGoal(this, 0.5D, AnvilBlock.class));
+        this.goalSelector.addGoal(6, new ShootBadGuysGoal(this));
+//        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, SlimeEntity.class, false));
+        this.targetSelector.addGoal(5, new AttackSlimeGoal<>(this));
     }
 
     public void fall(float distance, float damageMultiplier) {
@@ -43,8 +47,10 @@ public class EntityGolemShooter extends AnimalEntity {
     protected void registerAttributes() {
         super.registerAttributes();
         this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(100.0D);
-//        this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.25D);
+        this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.5D);
         this.getAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0D);
+        this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(5.0D);
+        this.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(32D);
     }
 
     public boolean canDespawn(double distanceToClosestPlayer) {
@@ -60,5 +66,8 @@ public class EntityGolemShooter extends AnimalEntity {
 
     protected SoundEvent getHurtSound(DamageSource damageSourceIn) {
         return ModSounds.ENTITY_GOLEM_HURT;
+    }
+
+    public void setFire(int seconds) {
     }
 }
