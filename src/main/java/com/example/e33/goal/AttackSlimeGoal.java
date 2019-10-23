@@ -1,8 +1,11 @@
 package com.example.e33.goal;
 
+import com.example.e33.entity.EntityGolemShooter;
+import com.example.e33.util.SlimeComparator;
 import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.ai.goal.TargetGoal;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.util.EntityPredicates;
@@ -12,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.PriorityQueue;
 
 public class AttackSlimeGoal<T extends LivingEntity> extends TargetGoal {
     private final static Logger LOGGER = LogManager.getLogger();
@@ -43,14 +47,23 @@ public class AttackSlimeGoal<T extends LivingEntity> extends TargetGoal {
         }
 
         List<SlimeEntity> slimes = this.goalOwner.world.getEntitiesWithinAABB(this.targetClass, this.getTargetableArea(this.getTargetDistance()), EntityPredicates.NOT_SPECTATING);
-
+        PriorityQueue<SlimeEntity> pQueue = new PriorityQueue<SlimeEntity>(new SlimeComparator(this.goalOwner));
         for (SlimeEntity slime : slimes) {
-            if (slime.isAlive() && slime.getSlimeSize() > slimeToAttack.getSlimeSize() && this.goalOwner.getEntitySenses().canSee(slime)) {
+            boolean validSlime = slime.isAlive() && this.goalOwner.getEntitySenses().canSee(slime);
+
+            // To make it more interesting
+            if (validSlime) {
+                slime.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(slime, EntityGolemShooter.class, true));
+                pQueue.add(slime);
+            }
+
+            if (validSlime && slime.getSlimeSize() > slimeToAttack.getSlimeSize()) {
                 slimeToAttack = slime;
             }
         }
 
-        this.targetToAttack = slimeToAttack;
+        this.targetToAttack = pQueue.poll();
+//        this.targetToAttack = slimeToAttack;
     }
 
     public void startExecuting() {

@@ -1,9 +1,9 @@
 package com.example.e33.client.model;
 
-import net.minecraft.client.renderer.model.ModelBox;
 import com.example.e33.entity.EntityGolemShooter;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.client.renderer.model.ModelBox;
 import org.lwjgl.opengl.GL11;
 
 

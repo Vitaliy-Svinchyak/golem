@@ -1,7 +1,8 @@
 package com.example.e33.goal;
 
 import com.google.common.collect.Lists;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.ai.goal.RandomWalkingGoal;
 import net.minecraft.pathfinding.Path;
