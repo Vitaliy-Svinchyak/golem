@@ -32,9 +32,9 @@ public class GolemShooterRegistry {
         ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(entityClass));
         EntityType<T> entity = EntityType.Builder
                 .create(factory, EntityClassification.CREATURE)
-                .size(2F, 2.5F)
-                .setTrackingRange(64)
-                .setUpdateInterval(1)
+                .size(1.4F, 2F)
+                .setTrackingRange(128)
+//                .setUpdateInterval(1)
                 .build(location.toString());
         entity.setRegistryName(location);
         entities.add(entity);

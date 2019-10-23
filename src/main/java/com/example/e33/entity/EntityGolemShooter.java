@@ -33,6 +33,7 @@ public class EntityGolemShooter extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
+
         this.goalSelector.addGoal(7, new PatrollingGoal(this, 0.5D, AnvilBlock.class));
     }
 
