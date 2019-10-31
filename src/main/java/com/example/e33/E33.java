@@ -1,6 +1,8 @@
 package com.example.e33;
 
+import com.example.e33.client.renderer.RendererBullet;
 import com.example.e33.client.renderer.RendererGolemShooter;
+import com.example.e33.entity.BulletEntity;
 import com.example.e33.entity.EntityGolemShooter;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -19,5 +21,6 @@ public class E33 {
 
     private void setup(final FMLCommonSetupEvent event) {
         RenderingRegistry.registerEntityRenderingHandler(EntityGolemShooter.class, RendererGolemShooter::new);
+        RenderingRegistry.registerEntityRenderingHandler(BulletEntity.class, RendererBullet::new);
     }
 }

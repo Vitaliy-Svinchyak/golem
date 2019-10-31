@@ -2,6 +2,7 @@ package com.example.e33.init;
 
 import com.example.e33.E33;
 import com.example.e33.core.ModSounds;
+import com.example.e33.entity.BulletEntity;
 import com.example.e33.entity.EntityGolemShooter;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -25,23 +26,38 @@ import java.util.List;
 public class GolemShooterRegistry {
     private final static Logger LOGGER = LogManager.getLogger();
     private static List<EntityType> entities = Lists.newArrayList();
-    public static final EntityType<EntityGolemShooter> GOLEM = createEntity(EntityGolemShooter.class, EntityGolemShooter::new);
+    public static final EntityType<EntityGolemShooter> GOLEM = createGolem();
+    public static final EntityType<BulletEntity> BULLET = createBulletEntity();
 
-    private static <T extends AnimalEntity> EntityType<T> createEntity(Class<T> entityClass, EntityType.IFactory<T> factory) {
-        ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(entityClass));
-        EntityType<T> entity = EntityType.Builder
-                .create(factory, EntityClassification.CREATURE)
+    private static <T extends AnimalEntity> EntityType<EntityGolemShooter> createGolem() {
+        ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(EntityGolemShooter.class));
+        EntityType<EntityGolemShooter> entity = EntityType.Builder
+                .create(EntityGolemShooter::new, EntityClassification.CREATURE)
                 .size(1.4F, 2F)
                 .setTrackingRange(128)
-//                .setUpdateInterval(1)
                 .build(location.toString());
         entity.setRegistryName(location);
+
         entities.add(entity);
 
         return entity;
     }
 
-    private static String classToString(Class<? extends AnimalEntity> entityClass) {
+    private static EntityType<BulletEntity> createBulletEntity() {
+        ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(BulletEntity.class));
+        EntityType<BulletEntity> entity = EntityType.Builder
+                .create(BulletEntity::build, EntityClassification.MISC)
+                .size(1F, 1F)
+                .setTrackingRange(128)
+                .build(location.toString());
+        entity.setRegistryName(location);
+
+        entities.add(entity);
+
+        return entity;
+    }
+
+    private static String classToString(Class<?> entityClass) {
         return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entityClass.getSimpleName()).replace("entity_", "");
     }
 
@@ -51,7 +67,7 @@ public class GolemShooterRegistry {
     }
 
     @SubscribeEvent
-    public static void registerGolemShooters(RegistryEvent.Register<EntityType<?>> event) {
+    public static void onRegisterEntities(RegistryEvent.Register<EntityType<?>> event) {
         for (EntityType entity : entities) {
             Preconditions.checkNotNull(entity.getRegistryName(), "registryName");
             event.getRegistry().register(entity);

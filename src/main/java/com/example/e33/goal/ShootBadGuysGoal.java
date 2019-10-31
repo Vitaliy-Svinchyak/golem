@@ -1,19 +1,26 @@
 package com.example.e33.goal;
 
+import com.example.e33.entity.BulletEntity;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.projectile.SmallFireballEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.EnumSet;
+import java.util.Random;
 
 public class ShootBadGuysGoal extends Goal {
     private final CreatureEntity entity;
+    protected static final Random random = new Random();
     private int attackStep;
     private int attackTime;
-    private int shootDistance;
+
+    private double attackAccelY = -0.0;
+    private double attackAccelX = -0.0;
+    private double attackAccelZ = -0.0;
 
     public ShootBadGuysGoal(CreatureEntity entity) {
         this.entity = entity;
@@ -36,65 +43,45 @@ public class ShootBadGuysGoal extends Goal {
     }
 
     /**
-     * Reset the task's internal state. Called when this task is interrupted by another one
-     */
-    public void resetTask() {
-        this.shootDistance = 0;
-    }
-
-    /**
      * Keep ticking a continuous task that has already been started
      */
     public void tick() {
         --this.attackTime;
-        LivingEntity livingentity = this.entity.getAttackTarget();
-        if (livingentity == null) {
+
+        LivingEntity attackTarget = this.entity.getAttackTarget();
+        if (attackTarget == null) {
             return;
         }
 
-        boolean flag = this.entity.getEntitySenses().canSee(livingentity);
-        if (flag) {
-            this.shootDistance = 0;
-        } else {
-            ++this.shootDistance;
+        boolean flag = this.entity.getEntitySenses().canSee(attackTarget);
+        if (!flag) {
+            return;
         }
 
-        double distanceToEntity = this.entity.getDistanceSq(livingentity);
+        if (this.attackAccelY == -0.0) {
+            this.attackAccelY = MathHelper.floor(attackTarget.posY - this.entity.posY - (double) (attackTarget.getHeight() / 3.0F));
+            this.attackAccelZ = attackTarget.posZ - this.entity.posZ;
+            this.attackAccelX = attackTarget.posX - this.entity.posX;
+        }
 
-        if (flag) {
-            double d1 = livingentity.posX - this.entity.posX;
-            double d2 = livingentity.getBoundingBox().minY + (double) (livingentity.getHeight() / 2.0F) - (this.entity.posY + (double) (this.entity.getHeight() / 2.0F));
-            double d3 = livingentity.posZ - this.entity.posZ;
+        if (this.attackTime <= 0) {
+            ++this.attackStep;
+            this.attackTime = 2;
 
-            if (this.attackTime <= 0) {
-                ++this.attackStep;
-                this.attackTime = 3;
-
-                if (this.attackStep > 10) {
-                    this.attackTime = 10;
-                    this.attackStep = 0;
-                }
-
-                if (this.attackStep > 1) {
-                    float f = MathHelper.sqrt(MathHelper.sqrt(distanceToEntity)) * 0.5F;
-
-                    for (int i = 0; i < 1; ++i) {
-                        SmallFireballEntity smallfireballentity = new SmallFireballEntity(this.entity.world, this.entity, d1, d2, d3);
-                        smallfireballentity.posY = this.entity.posY + (double) (this.entity.getHeight() / 2.0F) + 0.5D;
-                        this.entity.world.addEntity(smallfireballentity);
-                    }
-                }
+            if (this.attackStep > 4) {
+                this.attackTime = 10;
+                this.attackStep = 0;
+                this.attackAccelY = -0.0;
             }
 
-            this.entity.getLookController().setLookPositionWithEntity(livingentity, 10.0F, 10.0F);
-        } else if (this.shootDistance < 5) {
-//            this.entity.getMoveHelper().setMoveTo(livingentity.posX, livingentity.posY, livingentity.posZ, 1.0D);
+            if (this.attackStep > 1) {
+                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackAccelX, this.attackAccelY, this.attackAccelZ, this.entity);
+                bullet.posY = this.entity.posY + (double) (this.entity.getHeight() / 2.0F) + 0.5D;
+                this.entity.world.addEntity(bullet);
+                this.entity.world.playSound((PlayerEntity) null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
+            }
         }
 
-        super.tick();
-    }
-
-    private double getFollowDistance() {
-        return this.entity.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue();
+        this.entity.getLookController().setLookPositionWithEntity(attackTarget, 10.0F, 10.0F);
     }
 }
