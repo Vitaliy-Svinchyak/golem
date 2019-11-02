@@ -40,30 +40,25 @@ public class AttackSlimeGoal<T extends LivingEntity> extends TargetGoal {
     }
 
     protected void findTargetToAttack() {
-        SlimeEntity slimeToAttack = this.goalOwner.world.func_225318_b(this.targetClass, this.targetEntitySelector, this.goalOwner, this.goalOwner.posX, this.goalOwner.posY + (double) this.goalOwner.getEyeHeight(), this.goalOwner.posZ, this.getTargetableArea(this.getTargetDistance()));
+        AxisAlignedBB targetableArea = this.getTargetableArea(this.getTargetDistance());
+        SlimeEntity slimeToAttack = this.goalOwner.world.func_225318_b(this.targetClass, this.targetEntitySelector, this.goalOwner, this.goalOwner.posX, this.goalOwner.posY + (double) this.goalOwner.getEyeHeight(), this.goalOwner.posZ, targetableArea);
         if (slimeToAttack == null) {
             this.targetToAttack = null;
             return;
         }
 
-        List<SlimeEntity> slimes = this.goalOwner.world.getEntitiesWithinAABB(this.targetClass, this.getTargetableArea(this.getTargetDistance()), EntityPredicates.NOT_SPECTATING);
+        List<SlimeEntity> slimes = this.goalOwner.world.getEntitiesWithinAABB(this.targetClass, targetableArea, EntityPredicates.NOT_SPECTATING);
         PriorityQueue<SlimeEntity> pQueue = new PriorityQueue<SlimeEntity>(new SlimeComparator(this.goalOwner));
         for (SlimeEntity slime : slimes) {
             boolean validSlime = slime.isAlive() && this.goalOwner.getEntitySenses().canSee(slime);
 
-            // To make it more interesting
             if (validSlime) {
                 slime.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(slime, EntityGolemShooter.class, true));
                 pQueue.add(slime);
             }
-
-            if (validSlime && slime.getSlimeSize() > slimeToAttack.getSlimeSize()) {
-                slimeToAttack = slime;
-            }
         }
 
         this.targetToAttack = pQueue.poll();
-//        this.targetToAttack = slimeToAttack;
     }
 
     public void startExecuting() {

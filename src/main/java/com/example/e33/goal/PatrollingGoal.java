@@ -106,7 +106,6 @@ public class PatrollingGoal extends RandomWalkingGoal {
             return null;
         }
 
-        LOGGER.info(this.isGoalAchieved());
         if (!this.isGoalAchieved() && !this.firstLoad) {
             LOGGER.debug("Go again");
             return this.getCurrentPatrolTask();

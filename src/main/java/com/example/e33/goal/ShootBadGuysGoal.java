@@ -1,13 +1,14 @@
 package com.example.e33.goal;
 
 import com.example.e33.entity.BulletEntity;
+import com.example.e33.fight.ShootingNavigator;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.EnumSet;
 import java.util.Random;
@@ -17,10 +18,8 @@ public class ShootBadGuysGoal extends Goal {
     protected static final Random random = new Random();
     private int attackStep;
     private int attackTime;
-
-    private double attackAccelY = -0.0;
-    private double attackAccelX = -0.0;
-    private double attackAccelZ = -0.0;
+    private Vec3d attackPoint;
+    private int bulletsToShoot = 1;
 
     public ShootBadGuysGoal(CreatureEntity entity) {
         this.entity = entity;
@@ -48,37 +47,38 @@ public class ShootBadGuysGoal extends Goal {
     public void tick() {
         --this.attackTime;
 
-        LivingEntity attackTarget = this.entity.getAttackTarget();
+        MobEntity attackTarget = (MobEntity) this.entity.getAttackTarget();
         if (attackTarget == null) {
             return;
         }
 
-        boolean flag = this.entity.getEntitySenses().canSee(attackTarget);
-        if (!flag) {
+        if (!this.entity.getEntitySenses().canSee(attackTarget)) {
             return;
         }
 
-        if (this.attackAccelY == -0.0) {
-            this.attackAccelY = MathHelper.floor(attackTarget.posY - this.entity.posY - (double) (attackTarget.getHeight() / 3.0F));
-            this.attackAccelZ = attackTarget.posZ - this.entity.posZ;
-            this.attackAccelX = attackTarget.posX - this.entity.posX;
+        if (this.attackStep == 0) {
+            this.attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
+            this.bulletsToShoot = (int) Math.ceil(attackTarget.getHealth() / 5);
+
+            if (this.bulletsToShoot > 5) {
+                this.bulletsToShoot = 5;
+            }
         }
 
         if (this.attackTime <= 0) {
             ++this.attackStep;
             this.attackTime = 2;
 
-            if (this.attackStep > 4) {
-                this.attackTime = 10;
+            if (this.attackStep > this.bulletsToShoot) {
+                this.attackTime = this.bulletsToShoot * 5;
                 this.attackStep = 0;
-                this.attackAccelY = -0.0;
             }
 
-            if (this.attackStep > 1) {
-                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackAccelX, this.attackAccelY, this.attackAccelZ, this.entity);
+            if (this.attackStep >= 1) {
+                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackPoint.x, this.attackPoint.y, this.attackPoint.z, this.entity);
                 bullet.posY = this.entity.posY + (double) (this.entity.getHeight() / 2.0F) + 0.5D;
                 this.entity.world.addEntity(bullet);
-                this.entity.world.playSound((PlayerEntity) null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
+                this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
             }
         }
 

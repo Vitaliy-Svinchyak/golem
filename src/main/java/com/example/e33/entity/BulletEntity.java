@@ -57,4 +57,11 @@ public class BulletEntity extends DamagingProjectileEntity {
     public boolean attackEntityFrom(DamageSource source, float amount) {
         return false;
     }
+
+    /**
+     * Return the motion factor for this projectile. The factor is multiplied by the original motion.
+     */
+    protected float getMotionFactor() {
+        return 1.0F;
+    }
 }
