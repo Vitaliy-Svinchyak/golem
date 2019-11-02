@@ -1,6 +1,7 @@
 package com.example.e33.goal;
 
 import com.example.e33.entity.BulletEntity;
+import com.example.e33.fight.ShootExpectations;
 import com.example.e33.fight.ShootingNavigator;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.LivingEntity;
@@ -52,17 +53,19 @@ public class ShootBadGuysGoal extends Goal {
             return;
         }
 
-        if (!this.entity.getEntitySenses().canSee(attackTarget)) {
+        if (!this.entity.getEntitySenses().canSee(attackTarget) || !attackTarget.isAlive()) {
             return;
         }
 
+        boolean mustDead = true;
         if (this.attackStep == 0) {
             this.attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
             this.bulletsToShoot = (int) Math.ceil(attackTarget.getHealth() / 5);
 
-            if (this.bulletsToShoot > 5) {
-                this.bulletsToShoot = 5;
-            }
+//            if (this.bulletsToShoot > 5) {
+//                this.bulletsToShoot = 5;
+//                mustDead = false;
+//            }
         }
 
         if (this.attackTime <= 0) {
@@ -75,13 +78,21 @@ public class ShootBadGuysGoal extends Goal {
             }
 
             if (this.attackStep >= 1) {
-                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackPoint.x, this.attackPoint.y, this.attackPoint.z, this.entity);
+                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackPoint.x, this.attackPoint.y, this.attackPoint.z, this.entity, attackTarget);
                 bullet.posY = this.entity.posY + (double) (this.entity.getHeight() / 2.0F) + 0.5D;
                 this.entity.world.addEntity(bullet);
                 this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
             }
+
+            // Last shot
+            if (this.attackStep == this.bulletsToShoot) {
+                if (mustDead) {
+                    ShootExpectations.markAsDead(attackTarget);
+                }
+                this.entity.setAttackTarget(null);
+            }
         }
 
-        this.entity.getLookController().setLookPositionWithEntity(attackTarget, 10.0F, 10.0F);
+        this.entity.getLookController().setLookPositionWithEntity(attackTarget, 5.0F, 5.0F);
     }
 }

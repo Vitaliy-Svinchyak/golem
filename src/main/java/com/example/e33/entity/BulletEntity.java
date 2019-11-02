@@ -1,21 +1,27 @@
 package com.example.e33.entity;
 
-import net.minecraft.entity.Entity;
+import com.example.e33.fight.ShootExpectations;
+import com.example.e33.fight.ShootStatistic;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.DamagingProjectileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.EntityRayTraceResult;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class BulletEntity extends DamagingProjectileEntity {
 
     private LivingEntity owner = null;
+    private LivingEntity target = null;
 
-    public BulletEntity(World worldIn, LivingEntity shooter, double accelX, double accelY, double accelZ, LivingEntity owner) {
+    public BulletEntity(World worldIn, LivingEntity shooter, double accelX, double accelY, double accelZ, LivingEntity owner, LivingEntity target) {
         super(EntityType.SMALL_FIREBALL, shooter, accelX, accelY, accelZ, worldIn);
         this.owner = owner;
+        this.target = target;
+        ShootStatistic.bulletShot();
     }
 
     public BulletEntity(EntityType<? extends BulletEntity> entityType, World world) {
@@ -35,10 +41,22 @@ public class BulletEntity extends DamagingProjectileEntity {
         }
 
         if (result.getType() == RayTraceResult.Type.ENTITY) {
-            Entity entity = ((EntityRayTraceResult) result).getEntity();
-            DamageSource damagesource = DamageSource.causeMobDamage(this.owner);
-            entity.attackEntityFrom(damagesource, (float) 5);
-//            entity.attackEntityFrom(damagesource, (float) this.owner.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue());
+            LivingEntity entity = (LivingEntity) ((EntityRayTraceResult) result).getEntity();
+
+            if (entity.isAlive()) {
+                ShootStatistic.bulletHitTheTarget();
+                DamageSource damagesource = DamageSource.causeMobDamage(this.owner);
+                entity.attackEntityFrom(damagesource, (float) 5);
+            }
+
+            if (!entity.isAlive()) {
+                // Dead, remove from memory
+                ShootExpectations.removeFromDeadList(this.target);
+            }
+        } else {
+            // To shoot it again
+            LOGGER.info("miss");
+            ShootExpectations.removeFromDeadList(this.target);
         }
 
         this.remove();

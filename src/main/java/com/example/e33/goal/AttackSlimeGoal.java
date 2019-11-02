@@ -1,11 +1,11 @@
 package com.example.e33.goal;
 
-import com.example.e33.entity.EntityGolemShooter;
+import com.example.e33.fight.ShootExpectations;
+import com.example.e33.fight.ShootStatistic;
 import com.example.e33.util.SlimeComparator;
 import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
 import net.minecraft.entity.ai.goal.TargetGoal;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.util.EntityPredicates;
@@ -43,6 +43,7 @@ public class AttackSlimeGoal<T extends LivingEntity> extends TargetGoal {
         AxisAlignedBB targetableArea = this.getTargetableArea(this.getTargetDistance());
         SlimeEntity slimeToAttack = this.goalOwner.world.func_225318_b(this.targetClass, this.targetEntitySelector, this.goalOwner, this.goalOwner.posX, this.goalOwner.posY + (double) this.goalOwner.getEyeHeight(), this.goalOwner.posZ, targetableArea);
         if (slimeToAttack == null) {
+            ShootStatistic.clear();
             this.targetToAttack = null;
             return;
         }
@@ -52,8 +53,7 @@ public class AttackSlimeGoal<T extends LivingEntity> extends TargetGoal {
         for (SlimeEntity slime : slimes) {
             boolean validSlime = slime.isAlive() && this.goalOwner.getEntitySenses().canSee(slime);
 
-            if (validSlime) {
-                slime.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(slime, EntityGolemShooter.class, true));
+            if (validSlime && !ShootExpectations.isMarkedAsDead(slime)) {
                 pQueue.add(slime);
             }
         }

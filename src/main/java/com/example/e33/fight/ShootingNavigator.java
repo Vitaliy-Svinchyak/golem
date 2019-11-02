@@ -4,6 +4,7 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -34,8 +35,15 @@ public class ShootingNavigator {
 
     private static Vec3d getShootPointForSlime(MobEntity target, MobEntity creature) {
         String uuid = target.getUniqueID().toString();
+        if (!target.isAirBorne && !lastEntityPositions.containsKey(uuid)) {
+            lastEntityPositions.put(uuid, target.getPositionVec());
+        }
+
         double attackAccelX;
         double attackAccelZ;
+        int jumpNumber = Math.round(MathHelper.sqrt(creature.getDistanceSq(target)) * 0.9F / 15);
+        LOGGER.info("jumps " + jumpNumber);
+
         if (lastEntityPositions.containsKey(uuid)) {
             Vec3d lastEntityPosition = lastEntityPositions.get(uuid);
             attackAccelX = lastEntityPosition.x - creature.posX;
@@ -45,22 +53,24 @@ public class ShootingNavigator {
             attackAccelZ = target.posZ - creature.posZ;
         }
 
-        double attackAccelY = target.getBoundingBox().minY + (double) (target.getHeight() / 2.0F) - (creature.posY + creature.getHeight());
+        AxisAlignedBB boundingBox = target.getBoundingBox();
+        double attackAccelY = boundingBox.minY + (double) (target.getHeight() / 2.0F) - (creature.posY + creature.getHeight() / 2);
+        Vec3d motion = target.getMotion();
 
-        if (!target.onGround && creature.getDistanceSq(target) > 600) {
-            Vec3d motion = target.getMotion();
-
-            if (motion.getX() != 0.0D) {
-                attackAccelX -= motion.getX() > 0 ? -target.getBoundingBox().getXSize() : target.getBoundingBox().getXSize();
-            }
-            if (motion.getZ() != 0.0D) {
-                attackAccelZ -= motion.getZ() > 0 ? -target.getBoundingBox().getZSize() : target.getBoundingBox().getZSize();
-            }
-
-            attackAccelY -= motion.getY();
+        if (motion.getX() != 0.0D) {
+            attackAccelX -= motion.getX() > 0 ? -boundingBox.getXSize() : boundingBox.getXSize();
+        }
+        if (motion.getZ() != 0.0D) {
+            attackAccelZ -= motion.getZ() > 0 ? -boundingBox.getZSize() : boundingBox.getZSize();
         }
 
-        if (target.onGround) {
+        LOGGER.info(motion);
+        if (target.isAirBorne && motion.getY() != 0.0D) {
+            attackAccelY += motion.getY() > 0 ? boundingBox.getYSize() / 3 : -boundingBox.getYSize() / 3;
+        }
+
+        LOGGER.info(target.isAirBorne);
+        if (!target.isAirBorne) {
             lastEntityPositions.put(uuid, target.getPositionVec());
         }
 
