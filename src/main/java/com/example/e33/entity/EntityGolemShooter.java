@@ -6,6 +6,8 @@ import com.example.e33.goal.ShootBadGuysGoal;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
+import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
@@ -38,6 +40,7 @@ public class EntityGolemShooter extends AnimalEntity {
 //        this.goalSelector.addGoal(7, new PatrollingGoal(this, 0.5D, AnvilBlock.class));
         this.goalSelector.addGoal(6, new ShootBadGuysGoal(this));
 //        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, SlimeEntity.class, false));
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class, false));
         this.targetSelector.addGoal(5, new AttackSlimeGoal<>(this));
     }
 

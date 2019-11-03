@@ -1,5 +1,8 @@
 package com.example.e33.fight;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.SlabBlock;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.pathfinding.Path;
@@ -13,13 +16,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ShootingNavigator {
     private final static Logger LOGGER = LogManager.getLogger();
-    private final static Map<String, Vec3d> lastEntityPositions = new HashMap<String, Vec3d>();
 
     public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
         if (target instanceof SlimeEntity) {
@@ -27,52 +27,53 @@ public class ShootingNavigator {
         }
 
         double attackAccelX = target.posX - creature.posX;
-        double attackAccelY = target.getBoundingBox().minY + (double) (target.getHeight() / 2.0F) - (creature.posY + (double) (creature.getHeight() / 2.0F));
+//        double attackAccelY = target.getBoundingBox().minY + (double) (target.getHeight() / 2.0F) - (creature.posY + (double) (creature.getHeight() / 2.0F));
+        double attackAccelY = (target.posY + (double) (target.getHeight() / 2)) - (creature.posY + (double) (creature.getHeight()));
         double attackAccelZ = target.posZ - creature.posZ;
-
+        LOGGER.info(new Vec3d(attackAccelX, attackAccelY, attackAccelZ));
         return new Vec3d(attackAccelX, attackAccelY, attackAccelZ);
     }
 
     private static Vec3d getShootPointForSlime(MobEntity target, MobEntity creature) {
-        String uuid = target.getUniqueID().toString();
-        if (!target.isAirBorne && !lastEntityPositions.containsKey(uuid)) {
-            lastEntityPositions.put(uuid, target.getPositionVec());
+        target = (SlimeEntity) target;
+        // Where he is currently
+        double targetX = target.posX;
+        double targetZ = target.posZ;
+        double targetY = ShootingNavigator.getLowestBlockY(target);
+
+        Vec3d targetMotion = target.getMotion();
+        AxisAlignedBB targetBoundingBox = target.getBoundingBox();
+
+        float ticksForBullet = MathHelper.sqrt(creature.getDistanceSq(target)) * 0.9F;
+        if (!target.onGround || target.isAirBorne) {
+            ticksForBullet -= 7;
+        }
+        // How many jumps can he while bullet is in the air
+        float jumpNumber = ticksForBullet / 15;
+
+        LOGGER.info(jumpNumber);
+        if (jumpNumber > 0) {
+            double xJumpLength = targetBoundingBox.getXSize() * jumpNumber;
+            double zJumpLength = targetBoundingBox.getZSize() * jumpNumber;
+            if (targetMotion.getX() != 0.0D) {
+                targetX += targetMotion.getX() > 0 ? xJumpLength : -xJumpLength;
+            } else {
+                LOGGER.info("NO MOTION X");
+            }
+
+            if (targetMotion.getZ() != 0.0D) {
+                targetZ += targetMotion.getZ() > 0 ? zJumpLength : -zJumpLength;
+            } else {
+                LOGGER.info("NO MOTION Z");
+            }
         }
 
-        double attackAccelX;
-        double attackAccelZ;
-        int jumpNumber = Math.round(MathHelper.sqrt(creature.getDistanceSq(target)) * 0.9F / 15);
-        LOGGER.info("jumps " + jumpNumber);
+        double attackAccelX = targetX - creature.posX;
+        double attackAccelY = (targetY + (double) (target.getHeight() / 2)) - (creature.posY + (double) (creature.getHeight() / 2));
+        double attackAccelZ = targetZ - creature.posZ;
 
-        if (lastEntityPositions.containsKey(uuid)) {
-            Vec3d lastEntityPosition = lastEntityPositions.get(uuid);
-            attackAccelX = lastEntityPosition.x - creature.posX;
-            attackAccelZ = lastEntityPosition.z - creature.posZ;
-        } else {
-            attackAccelX = target.posX - creature.posX;
-            attackAccelZ = target.posZ - creature.posZ;
-        }
-
-        AxisAlignedBB boundingBox = target.getBoundingBox();
-        double attackAccelY = boundingBox.minY + (double) (target.getHeight() / 2.0F) - (creature.posY + creature.getHeight() / 2);
-        Vec3d motion = target.getMotion();
-
-        if (motion.getX() != 0.0D) {
-            attackAccelX -= motion.getX() > 0 ? -boundingBox.getXSize() : boundingBox.getXSize();
-        }
-        if (motion.getZ() != 0.0D) {
-            attackAccelZ -= motion.getZ() > 0 ? -boundingBox.getZSize() : boundingBox.getZSize();
-        }
-
-        LOGGER.info(motion);
-        if (target.isAirBorne && motion.getY() != 0.0D) {
-            attackAccelY += motion.getY() > 0 ? boundingBox.getYSize() / 3 : -boundingBox.getYSize() / 3;
-        }
-
-        LOGGER.info(target.isAirBorne);
-        if (!target.isAirBorne) {
-            lastEntityPositions.put(uuid, target.getPositionVec());
-        }
+        LOGGER.info(new Vec3d(targetX, targetY, targetZ));
+        LOGGER.info(new Vec3d(attackAccelX, attackAccelY, attackAccelZ));
 
         return new Vec3d(attackAccelX, attackAccelY, attackAccelZ);
     }
@@ -96,13 +97,19 @@ public class ShootingNavigator {
         return null;
     }
 
-    private static BlockPos getLowestBlock(MobEntity target) {
+    private static double getLowestBlockY(MobEntity target) {
         BlockPos position = target.getPosition();
         World world = target.getEntityWorld();
-        while (!world.getBlockState(position).isAir()) {
+        while (!world.getBlockState(position).isSolid()) {
             position = position.down();
         }
 
-        return position.up();
+        BlockState blockState = world.getBlockState(position);
+        Block block = blockState.getBlock();
+        if (block instanceof SlabBlock && block.func_220074_n(blockState)) {
+            return position.up().getY() + 0.5;
+        }
+
+        return position.up().getY();
     }
 }

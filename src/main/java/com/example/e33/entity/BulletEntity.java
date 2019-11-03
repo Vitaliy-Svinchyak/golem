@@ -7,20 +7,20 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.DamagingProjectileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class BulletEntity extends DamagingProjectileEntity {
 
-    private LivingEntity owner = null;
     private LivingEntity target = null;
 
-    public BulletEntity(World worldIn, LivingEntity shooter, double accelX, double accelY, double accelZ, LivingEntity owner, LivingEntity target) {
-        super(EntityType.SMALL_FIREBALL, shooter, accelX, accelY, accelZ, worldIn);
-        this.owner = owner;
+    public BulletEntity(World world, LivingEntity shooter, double accelX, double accelY, double accelZ, LivingEntity target) {
+        super(EntityType.SMALL_FIREBALL, world);
         this.target = target;
+        this.shootingEntity = shooter;
+        this.setLocationAndAngles(shooter.posX, shooter.posY, shooter.posZ, shooter.rotationYaw, shooter.rotationPitch);
+        this.setBasicPosition(accelX, accelY, accelZ);
         ShootStatistic.bulletShot();
     }
 
@@ -28,8 +28,25 @@ public class BulletEntity extends DamagingProjectileEntity {
         super(entityType, world);
     }
 
+    public void setBasicPosition(double x, double y, double z) {
+        this.setPosition(this.posX, this.shootingEntity.posY + (double) (this.shootingEntity.getHeight() / 2.0F) + 0.5D, this.posZ);
+        this.setMotion(Vec3d.ZERO);
+        int d0 = 150;
+        this.accelerationX = x / d0;
+        this.accelerationY = y / d0;
+        this.accelerationZ = z / d0;
+    }
+
     public static BulletEntity build(EntityType<? extends BulletEntity> entityType, World world) {
         return new BulletEntity(entityType, world);
+    }
+
+    public void baseTick() {
+        if (this.posY > 512.0D) {
+            this.outOfWorld();
+        }
+
+        super.baseTick();
     }
 
     /**
@@ -41,13 +58,14 @@ public class BulletEntity extends DamagingProjectileEntity {
         }
 
         if (result.getType() == RayTraceResult.Type.ENTITY) {
+            LOGGER.info("hit");
             LivingEntity entity = (LivingEntity) ((EntityRayTraceResult) result).getEntity();
 
             if (entity.isAlive()) {
                 ShootStatistic.bulletHitTheTarget();
-                DamageSource damagesource = DamageSource.causeMobDamage(this.owner);
-                entity.attackEntityFrom(damagesource, (float) 5);
             }
+            DamageSource damagesource = DamageSource.causeMobDamage(this.shootingEntity);
+            entity.attackEntityFrom(damagesource, (float) 5);
 
             if (!entity.isAlive()) {
                 // Dead, remove from memory
@@ -60,6 +78,16 @@ public class BulletEntity extends DamagingProjectileEntity {
         }
 
         this.remove();
+    }
+
+    public void remove() {
+        ShootExpectations.removeFromDeadList(this.target);
+        super.remove();
+    }
+
+    public void remove(boolean keepData) {
+        ShootExpectations.removeFromDeadList(this.target);
+        super.remove(keepData);
     }
 
     /**

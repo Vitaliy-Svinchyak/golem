@@ -10,17 +10,21 @@ import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.Vec3d;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.EnumSet;
 import java.util.Random;
 
 public class ShootBadGuysGoal extends Goal {
+    private final static Logger LOGGER = LogManager.getLogger();
+
     private final CreatureEntity entity;
     protected static final Random random = new Random();
     private int attackStep;
-    private int attackTime;
+    private int attackTime = 0;
     private Vec3d attackPoint;
-    private int bulletsToShoot = 1;
+    private int bulletsToShoot = 0;
 
     public ShootBadGuysGoal(CreatureEntity entity) {
         this.entity = entity;
@@ -58,7 +62,7 @@ public class ShootBadGuysGoal extends Goal {
         }
 
         boolean mustDead = true;
-        if (this.attackStep == 0) {
+        if (this.attackStep == 0 && this.attackTime <= 0) {
             this.attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
             this.bulletsToShoot = (int) Math.ceil(attackTarget.getHealth() / 5);
 
@@ -78,8 +82,9 @@ public class ShootBadGuysGoal extends Goal {
             }
 
             if (this.attackStep >= 1) {
-                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackPoint.x, this.attackPoint.y, this.attackPoint.z, this.entity, attackTarget);
-                bullet.posY = this.entity.posY + (double) (this.entity.getHeight() / 2.0F) + 0.5D;
+                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackPoint.x, this.attackPoint.y, this.attackPoint.z, attackTarget);
+//                bullet.posY = this.entity.posY + (double) (this.entity.getHeight() / 2.0F) + 0.5D;
+//                LOGGER.info(bullet.getPositionVec());
                 this.entity.world.addEntity(bullet);
                 this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
             }
