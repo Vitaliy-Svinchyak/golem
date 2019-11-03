@@ -6,6 +6,7 @@ import com.example.e33.fight.ShootingNavigator;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
@@ -22,9 +23,9 @@ public class ShootBadGuysGoal extends Goal {
     private final CreatureEntity entity;
     protected static final Random random = new Random();
     private int attackStep;
-    private int attackTime = 0;
+    private int attackTime;
     private Vec3d attackPoint;
-    private int bulletsToShoot = 0;
+    private int bulletsToShoot = -1;
 
     public ShootBadGuysGoal(CreatureEntity entity) {
         this.entity = entity;
@@ -53,18 +54,20 @@ public class ShootBadGuysGoal extends Goal {
         --this.attackTime;
 
         MobEntity attackTarget = (MobEntity) this.entity.getAttackTarget();
-        if (attackTarget == null) {
+        if (attackTarget == null || !this.entity.getEntitySenses().canSee(attackTarget) || !attackTarget.isAlive()) {
             return;
         }
 
-        if (!this.entity.getEntitySenses().canSee(attackTarget) || !attackTarget.isAlive()) {
-            return;
-        }
 
         boolean mustBeDead = true;
         if (this.attackStep == 0 && this.attackTime <= 0) {
             this.attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
-            this.bulletsToShoot = (int) Math.ceil(attackTarget.getHealth() / 5);
+            float targetHealth = attackTarget.getHealth();
+            if (targetHealth > attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue()) {
+                LOGGER.info("ooooops");
+                targetHealth = (float) attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue();
+            }
+            this.bulletsToShoot = (int) Math.ceil(targetHealth / 5);
 
             if (this.bulletsToShoot > 5) {
                 this.bulletsToShoot = 5;

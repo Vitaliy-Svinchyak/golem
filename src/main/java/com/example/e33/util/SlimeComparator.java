@@ -16,10 +16,6 @@ public class SlimeComparator implements Comparator<SlimeEntity> {
     }
 
     public int compare(SlimeEntity s1, SlimeEntity s2) {
-        if (s1.isSmallSlime() && s2.isSmallSlime()) {
-            return 0;
-        }
-
         if (s1.isSmallSlime() && !s2.isSmallSlime()) {
             return 1;
         }
