@@ -7,6 +7,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.DamagingProjectileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.EntityRayTraceResult;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -42,7 +43,7 @@ public class BulletEntity extends DamagingProjectileEntity {
     }
 
     public void baseTick() {
-        if (this.posY > 512.0D) {
+        if (World.isYOutOfBounds((int) this.posY) || MathHelper.sqrt(this.getDistanceSq(this.shootingEntity)) > 64) {
             this.outOfWorld();
         }
 

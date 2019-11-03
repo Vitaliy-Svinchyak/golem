@@ -61,15 +61,15 @@ public class ShootBadGuysGoal extends Goal {
             return;
         }
 
-        boolean mustDead = true;
+        boolean mustBeDead = true;
         if (this.attackStep == 0 && this.attackTime <= 0) {
             this.attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
             this.bulletsToShoot = (int) Math.ceil(attackTarget.getHealth() / 5);
 
-//            if (this.bulletsToShoot > 5) {
-//                this.bulletsToShoot = 5;
-//                mustDead = false;
-//            }
+            if (this.bulletsToShoot > 5) {
+                this.bulletsToShoot = 5;
+                mustBeDead = false;
+            }
         }
 
         if (this.attackTime <= 0) {
@@ -83,15 +83,13 @@ public class ShootBadGuysGoal extends Goal {
 
             if (this.attackStep >= 1) {
                 BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackPoint.x, this.attackPoint.y, this.attackPoint.z, attackTarget);
-//                bullet.posY = this.entity.posY + (double) (this.entity.getHeight() / 2.0F) + 0.5D;
-//                LOGGER.info(bullet.getPositionVec());
                 this.entity.world.addEntity(bullet);
                 this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
             }
 
             // Last shot
             if (this.attackStep == this.bulletsToShoot) {
-                if (mustDead) {
+                if (mustBeDead) {
                     ShootExpectations.markAsDead(attackTarget);
                 }
                 this.entity.setAttackTarget(null);
