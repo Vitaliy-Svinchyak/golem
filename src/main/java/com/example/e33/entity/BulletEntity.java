@@ -61,18 +61,21 @@ public class BulletEntity extends DamagingProjectileEntity {
 
         if (result.getType() == RayTraceResult.Type.ENTITY) {
             LOGGER.info("hit");
-            LivingEntity entity = (LivingEntity) ((EntityRayTraceResult) result).getEntity();
+            LivingEntity target = (LivingEntity) ((EntityRayTraceResult) result).getEntity();
+            LOGGER.info(target.getHealth());
 
-            if (entity.isAlive()) {
+            if (target.isAlive()) {
                 ShootStatistic.bulletHitTheTarget();
             }
-            DamageSource damagesource = DamageSource.causeMobDamage(this.shootingEntity);
-            entity.attackEntityFrom(damagesource, (float) 5);
 
-            if (!entity.isAlive()) {
+            DamageSource damagesource = DamageSource.causeMobDamage(this.shootingEntity);
+            target.attackEntityFrom(damagesource, (float) 5);
+
+            if (!target.isAlive()) {
                 // Dead, remove from memory
                 ShootExpectations.removeFromDeadList(this.target);
             }
+            LOGGER.info(target.getHealth());
         } else {
             // To shoot it again
             LOGGER.info("miss");

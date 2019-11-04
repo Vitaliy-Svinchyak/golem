@@ -1,13 +1,14 @@
 package com.example.e33.entity;
 
 import com.example.e33.core.ModSounds;
-import com.example.e33.goal.AttackSlimeGoal;
+import com.example.e33.goal.attack.AttackSlimeGoal;
 import com.example.e33.goal.ShootBadGuysGoal;
+import com.example.e33.goal.attack.AttackZombieGoal;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.item.ArmorStandEntity;
+import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
@@ -36,12 +37,11 @@ public class EntityGolemShooter extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
-
 //        this.goalSelector.addGoal(7, new PatrollingGoal(this, 0.5D, AnvilBlock.class));
-        this.goalSelector.addGoal(6, new ShootBadGuysGoal(this));
-//        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, SlimeEntity.class, false));
-        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class, false));
-        this.targetSelector.addGoal(5, new AttackSlimeGoal<>(this));
+        this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
+//        this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, ZombieEntity.class, false));
+        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
+        this.targetSelector.addGoal(10, new AttackSlimeGoal(this));
     }
 
     public void fall(float distance, float damageMultiplier) {

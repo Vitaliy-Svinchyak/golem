@@ -61,7 +61,6 @@ public class ShootBadGuysGoal extends Goal {
 
         boolean mustBeDead = true;
         if (this.attackStep == 0 && this.attackTime <= 0) {
-            this.attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
             float targetHealth = attackTarget.getHealth();
             if (targetHealth > attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue()) {
                 LOGGER.info("ooooops");
@@ -77,15 +76,16 @@ public class ShootBadGuysGoal extends Goal {
 
         if (this.attackTime <= 0) {
             ++this.attackStep;
-            this.attackTime = 2;
+            this.attackTime = 5;
 
             if (this.attackStep > this.bulletsToShoot) {
-                this.attackTime = this.bulletsToShoot * 5;
+                this.attackTime = 10;
                 this.attackStep = 0;
             }
 
             if (this.attackStep >= 1) {
-                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, this.attackPoint.x, this.attackPoint.y, this.attackPoint.z, attackTarget);
+                Vec3d attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
+                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, attackPoint.x, attackPoint.y, attackPoint.z, attackTarget);
                 this.entity.world.addEntity(bullet);
                 this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
             }

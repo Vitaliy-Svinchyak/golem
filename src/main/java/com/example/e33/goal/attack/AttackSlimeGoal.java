@@ -1,4 +1,4 @@
-package com.example.e33.goal;
+package com.example.e33.goal.attack;
 
 import com.example.e33.fight.ShootExpectations;
 import com.example.e33.fight.ShootStatistic;
@@ -17,7 +17,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.PriorityQueue;
 
-public class AttackSlimeGoal<T extends LivingEntity> extends TargetGoal {
+public class AttackSlimeGoal extends TargetGoal {
     private final static Logger LOGGER = LogManager.getLogger();
 
     protected final Class<SlimeEntity> targetClass = SlimeEntity.class;
@@ -43,7 +43,6 @@ public class AttackSlimeGoal<T extends LivingEntity> extends TargetGoal {
         AxisAlignedBB targetableArea = this.getTargetableArea(this.getTargetDistance());
         SlimeEntity slimeToAttack = this.goalOwner.world.func_225318_b(this.targetClass, this.targetEntitySelector, this.goalOwner, this.goalOwner.posX, this.goalOwner.posY + (double) this.goalOwner.getEyeHeight(), this.goalOwner.posZ, targetableArea);
         if (slimeToAttack == null) {
-            ShootStatistic.clear();
             this.targetToAttack = null;
             return;
         }
