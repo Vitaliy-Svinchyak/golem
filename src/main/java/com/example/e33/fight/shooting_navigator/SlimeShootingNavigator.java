@@ -5,13 +5,10 @@ import net.minecraft.entity.ai.controller.MovementController;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 
 public class SlimeShootingNavigator extends AbstractShootingNavigator {
-    private final static Logger LOGGER = LogManager.getLogger();
 
     public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
         target = (SlimeEntity) target;

@@ -115,4 +115,8 @@ public class BulletEntity extends DamagingProjectileEntity {
     protected float getMotionFactor() {
         return 1.0F;
     }
+
+    protected boolean isFireballFiery() {
+        return false;
+    }
 }

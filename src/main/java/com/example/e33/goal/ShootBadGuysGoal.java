@@ -76,10 +76,10 @@ public class ShootBadGuysGoal extends Goal {
 
         if (this.attackTime <= 0) {
             ++this.attackStep;
-            this.attackTime = 5;
+            this.attackTime = 10;
 
             if (this.attackStep > this.bulletsToShoot) {
-                this.attackTime = 10;
+                this.attackTime = 20;
                 this.attackStep = 0;
             }
 
