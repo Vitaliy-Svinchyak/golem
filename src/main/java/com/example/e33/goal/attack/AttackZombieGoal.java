@@ -1,7 +1,6 @@
 package com.example.e33.goal.attack;
 
 import com.example.e33.fight.ShootExpectations;
-import com.example.e33.fight.ShootStatistic;
 import com.example.e33.util.ZombieComparator;
 import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.LivingEntity;

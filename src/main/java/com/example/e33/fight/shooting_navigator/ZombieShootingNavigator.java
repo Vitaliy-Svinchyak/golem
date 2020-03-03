@@ -1,39 +1,34 @@
 package com.example.e33.fight.shooting_navigator;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.HashMap;
+
 public class ZombieShootingNavigator extends AbstractShootingNavigator {
+    public static HashMap<String, Boolean> showedPaths = new HashMap<String, Boolean>();
 
     public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
         target = (ZombieEntity) target;
         Vec3d targetPosition = ZombieShootingNavigator.guessWhereTargetWillBeWhileBulletIsInAir(target, creature);
         double targetHeight = target.getBoundingBox().maxY - target.getBoundingBox().minY;
-        double targetX = target.posX;
-        double targetZ = target.posZ;
-        double targetY = SlimeShootingNavigator.getLowestBlockY(target);
 
         if (target.isChild()) {
             targetHeight /= 2;
         }
 
-        Vec3d targetMotion = ZombieShootingNavigator.getTargetMotion(target);
-        float ticksForBullet = SlimeShootingNavigator.getTicksForBullet(target, creature);
-        float blocksToGo = ticksForBullet * (target.getAIMoveSpeed() * 0.4F);
-        if (targetMotion.getX() != 0.0D) {
-            double xBlocksToGo = blocksToGo * (targetMotion.getX() * 2);
-            targetX += xBlocksToGo;
-        }
-        if (targetMotion.getZ() != 0.0D) {
-            double zBlocksToGo = blocksToGo * (targetMotion.getZ() * 2);
-            targetZ += zBlocksToGo;
-        }
-
         double attackAccelX = targetPosition.x - creature.posX;
-        double attackAccelY = (targetPosition.y + (targetHeight / 2)) - (creature.posY + (double) (creature.getHeight() / 2));
+        double attackAccelY = (targetPosition.y + (targetHeight / 2)) - (creature.posY + (creature.getHeight() / 1.5));
         double attackAccelZ = targetPosition.z - creature.posZ;
 
+        if (target.getNavigator().getPath() != null && !showedPaths.get(target.getNavigator().getPath().toString())) {
+            DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
+            renderer.pathfinding.addPath(target.getEntityId(), target.getNavigator().getPath(), 0);
+            showedPaths.put(target.getNavigator().getPath().toString(), true);
+        }
 
         return new Vec3d(attackAccelX, attackAccelY, attackAccelZ);
     }

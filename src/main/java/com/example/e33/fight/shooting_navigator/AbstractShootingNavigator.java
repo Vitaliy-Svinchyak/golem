@@ -15,7 +15,6 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 abstract class AbstractShootingNavigator {
@@ -42,9 +41,7 @@ abstract class AbstractShootingNavigator {
     }
 
     static float getTicksForBullet(MobEntity target, MobEntity creature) {
-        float distance = MathHelper.sqrt(creature.getDistanceSq(target));
-        return distance;
-//        return distance > 12 ? distance : 12.0F;
+        return MathHelper.sqrt(creature.getDistanceSq(target));
     }
 
     static double getLowestBlockY(MobEntity target) {
@@ -64,47 +61,71 @@ abstract class AbstractShootingNavigator {
     }
 
     static Vec3d guessWhereTargetWillBeWhileBulletIsInAir(MobEntity target, MobEntity creature) {
-        List<PathPoint> path = AbstractShootingNavigator.getEntityPath(target);
-        int currentPathIndex = 0;
+        List<Vec3d> path = AbstractShootingNavigator.getEntityPath(target);
         Vec3d currentPosition = target.getPositionVec();
         float ticksForBullet = AbstractShootingNavigator.getTicksForBullet(target, creature);
-        float targetBlocksPerTick = (float) target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue() * 2F;
+        float targetBlocksPerTick = (float) target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
+
+        if (target.isChild()) {
+            targetBlocksPerTick *= 1.5;
+        }
+
         if (path.isEmpty()) {
             return currentPosition;
         }
-        PathPoint nextPoint;
+
+        Vec3d previousPoint = null;
+        Vec3d nextPoint;
+        int currentPathIndex = 0;
         while (ticksForBullet > 0) {
             nextPoint = path.get(currentPathIndex);
-            float distanceToPoint = MathHelper.sqrt(target.getDistanceSq(new Vec3d(nextPoint.x, nextPoint.y, nextPoint.z)));
+            float distanceToPoint = MathHelper.sqrt(target.getDistanceSq(nextPoint));
             float usedTicks = distanceToPoint / targetBlocksPerTick;
+
             currentPathIndex++;
             if (currentPathIndex >= path.size()) {
-                return new Vec3d(nextPoint.x, nextPoint.y, nextPoint.z);
+                return nextPoint;
             }
             ticksForBullet -= usedTicks;
 
-            if (ticksForBullet < 0) {
-                return new Vec3d(nextPoint.x, nextPoint.y, nextPoint.z);
+            if (ticksForBullet < 0 && previousPoint != null) {
+                return previousPoint;
             }
+            previousPoint = nextPoint;
         }
 
         return currentPosition;
     }
 
-    static List<PathPoint> getEntityPath(MobEntity target) {
+    static List<Vec3d> getEntityPath(MobEntity target) {
         Path path = target.getNavigator().getPath();
         if (path == null || path.isFinished()) {
             return Lists.newArrayList();
         }
 
+        List<Vec3d> accuratePath = AbstractShootingNavigator.getAccuratePath(path);
+
         int currentPathIndex = path.getCurrentPathIndex();
         int currentPathLength = path.getCurrentPathLength();
-        List<PathPoint> remainPath = Lists.newArrayList();
-        for (int i = currentPathIndex - 1; i < currentPathLength; i++) {
-            remainPath.add(path.getPathPointFromIndex(i));
+        List<Vec3d> remainPath = Lists.newArrayList();
+
+        if (currentPathLength > 0) {
+            for (int i = currentPathIndex - 1; i < currentPathLength; i++) {
+                remainPath.add(accuratePath.get(i));
+            }
         }
 
         return remainPath;
+    }
 
+    static List<Vec3d> getAccuratePath(Path path) {
+        List<Vec3d> accuratePath = Lists.newArrayList();
+
+        for (int pathIndex = 0; pathIndex < path.getCurrentPathLength(); ++pathIndex) {
+            PathPoint pathPoint = path.getPathPointFromIndex(pathIndex);
+            accuratePath.add(new Vec3d((double) pathPoint.x + 0.5D, (double) pathPoint.y + 0.5D, (double) pathPoint.z + 0.5D));
+        }
+
+        return accuratePath;
     }
 }
