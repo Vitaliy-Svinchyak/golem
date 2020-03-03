@@ -69,7 +69,7 @@ public class BulletEntity extends DamagingProjectileEntity {
             }
 
             DamageSource damagesource = DamageSource.causeMobDamage(this.shootingEntity);
-            target.attackEntityFrom(damagesource, (float) 5);
+            target.attackEntityFrom(damagesource, (float) 10);
 
             if (!target.isAlive()) {
                 // Dead, remove from memory

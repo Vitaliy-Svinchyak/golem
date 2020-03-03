@@ -15,12 +15,14 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 abstract class AbstractShootingNavigator {
     final static Logger LOGGER = LogManager.getLogger();
 
-    static Vec3d getTargetMotion(MobEntity target) {
+    @Nonnull
+    static Vec3d getTargetMotion(@Nonnull MobEntity target) {
         Vec3d motion = target.getMotion();
 
         if (motion.getX() != 0.0D && motion.getZ() != 0.0D) {
@@ -31,7 +33,8 @@ abstract class AbstractShootingNavigator {
     }
 
     // Copied from forge source code
-    private static Vec3d getAbsoluteMotion(Vec3d relative, float facing) {
+    @Nonnull
+    private static Vec3d getAbsoluteMotion(@Nonnull Vec3d relative, float facing) {
         double d0 = relative.lengthSquared();
 
         Vec3d vec3d = (d0 > 1.0D ? relative.normalize() : relative);
@@ -40,11 +43,14 @@ abstract class AbstractShootingNavigator {
         return new Vec3d(vec3d.x * (double) f1 - vec3d.z * (double) f, vec3d.y, vec3d.z * (double) f1 + vec3d.x * (double) f);
     }
 
-    static float getTicksForBullet(MobEntity target, MobEntity creature) {
+    /**
+     * @return how many ticks are needed for a bullet to reach the target
+     */
+    static float getTicksForBullet(@Nonnull MobEntity target, @Nonnull MobEntity creature) {
         return MathHelper.sqrt(creature.getDistanceSq(target));
     }
 
-    static double getLowestBlockY(MobEntity target) {
+    static double getLowestBlockY(@Nonnull MobEntity target) {
         BlockPos position = target.getPosition();
         World world = target.getEntityWorld();
         while (!world.getBlockState(position).isSolid()) {
@@ -60,18 +66,19 @@ abstract class AbstractShootingNavigator {
         return position.up().getY();
     }
 
-    static Vec3d guessWhereTargetWillBeWhileBulletIsInAir(MobEntity target, MobEntity creature) {
-        List<Vec3d> path = AbstractShootingNavigator.getEntityPath(target);
-        Vec3d currentPosition = target.getPositionVec();
+    @Nonnull
+    static Vec3d guessWhereTargetWillBeWhileBulletIsInAir(@Nonnull MobEntity target, @Nonnull MobEntity creature) {
+        List<Vec3d> path = AbstractShootingNavigator.getRemainingEntityPath(target);
+        Vec3d currentTargetPosition = target.getPositionVec();
+        if (path.isEmpty()) {
+            return currentTargetPosition;
+        }
+
         float ticksForBullet = AbstractShootingNavigator.getTicksForBullet(target, creature);
         float targetBlocksPerTick = (float) target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
 
         if (target.isChild()) {
-            targetBlocksPerTick *= 1.5;
-        }
-
-        if (path.isEmpty()) {
-            return currentPosition;
+            targetBlocksPerTick *= 3.5;
         }
 
         Vec3d previousPoint = null;
@@ -89,36 +96,38 @@ abstract class AbstractShootingNavigator {
             ticksForBullet -= usedTicks;
 
             if (ticksForBullet < 0 && previousPoint != null) {
+                // TODO return sth middle between previous and next point
                 return previousPoint;
             }
             previousPoint = nextPoint;
         }
 
-        return currentPosition;
+        return currentTargetPosition;
     }
 
-    static List<Vec3d> getEntityPath(MobEntity target) {
-        Path path = target.getNavigator().getPath();
+    @Nonnull
+    private static List<Vec3d> getRemainingEntityPath(@Nonnull MobEntity entity) {
+        List<Vec3d> remainingPath = Lists.newArrayList();
+        Path path = entity.getNavigator().getPath();
         if (path == null || path.isFinished()) {
-            return Lists.newArrayList();
+            return remainingPath;
         }
 
-        List<Vec3d> accuratePath = AbstractShootingNavigator.getAccuratePath(path);
-
+        List<Vec3d> accuratePath = AbstractShootingNavigator.turnPathIntoAccurate(path);
         int currentPathIndex = path.getCurrentPathIndex();
         int currentPathLength = path.getCurrentPathLength();
-        List<Vec3d> remainPath = Lists.newArrayList();
 
         if (currentPathLength > 0) {
             for (int i = currentPathIndex - 1; i < currentPathLength; i++) {
-                remainPath.add(accuratePath.get(i));
+                remainingPath.add(accuratePath.get(i));
             }
         }
 
-        return remainPath;
+        return remainingPath;
     }
 
-    static List<Vec3d> getAccuratePath(Path path) {
+    @Nonnull
+    private static List<Vec3d> turnPathIntoAccurate(@Nonnull Path path) {
         List<Vec3d> accuratePath = Lists.newArrayList();
 
         for (int pathIndex = 0; pathIndex < path.getCurrentPathLength(); ++pathIndex) {

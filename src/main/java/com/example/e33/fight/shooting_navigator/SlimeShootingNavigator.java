@@ -20,7 +20,7 @@ public class SlimeShootingNavigator extends AbstractShootingNavigator {
         AxisAlignedBB targetBoundingBox = target.getBoundingBox();
 
         float ticksForBullet = SlimeShootingNavigator.getTicksForBullet(target, creature);
-        // How many jumps can he while bullet is in the air
+        // How many jumps can he make while bullet is in the air
         float jumpNumber = ticksForBullet / 20;
         if (SlimeShootingNavigator.getSlimeJumpDelay(target) <= 2) {
             jumpNumber += 0.3;
@@ -45,8 +45,11 @@ public class SlimeShootingNavigator extends AbstractShootingNavigator {
         return new Vec3d(attackAccelX, attackAccelY, attackAccelZ);
     }
 
-    private static int getSlimeJumpDelay(MobEntity target) {
-        MovementController moveCtrl = target.getMoveHelper();
+    /**
+     * @return ticks to next jump
+     */
+    private static int getSlimeJumpDelay(MobEntity slime) {
+        MovementController moveCtrl = slime.getMoveHelper();
 
         try {
             Field jumpDelayField = moveCtrl.getClass().getDeclaredField("jumpDelay");
