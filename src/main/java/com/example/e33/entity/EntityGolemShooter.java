@@ -1,11 +1,8 @@
 package com.example.e33.entity;
 
 import com.example.e33.core.ModSounds;
-import com.example.e33.goal.attack.AttackSkeletonGoal;
-import com.example.e33.goal.attack.AttackSlimeGoal;
+import com.example.e33.goal.attack.*;
 import com.example.e33.goal.ShootBadGuysGoal;
-import com.example.e33.goal.attack.AttackSpiderGoal;
-import com.example.e33.goal.attack.AttackZombieGoal;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -37,14 +34,17 @@ public class EntityGolemShooter extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
+        // TODO custom priority queue
         this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
         this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
-        this.targetSelector.addGoal(10, new AttackSlimeGoal(this));
+        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
+        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
     }
 
     public void fall(float distance, float damageMultiplier) {
+        // TODO don't ignore fall damage
     }
 
     protected void registerAttributes() {
@@ -72,5 +72,11 @@ public class EntityGolemShooter extends AnimalEntity {
     }
 
     public void setFire(int seconds) {
+        // TODO don't ignore fire
+    }
+
+    public int getMaxFallHeight() {
+        // TODO set normal fall height
+        return 255;
     }
 }

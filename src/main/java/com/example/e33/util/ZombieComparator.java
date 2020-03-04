@@ -9,32 +9,35 @@ import java.util.Comparator;
 
 public class ZombieComparator implements Comparator<ZombieEntity> {
     private MobEntity creature;
-    private final static Logger LOGGER = LogManager.getLogger();
 
     public ZombieComparator(MobEntity creature) {
         this.creature = creature;
     }
 
-    public int compare(ZombieEntity z1, ZombieEntity z2) {
-        if (z1.hurtResistantTime > 10.0F && z2.hurtResistantTime <= 10.0F) {
+    public int compare(ZombieEntity mob1, ZombieEntity mob2) {
+        if (!mob1.isBurning() && mob2.isBurning()) {
             return 1;
         }
-        if (z1.hurtResistantTime <= 10.0F && z2.hurtResistantTime > 10.0F) {
-            return -1;
-        }
-        if (z1.hurtResistantTime > 10.0F && z2.hurtResistantTime > 10.0F) {
-            return 0;
-        }
-
-        if (!z1.isChild() && z2.isChild()) {
-            return 1;
-        }
-        if (z1.isChild() && !z2.isChild()) {
+        if (mob1.isBurning() && !mob2.isBurning()) {
             return -1;
         }
 
-        double s1Distance = this.creature.getDistanceSq(z1);
-        double s2Distance = this.creature.getDistanceSq(z2);
+        if (mob1.hurtResistantTime > 10.0F && mob2.hurtResistantTime <= 10.0F) {
+            return 1;
+        }
+        if (mob1.hurtResistantTime <= 10.0F && mob2.hurtResistantTime > 10.0F) {
+            return -1;
+        }
+
+        if (!mob1.isChild() && mob2.isChild()) {
+            return 1;
+        }
+        if (mob1.isChild() && !mob2.isChild()) {
+            return -1;
+        }
+
+        double s1Distance = this.creature.getDistanceSq(mob1);
+        double s2Distance = this.creature.getDistanceSq(mob2);
 
         return (int) Math.floor(s1Distance - s2Distance);
     }

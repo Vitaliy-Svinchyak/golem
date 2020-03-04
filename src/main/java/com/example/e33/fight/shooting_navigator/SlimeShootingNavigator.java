@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
 
 public class SlimeShootingNavigator extends AbstractShootingNavigator {
 
-    public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
+    public static Vec3d getShootPoint(SlimeEntity target, MobEntity creature) {
         double targetX = target.posX;
         double targetZ = target.posZ;
         double targetY = SlimeShootingNavigator.getLowestBlockY(target);

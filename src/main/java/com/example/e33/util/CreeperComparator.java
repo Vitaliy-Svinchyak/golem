@@ -1,25 +1,29 @@
 package com.example.e33.util;
 
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.monster.SpiderEntity;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.entity.monster.CreeperEntity;
 
 import java.util.Comparator;
 
-public class SpiderComparator implements Comparator<SpiderEntity> {
+public class CreeperComparator implements Comparator<CreeperEntity> {
     private MobEntity creature;
-    private final static Logger LOGGER = LogManager.getLogger();
 
-    public SpiderComparator(MobEntity creature) {
+    public CreeperComparator(MobEntity creature) {
         this.creature = creature;
     }
 
-    public int compare(SpiderEntity mob1, SpiderEntity mob2) {
+    public int compare(CreeperEntity mob1, CreeperEntity mob2) {
         if (mob1.hurtResistantTime > 10.0F && mob2.hurtResistantTime <= 10.0F) {
             return 1;
         }
         if (mob1.hurtResistantTime <= 10.0F && mob2.hurtResistantTime > 10.0F) {
+            return -1;
+        }
+
+        if (!mob1.getPowered() && mob2.getPowered()) {
+            return 1;
+        }
+        if (mob1.getPowered() && !mob2.getPowered()) {
             return -1;
         }
 

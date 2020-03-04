@@ -9,23 +9,22 @@ import java.util.Comparator;
 
 public class SlimeComparator implements Comparator<SlimeEntity> {
     private MobEntity creature;
-    private final static Logger LOGGER = LogManager.getLogger();
 
     public SlimeComparator(MobEntity creature) {
         this.creature = creature;
     }
 
-    public int compare(SlimeEntity s1, SlimeEntity s2) {
-        if (s1.isSmallSlime() && !s2.isSmallSlime()) {
+    public int compare(SlimeEntity mob1, SlimeEntity mob2) {
+        if (mob1.isSmallSlime() && !mob2.isSmallSlime()) {
             return 1;
         }
 
-        if (s2.isSmallSlime() && !s1.isSmallSlime()) {
+        if (mob2.isSmallSlime() && !mob1.isSmallSlime()) {
             return -1;
         }
 
-        double s1Distance = this.creature.getDistanceSq(s1);
-        double s2Distance = this.creature.getDistanceSq(s2);
+        double s1Distance = this.creature.getDistanceSq(mob1);
+        double s2Distance = this.creature.getDistanceSq(mob2);
 
         return (int) Math.floor(s1Distance - s2Distance);
     }

@@ -10,30 +10,33 @@ import java.util.Comparator;
 
 public class SkeletonComparator implements Comparator<SkeletonEntity> {
     private MobEntity creature;
-    private final static Logger LOGGER = LogManager.getLogger();
 
     public SkeletonComparator(MobEntity creature) {
         this.creature = creature;
     }
 
-    public int compare(SkeletonEntity z1, SkeletonEntity z2) {
-        // TODO check armor and bow enchantment
-        if (!z2.hasItemInSlot(EquipmentSlotType.MAINHAND)) {
-            return -1;
-        }
-
-        if (z1.hurtResistantTime > 10.0F && z2.hurtResistantTime <= 10.0F) {
+    public int compare(SkeletonEntity mob1, SkeletonEntity mob2) {
+        if (!mob1.isBurning() && mob2.isBurning()) {
             return 1;
         }
-        if (z1.hurtResistantTime <= 10.0F && z2.hurtResistantTime > 10.0F) {
+        if (mob1.isBurning() && !mob2.isBurning()) {
             return -1;
         }
-        if (z1.hurtResistantTime > 10.0F && z2.hurtResistantTime > 10.0F) {
-            return 0;
+
+        // TODO check armor and bow enchantment
+        if (!mob2.hasItemInSlot(EquipmentSlotType.MAINHAND)) {
+            return -1;
         }
 
-        double s1Distance = this.creature.getDistanceSq(z1);
-        double s2Distance = this.creature.getDistanceSq(z2);
+        if (mob1.hurtResistantTime > 10.0F && mob2.hurtResistantTime <= 10.0F) {
+            return 1;
+        }
+        if (mob1.hurtResistantTime <= 10.0F && mob2.hurtResistantTime > 10.0F) {
+            return -1;
+        }
+
+        double s1Distance = this.creature.getDistanceSq(mob1);
+        double s2Distance = this.creature.getDistanceSq(mob2);
 
         return (int) Math.floor(s1Distance - s2Distance);
     }

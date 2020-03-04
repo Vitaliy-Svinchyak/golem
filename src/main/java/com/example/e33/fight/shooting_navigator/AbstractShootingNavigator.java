@@ -76,7 +76,7 @@ abstract class AbstractShootingNavigator {
         }
 
         float ticksForBullet = AbstractShootingNavigator.getTicksForBullet(target, creature);
-        float targetBlocksPerTick = (float) (target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue() * 1.5);
+        float targetBlocksPerTick = (float) (target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
 
         if (target.isChild() && target instanceof ZombieEntity) {
             targetBlocksPerTick *= 1.5;
