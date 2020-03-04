@@ -4,6 +4,7 @@ import com.example.e33.core.ModSounds;
 import com.example.e33.goal.attack.AttackSkeletonGoal;
 import com.example.e33.goal.attack.AttackSlimeGoal;
 import com.example.e33.goal.ShootBadGuysGoal;
+import com.example.e33.goal.attack.AttackSpiderGoal;
 import com.example.e33.goal.attack.AttackZombieGoal;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.EntityType;
@@ -39,6 +40,7 @@ public class EntityGolemShooter extends AnimalEntity {
         this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
+        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
         this.targetSelector.addGoal(10, new AttackSlimeGoal(this));
     }
 

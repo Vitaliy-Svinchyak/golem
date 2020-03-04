@@ -21,7 +21,7 @@ abstract public class AbstractPriorityAttackGoal extends TargetGoal {
     }
 
     AxisAlignedBB getTargetableArea(double distance) {
-        double heightGap = 4;
+        double heightGap = 15;
         return this.goalOwner.getBoundingBox().grow(distance, heightGap, distance);
     }
 

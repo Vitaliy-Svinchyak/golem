@@ -6,6 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.BlockPos;
@@ -77,8 +78,8 @@ abstract class AbstractShootingNavigator {
         float ticksForBullet = AbstractShootingNavigator.getTicksForBullet(target, creature);
         float targetBlocksPerTick = (float) (target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue() * 1.5);
 
-        if (target.isChild()) {
-            targetBlocksPerTick *= 2;
+        if (target.isChild() && target instanceof ZombieEntity) {
+            targetBlocksPerTick *= 1.5;
         }
 
         Vec3d previousPoint = null;
@@ -117,10 +118,12 @@ abstract class AbstractShootingNavigator {
         int currentPathIndex = path.getCurrentPathIndex();
         int currentPathLength = path.getCurrentPathLength();
 
-        if (currentPathLength > 0) {
-            for (int i = currentPathIndex - 1; i < currentPathLength; i++) {
-                remainingPath.add(accuratePath.get(i));
-            }
+        if (currentPathIndex > 0) {
+            currentPathIndex--;
+        }
+
+        for (int i = currentPathIndex; i < currentPathLength; i++) {
+            remainingPath.add(accuratePath.get(i));
         }
 
         return remainingPath;

@@ -2,16 +2,19 @@ package com.example.e33.fight;
 
 import com.example.e33.fight.shooting_navigator.SkeletonShootingNavigator;
 import com.example.e33.fight.shooting_navigator.SlimeShootingNavigator;
+import com.example.e33.fight.shooting_navigator.SpiderShootingNavigator;
 import com.example.e33.fight.shooting_navigator.ZombieShootingNavigator;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.SkeletonEntity;
 import net.minecraft.entity.monster.SlimeEntity;
+import net.minecraft.entity.monster.SpiderEntity;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.util.math.Vec3d;
 
 public class ShootingNavigator {
 
     public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
+        // TODO shoot to visible part of mob
         if (target instanceof SlimeEntity) {
             return SlimeShootingNavigator.getShootPoint(target, creature);
         }
@@ -22,6 +25,10 @@ public class ShootingNavigator {
 
         if (target instanceof SkeletonEntity) {
             return SkeletonShootingNavigator.getShootPoint(target, creature);
+        }
+
+        if (target instanceof SpiderEntity) {
+            return SpiderShootingNavigator.getShootPoint(target, creature);
         }
 
         double attackAccelX = target.posX - creature.posX;
