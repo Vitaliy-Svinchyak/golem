@@ -18,6 +18,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 @Mod(E33.MOD_ID)
 public class E33 {
     public static final String MOD_ID = "e33";
+    private static DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
 
     public E33() {
         final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -33,8 +34,8 @@ public class E33 {
     }
 
     @SubscribeEvent
-    public void renderWorldLastEvent(RenderWorldLastEvent evt) {
-        DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
-        renderer.pathfinding.render(6);
+    public void renderWorldLastEvent(RenderWorldLastEvent event) {
+        // TODO prevent HashMap null exception
+        E33.renderer.pathfinding.render(50);
     }
 }

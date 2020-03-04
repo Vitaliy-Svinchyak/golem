@@ -65,8 +65,8 @@ public class ShootBadGuysGoal extends Goal {
         if (this.attackStep == 0 && this.attackTime <= 0) {
             this.setBulletsToShoot(attackTarget);
 
-            if (this.bulletsToShoot > 2) {
-                this.bulletsToShoot = 2;
+            if (this.bulletsToShoot > 1) {
+                this.bulletsToShoot = 1;
                 mustBeDead = false;
             }
         }
