@@ -8,11 +8,8 @@ import net.minecraft.entity.monster.SkeletonEntity;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.util.math.Vec3d;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class ShootingNavigator {
-    private final static Logger LOGGER = LogManager.getLogger();
 
     public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
         if (target instanceof SlimeEntity) {

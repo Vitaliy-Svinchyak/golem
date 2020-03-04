@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 public class SlimeShootingNavigator extends AbstractShootingNavigator {
 
     public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
-        target = (SlimeEntity) target;
         double targetX = target.posX;
         double targetZ = target.posZ;
         double targetY = SlimeShootingNavigator.getLowestBlockY(target);
@@ -54,8 +53,7 @@ public class SlimeShootingNavigator extends AbstractShootingNavigator {
         try {
             Field jumpDelayField = moveCtrl.getClass().getDeclaredField("jumpDelay");
             jumpDelayField.setAccessible(true);
-            int jumpDelay = (int) jumpDelayField.get(moveCtrl);
-            return jumpDelay;
+            return (int) jumpDelayField.get(moveCtrl);
         } catch (ReflectiveOperationException e) {
             LOGGER.error(e.getMessage());
         }

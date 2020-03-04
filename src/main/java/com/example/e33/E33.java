@@ -36,6 +36,6 @@ public class E33 {
     @SubscribeEvent
     public void renderWorldLastEvent(RenderWorldLastEvent event) {
         // TODO prevent HashMap null exception
-        E33.renderer.pathfinding.render(50);
+//        E33.renderer.pathfinding.render(50);
     }
 }

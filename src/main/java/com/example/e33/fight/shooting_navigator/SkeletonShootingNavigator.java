@@ -3,18 +3,16 @@ package com.example.e33.fight.shooting_navigator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.monster.SkeletonEntity;
 import net.minecraft.util.math.Vec3d;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 public class SkeletonShootingNavigator extends AbstractShootingNavigator {
-    public static HashMap<Integer, Boolean> showedPaths = new HashMap<Integer, Boolean>();
+    private static HashMap<Integer, Boolean> showedPaths = new HashMap<>();
 
     @Nonnull
     public static Vec3d getShootPoint(@Nonnull MobEntity target, @Nonnull MobEntity creature) {
-        target = (SkeletonEntity) target;
         Vec3d targetPosition = SkeletonShootingNavigator.guessWhereTargetWillBeWhileBulletIsInAir(target, creature);
         double targetHeight = target.getBoundingBox().maxY - target.getBoundingBox().minY;
 

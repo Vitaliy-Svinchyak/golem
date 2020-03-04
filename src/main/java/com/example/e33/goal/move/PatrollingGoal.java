@@ -1,4 +1,4 @@
-package com.example.e33.goal;
+package com.example.e33.goal.move;
 
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;

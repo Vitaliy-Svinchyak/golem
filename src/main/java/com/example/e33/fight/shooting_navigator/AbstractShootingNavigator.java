@@ -75,10 +75,10 @@ abstract class AbstractShootingNavigator {
         }
 
         float ticksForBullet = AbstractShootingNavigator.getTicksForBullet(target, creature);
-        float targetBlocksPerTick = (float) target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue();
+        float targetBlocksPerTick = (float) (target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue() * 1.5);
 
         if (target.isChild()) {
-            targetBlocksPerTick *= 3.5;
+            targetBlocksPerTick *= 2;
         }
 
         Vec3d previousPoint = null;

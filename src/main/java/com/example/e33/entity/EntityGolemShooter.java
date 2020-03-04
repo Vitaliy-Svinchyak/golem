@@ -36,9 +36,7 @@ public class EntityGolemShooter extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
-//        this.goalSelector.addGoal(7, new PatrollingGoal(this, 0.5D, AnvilBlock.class));
         this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
-//        this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, ZombieEntity.class, false));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
         this.targetSelector.addGoal(10, new AttackSlimeGoal(this));

@@ -21,10 +21,9 @@ public class ShootBadGuysGoal extends Goal {
     private final static Logger LOGGER = LogManager.getLogger();
 
     private final CreatureEntity entity;
-    protected static final Random random = new Random();
+    private static final Random random = new Random();
     private int attackStep;
     private int attackTime;
-    private Vec3d attackPoint;
     private int bulletsToShoot = -1;
 
     public ShootBadGuysGoal(CreatureEntity entity) {
