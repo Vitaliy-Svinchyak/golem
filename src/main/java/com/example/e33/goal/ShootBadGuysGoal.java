@@ -1,6 +1,7 @@
 package com.example.e33.goal;
 
 import com.example.e33.entity.BulletEntity;
+import com.example.e33.entity.EntityGolemShooter;
 import com.example.e33.fight.ShootExpectations;
 import com.example.e33.fight.ShootingNavigator;
 import net.minecraft.entity.CreatureEntity;
@@ -16,17 +17,19 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.EnumSet;
 import java.util.Random;
+import java.util.UUID;
 
 public class ShootBadGuysGoal extends Goal {
     private final static Logger LOGGER = LogManager.getLogger();
 
-    private final CreatureEntity entity;
+    private final EntityGolemShooter entity;
+    private MobEntity lastTarget = null;
     private static final Random random = new Random();
     private int attackStep;
     private int attackTime;
     private int bulletsToShoot = -1;
 
-    public ShootBadGuysGoal(CreatureEntity entity) {
+    public ShootBadGuysGoal(EntityGolemShooter entity) {
         this.entity = entity;
         this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
     }
@@ -56,10 +59,21 @@ public class ShootBadGuysGoal extends Goal {
         }
 
         MobEntity attackTarget = (MobEntity) this.entity.getAttackTarget();
+        if (this.lastTarget == null) {
+            this.lastTarget = attackTarget;
+        }
+
+        if (!this.lastTarget.equals(attackTarget)) {
+            ShootExpectations.removeFromBusyList(this.lastTarget);
+            this.lastTarget = attackTarget;
+        }
+
+
         if (attackTarget == null || !this.entity.getEntitySenses().canSee(attackTarget) || !attackTarget.isAlive()) {
             return;
         }
 
+        ShootExpectations.markAsBusy(attackTarget, this.entity);
         boolean mustBeDead = true;
         if (this.attackStep == 0 && this.attackTime <= 0) {
             this.setBulletsToShoot(attackTarget);

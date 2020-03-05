@@ -12,7 +12,9 @@ import java.util.PriorityQueue;
 
 public class AttackZombieGoal extends AbstractPriorityAttackGoal {
 
-    public AttackZombieGoal(MobEntity goalOwner) { super(goalOwner); }
+    public AttackZombieGoal(MobEntity goalOwner) {
+        super(goalOwner);
+    }
 
     protected void findTargetToAttack() {
         AxisAlignedBB targetableArea = this.getTargetableArea(this.getTargetDistance());
@@ -24,7 +26,7 @@ public class AttackZombieGoal extends AbstractPriorityAttackGoal {
             // TODO use canTarget method
             boolean validZombie = zombie.isAlive() && this.goalOwner.getEntitySenses().canSee(zombie);
 
-            if (validZombie && !ShootExpectations.isMarkedAsDead(zombie)) {
+            if (validZombie && ShootExpectations.shouldAttack(zombie, this.goalOwner)) {
                 pQueue.add(zombie);
             }
         }

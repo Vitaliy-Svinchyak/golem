@@ -26,7 +26,7 @@ public class AttackSkeletonGoal extends AbstractPriorityAttackGoal {
             // TODO use canTarget method
             boolean validSkeleton = skeleton.isAlive() && this.goalOwner.getEntitySenses().canSee(skeleton);
 
-            if (validSkeleton && !ShootExpectations.isMarkedAsDead(skeleton)) {
+            if (validSkeleton && ShootExpectations.shouldAttack(skeleton, this.goalOwner)) {
                 pQueue.add(skeleton);
             }
         }

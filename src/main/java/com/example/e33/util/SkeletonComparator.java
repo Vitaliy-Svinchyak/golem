@@ -3,8 +3,6 @@ package com.example.e33.util;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.SkeletonEntity;
 import net.minecraft.inventory.EquipmentSlotType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.Comparator;
 

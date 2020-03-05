@@ -24,7 +24,7 @@ public class AttackSpiderGoal extends AbstractPriorityAttackGoal {
             // TODO use canTarget method
             boolean validZombie = zombie.isAlive() && this.goalOwner.getEntitySenses().canSee(zombie);
 
-            if (validZombie && !ShootExpectations.isMarkedAsDead(zombie)) {
+            if (validZombie && ShootExpectations.shouldAttack(zombie, this.goalOwner)) {
                 pQueue.add(zombie);
             }
         }

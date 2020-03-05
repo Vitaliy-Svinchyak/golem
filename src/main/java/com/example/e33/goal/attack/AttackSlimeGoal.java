@@ -26,7 +26,7 @@ public class AttackSlimeGoal extends AbstractPriorityAttackGoal {
             // TODO use canTarget method
             boolean validSlime = slime.isAlive() && this.goalOwner.getEntitySenses().canSee(slime);
 
-            if (validSlime && !ShootExpectations.isMarkedAsDead(slime)) {
+            if (validSlime && ShootExpectations.shouldAttack(slime, this.goalOwner)) {
                 pQueue.add(slime);
             }
         }

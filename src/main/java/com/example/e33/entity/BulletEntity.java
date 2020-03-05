@@ -74,7 +74,7 @@ public class BulletEntity extends DamagingProjectileEntity {
 
             if (!target.isAlive()) {
                 // Dead, remove from memory
-                ShootExpectations.removeFromDeadList(this.target);
+                ShootExpectations.forgetTarget(this.target);
             }
         } else {
             // To shoot it again
