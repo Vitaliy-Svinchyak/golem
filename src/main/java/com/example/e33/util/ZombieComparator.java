@@ -1,9 +1,10 @@
 package com.example.e33.util;
 
+import com.example.e33.entity.EntityGolemShooter;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.ZombieEntity;
-import net.minecraft.entity.passive.GolemEntity;
 
+import javax.annotation.Nonnull;
 import java.util.Comparator;
 
 public class ZombieComparator implements Comparator<ZombieEntity> {
@@ -13,7 +14,7 @@ public class ZombieComparator implements Comparator<ZombieEntity> {
         this.creature = creature;
     }
 
-    public int compare(ZombieEntity mob1, ZombieEntity mob2) {
+    public int compare(@Nonnull ZombieEntity mob1, @Nonnull ZombieEntity mob2) {
         int mob1HazardPoints = this.getHazardPoints(mob1);
         int mob2HazardPoints = this.getHazardPoints(mob2);
 
@@ -26,14 +27,14 @@ public class ZombieComparator implements Comparator<ZombieEntity> {
         return 0;
     }
 
-    private int getHazardPoints(ZombieEntity mob) {
+    private int getHazardPoints(@Nonnull ZombieEntity mob) {
         int hazardPoints = 0;
 
         if (mob.isBurning()) {
             return -100;
         }
 
-        if (mob.getAttackTarget() instanceof GolemEntity) {
+        if (mob.getAttackTarget() instanceof EntityGolemShooter) {
             hazardPoints += 10;
         }
 

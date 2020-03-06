@@ -4,6 +4,7 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.entity.passive.GolemEntity;
 
+import javax.annotation.Nonnull;
 import java.util.Comparator;
 
 public class CreeperComparator implements Comparator<CreeperEntity> {
@@ -13,7 +14,7 @@ public class CreeperComparator implements Comparator<CreeperEntity> {
         this.creature = creature;
     }
 
-    public int compare(CreeperEntity mob1, CreeperEntity mob2) {
+    public int compare(@Nonnull CreeperEntity mob1, @Nonnull CreeperEntity mob2) {
         int mob1HazardPoints = this.getHazardPoints(mob1);
         int mob2HazardPoints = this.getHazardPoints(mob2);
 
@@ -26,7 +27,7 @@ public class CreeperComparator implements Comparator<CreeperEntity> {
         return 0;
     }
 
-    private int getHazardPoints(CreeperEntity mob) {
+    private int getHazardPoints(@Nonnull CreeperEntity mob) {
         int hazardPoints = 0;
 
         if (mob.isBurning()) {

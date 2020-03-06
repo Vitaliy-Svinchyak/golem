@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 
+// TODO implement IRangedAttackMob
 public class EntityGolemShooter extends AnimalEntity {
 
     public EntityGolemShooter(EntityType<? extends EntityGolemShooter> golem, World world) {
