@@ -1,4 +1,4 @@
-package com.example.e33.fight.shooting_navigator;
+package com.example.e33.fight.shootingNavigator;
 
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.controller.MovementController;

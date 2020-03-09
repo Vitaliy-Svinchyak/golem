@@ -63,6 +63,11 @@ public class ShootBadGuysGoal extends Goal {
             this.lastTarget = attackTarget;
         }
 
+        if (!this.entity.avoidPeacefulCreaturesGoal.bulletPathIsClear(attackTarget)) {
+            this.entity.setAttackTarget(null);
+            return;
+        }
+
         if (!this.lastTarget.equals(attackTarget)) {
             ShootExpectations.removeFromBusyList(this.lastTarget);
             this.lastTarget = attackTarget;

@@ -1,20 +1,21 @@
-package com.example.e33.util;
+package com.example.e33.util.mobComparator;
 
 import com.example.e33.entity.EntityGolemShooter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.monster.SpiderEntity;
 
 import javax.annotation.Nonnull;
 import java.util.Comparator;
 
-public class ZombieComparator implements Comparator<ZombieEntity> {
+public class SpiderComparator implements Comparator<SpiderEntity> {
     private MobEntity creature;
 
-    public ZombieComparator(MobEntity creature) {
+    public SpiderComparator(MobEntity creature) {
         this.creature = creature;
     }
 
-    public int compare(@Nonnull ZombieEntity mob1, @Nonnull ZombieEntity mob2) {
+    public int compare(@Nonnull SpiderEntity mob1, @Nonnull SpiderEntity mob2) {
         int mob1HazardPoints = this.getHazardPoints(mob1);
         int mob2HazardPoints = this.getHazardPoints(mob2);
 
@@ -27,19 +28,19 @@ public class ZombieComparator implements Comparator<ZombieEntity> {
         return 0;
     }
 
-    private int getHazardPoints(@Nonnull ZombieEntity mob) {
+    private int getHazardPoints(@Nonnull SpiderEntity mob) {
         int hazardPoints = 0;
 
         if (mob.isBurning()) {
             return -100;
         }
 
-        if (mob.getAttackTarget() instanceof EntityGolemShooter) {
-            hazardPoints += 10;
+        if (Minecraft.getInstance().world.isDaytime() && mob.getAttackTarget() == null) {
+            return -100;
         }
 
-        if (mob.isChild()) {
-            hazardPoints += 5;
+        if (mob.getAttackTarget() instanceof EntityGolemShooter) {
+            hazardPoints += 10;
         }
 
         double distanceToMob = this.creature.getDistanceSq(mob);
@@ -61,20 +62,9 @@ public class ZombieComparator implements Comparator<ZombieEntity> {
             hazardPoints -= 1;
         }
 
-        final int[] equipmentPower = {0};
-        mob.getArmorInventoryList().forEach(itemStack -> {
-            equipmentPower[0]++;
-            if (itemStack.isEnchanted()) {
-                equipmentPower[0]++;
-            }
-        });
-        mob.getHeldEquipment().forEach(itemStack -> {
-            equipmentPower[0]++;
-            if (itemStack.isEnchanted()) {
-                equipmentPower[0]++;
-            }
-        });
-        hazardPoints += equipmentPower[0];
+        if (mob.getActivePotionEffects().size() > 0) {
+            hazardPoints += 2;
+        }
 
         return hazardPoints;
     }

@@ -1,7 +1,6 @@
 package com.example.e33.goal.attack;
 
-import com.example.e33.fight.ShootExpectations;
-import com.example.e33.util.SkeletonComparator;
+import com.example.e33.util.mobComparator.SkeletonComparator;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.SkeletonEntity;
 import net.minecraft.util.EntityPredicates;
@@ -22,11 +21,7 @@ public class AttackSkeletonGoal extends AbstractPriorityAttackGoal {
         PriorityQueue<SkeletonEntity> pQueue = new PriorityQueue<>(new SkeletonComparator(this.goalOwner));
 
         for (SkeletonEntity skeleton : skeletons) {
-            // TODO add check that nobody is on the way of bullet
-            // TODO use canTarget method
-            boolean validSkeleton = skeleton.isAlive() && this.goalOwner.getEntitySenses().canSee(skeleton);
-
-            if (validSkeleton && ShootExpectations.shouldAttack(skeleton, this.goalOwner)) {
+            if (this.canShoot(skeleton)) {
                 pQueue.add(skeleton);
             }
         }

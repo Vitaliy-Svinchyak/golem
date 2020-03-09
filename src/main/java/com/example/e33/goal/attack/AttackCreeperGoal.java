@@ -1,8 +1,6 @@
 package com.example.e33.goal.attack;
 
-import com.example.e33.fight.ShootExpectations;
-import com.example.e33.util.CreeperComparator;
-import com.example.e33.util.ZombieComparator;
+import com.example.e33.util.mobComparator.CreeperComparator;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.util.EntityPredicates;
@@ -17,16 +15,12 @@ public class AttackCreeperGoal extends AbstractPriorityAttackGoal {
 
     protected void findTargetToAttack() {
         AxisAlignedBB targetableArea = this.getTargetableArea(this.getTargetDistance());
-        List<CreeperEntity> zombies = this.goalOwner.world.getEntitiesWithinAABB(CreeperEntity.class, targetableArea, EntityPredicates.NOT_SPECTATING);
+        List<CreeperEntity> creepers = this.goalOwner.world.getEntitiesWithinAABB(CreeperEntity.class, targetableArea, EntityPredicates.NOT_SPECTATING);
         PriorityQueue<CreeperEntity> pQueue = new PriorityQueue<>(new CreeperComparator(this.goalOwner));
 
-        for (CreeperEntity zombie : zombies) {
-            // TODO add check that nobody is on the way of bullet
-            // TODO use canTarget method
-            boolean validZombie = zombie.isAlive() && this.goalOwner.getEntitySenses().canSee(zombie);
-
-            if (validZombie && ShootExpectations.shouldAttack(zombie, this.goalOwner)) {
-                pQueue.add(zombie);
+        for (CreeperEntity creeper : creepers) {
+            if (this.canShoot(creeper)) {
+                pQueue.add(creeper);
             }
         }
 

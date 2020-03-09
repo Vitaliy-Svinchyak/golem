@@ -1,4 +1,4 @@
-package com.example.e33.fight.shooting_navigator;
+package com.example.e33.fight.shootingNavigator;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.debug.DebugRenderer;
@@ -22,7 +22,7 @@ public class SkeletonShootingNavigator extends AbstractShootingNavigator {
 
         if (target.getNavigator().getPath() != null && showedPaths.get(target.getNavigator().getPath().hashCode()) == null) {
             DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
-            renderer.pathfinding.addPath(target.getEntityId(), target.getNavigator().getPath(), 0);
+            renderer.pathfinding.addPath(target.getUniqueID().hashCode(), target.getNavigator().getPath(), 0);
             // TODO clear cache after enemy die (memory leack)
             showedPaths.put(target.getNavigator().getPath().hashCode(), true);
         }

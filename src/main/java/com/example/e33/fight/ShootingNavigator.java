@@ -1,6 +1,6 @@
 package com.example.e33.fight;
 
-import com.example.e33.fight.shooting_navigator.*;
+import com.example.e33.fight.shootingNavigator.*;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.*;
 import net.minecraft.util.math.Vec3d;

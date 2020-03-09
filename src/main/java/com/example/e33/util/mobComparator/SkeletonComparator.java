@@ -1,4 +1,4 @@
-package com.example.e33.util;
+package com.example.e33.util.mobComparator;
 
 import com.example.e33.entity.EntityGolemShooter;
 import net.minecraft.entity.MobEntity;

@@ -1,4 +1,4 @@
-package com.example.e33.fight.shooting_navigator;
+package com.example.e33.fight.shootingNavigator;
 
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;

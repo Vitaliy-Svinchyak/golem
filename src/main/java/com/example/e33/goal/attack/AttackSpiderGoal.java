@@ -1,7 +1,6 @@
 package com.example.e33.goal.attack;
 
-import com.example.e33.fight.ShootExpectations;
-import com.example.e33.util.SpiderComparator;
+import com.example.e33.util.mobComparator.SpiderComparator;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.SpiderEntity;
 import net.minecraft.util.EntityPredicates;
@@ -16,16 +15,12 @@ public class AttackSpiderGoal extends AbstractPriorityAttackGoal {
 
     protected void findTargetToAttack() {
         AxisAlignedBB targetableArea = this.getTargetableArea(this.getTargetDistance());
-        List<SpiderEntity> zombies = this.goalOwner.world.getEntitiesWithinAABB(SpiderEntity.class, targetableArea, EntityPredicates.NOT_SPECTATING);
+        List<SpiderEntity> spiders = this.goalOwner.world.getEntitiesWithinAABB(SpiderEntity.class, targetableArea, EntityPredicates.NOT_SPECTATING);
         PriorityQueue<SpiderEntity> pQueue = new PriorityQueue<>(new SpiderComparator(this.goalOwner));
 
-        for (SpiderEntity zombie : zombies) {
-            // TODO add check that nobody is on the way of bullet
-            // TODO use canTarget method
-            boolean validZombie = zombie.isAlive() && this.goalOwner.getEntitySenses().canSee(zombie);
-
-            if (validZombie && ShootExpectations.shouldAttack(zombie, this.goalOwner)) {
-                pQueue.add(zombie);
+        for (SpiderEntity spider : spiders) {
+            if (this.canShoot(spider)) {
+                pQueue.add(spider);
             }
         }
 

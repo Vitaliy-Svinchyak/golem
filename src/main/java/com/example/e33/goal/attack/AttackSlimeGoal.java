@@ -1,7 +1,6 @@
 package com.example.e33.goal.attack;
 
-import com.example.e33.fight.ShootExpectations;
-import com.example.e33.util.SlimeComparator;
+import com.example.e33.util.mobComparator.SlimeComparator;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.util.EntityPredicates;
@@ -22,11 +21,7 @@ public class AttackSlimeGoal extends AbstractPriorityAttackGoal {
         PriorityQueue<SlimeEntity> pQueue = new PriorityQueue<SlimeEntity>(new SlimeComparator(this.goalOwner));
 
         for (SlimeEntity slime : slimes) {
-            // TODO add check that nobody is on the way of bullet
-            // TODO use canTarget method
-            boolean validSlime = slime.isAlive() && this.goalOwner.getEntitySenses().canSee(slime);
-
-            if (validSlime && ShootExpectations.shouldAttack(slime, this.goalOwner)) {
+            if (this.canShoot(slime)) {
                 pQueue.add(slime);
             }
         }

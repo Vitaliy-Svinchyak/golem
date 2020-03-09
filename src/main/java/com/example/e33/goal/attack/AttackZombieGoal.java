@@ -1,7 +1,6 @@
 package com.example.e33.goal.attack;
 
-import com.example.e33.fight.ShootExpectations;
-import com.example.e33.util.ZombieComparator;
+import com.example.e33.util.mobComparator.ZombieComparator;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.util.EntityPredicates;
@@ -22,11 +21,7 @@ public class AttackZombieGoal extends AbstractPriorityAttackGoal {
         PriorityQueue<ZombieEntity> pQueue = new PriorityQueue<>(new ZombieComparator(this.goalOwner));
 
         for (ZombieEntity zombie : zombies) {
-            // TODO add check that nobody is on the way of bullet
-            // TODO use canTarget method
-            boolean validZombie = zombie.isAlive() && this.goalOwner.getEntitySenses().canSee(zombie);
-
-            if (validZombie && ShootExpectations.shouldAttack(zombie, this.goalOwner)) {
+            if (this.canShoot(zombie)) {
                 pQueue.add(zombie);
             }
         }

@@ -3,9 +3,7 @@ package com.example.e33.entity;
 import com.example.e33.core.ModSounds;
 import com.example.e33.goal.attack.*;
 import com.example.e33.goal.ShootBadGuysGoal;
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
@@ -18,10 +16,18 @@ import javax.annotation.Nonnull;
 // TODO implement IRangedAttackMob
 public class EntityGolemShooter extends AnimalEntity {
 
+    public AvoidPeacefulCreaturesGoal avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesGoal(this);
+
     public EntityGolemShooter(EntityType<? extends EntityGolemShooter> golem, World world) {
         super(golem, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
+    }
+
+    @Override
+    public void tick() {
+        this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
+        super.tick();
     }
 
     @Override

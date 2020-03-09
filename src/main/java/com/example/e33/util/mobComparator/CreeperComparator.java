@@ -1,21 +1,20 @@
-package com.example.e33.util;
+package com.example.e33.util.mobComparator;
 
-import com.example.e33.entity.EntityGolemShooter;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.monster.SpiderEntity;
+import net.minecraft.entity.monster.CreeperEntity;
+import net.minecraft.entity.passive.GolemEntity;
 
 import javax.annotation.Nonnull;
 import java.util.Comparator;
 
-public class SpiderComparator implements Comparator<SpiderEntity> {
+public class CreeperComparator implements Comparator<CreeperEntity> {
     private MobEntity creature;
 
-    public SpiderComparator(MobEntity creature) {
+    public CreeperComparator(MobEntity creature) {
         this.creature = creature;
     }
 
-    public int compare(@Nonnull SpiderEntity mob1, @Nonnull SpiderEntity mob2) {
+    public int compare(@Nonnull CreeperEntity mob1, @Nonnull CreeperEntity mob2) {
         int mob1HazardPoints = this.getHazardPoints(mob1);
         int mob2HazardPoints = this.getHazardPoints(mob2);
 
@@ -28,18 +27,14 @@ public class SpiderComparator implements Comparator<SpiderEntity> {
         return 0;
     }
 
-    private int getHazardPoints(@Nonnull SpiderEntity mob) {
+    private int getHazardPoints(@Nonnull CreeperEntity mob) {
         int hazardPoints = 0;
 
         if (mob.isBurning()) {
             return -100;
         }
 
-        if (Minecraft.getInstance().world.isDaytime() && mob.getAttackTarget() == null) {
-            return -100;
-        }
-
-        if (mob.getAttackTarget() instanceof EntityGolemShooter) {
+        if (mob.getAttackTarget() instanceof GolemEntity) {
             hazardPoints += 10;
         }
 
@@ -62,8 +57,8 @@ public class SpiderComparator implements Comparator<SpiderEntity> {
             hazardPoints -= 1;
         }
 
-        if (mob.getActivePotionEffects().size() > 0) {
-            hazardPoints += 2;
+        if (mob.getPowered()) {
+            hazardPoints *= 2;
         }
 
         return hazardPoints;
