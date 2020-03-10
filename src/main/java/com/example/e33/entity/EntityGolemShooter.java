@@ -13,10 +13,10 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 
-// TODO implement IRangedAttackMob
+// TODO 2 implement IRangedAttackMob?
 public class EntityGolemShooter extends AnimalEntity {
 
-    public AvoidPeacefulCreaturesGoal avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesGoal(this);
+    public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesHelper(this);
 
     public EntityGolemShooter(EntityType<? extends EntityGolemShooter> golem, World world) {
         super(golem, world);
@@ -41,7 +41,7 @@ public class EntityGolemShooter extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
-        // TODO custom priority queue
+        // TODO 2 custom priority queue
         this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
@@ -54,6 +54,7 @@ public class EntityGolemShooter extends AnimalEntity {
         // TODO don't ignore fall damage
     }
 
+    // TODO 2 teams implementation (isOnSameTeam method)
     protected void registerAttributes() {
         super.registerAttributes();
         this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0D);

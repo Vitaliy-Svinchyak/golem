@@ -9,7 +9,6 @@ import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 public class ZombieShootingNavigator extends AbstractShootingNavigator {
-    private static HashMap<Integer, Boolean> showedPaths = new HashMap<>();
 
     @Nonnull
     public static Vec3d getShootPoint(@Nonnull MobEntity target, @Nonnull MobEntity creature) {
@@ -24,12 +23,7 @@ public class ZombieShootingNavigator extends AbstractShootingNavigator {
         double attackAccelY = (targetPosition.y + (targetHeight / 2)) - (creature.posY + (creature.getHeight() / 1.5));
         double attackAccelZ = targetPosition.z - creature.posZ;
 
-        if (target.getNavigator().getPath() != null && showedPaths.get(target.getNavigator().getPath().hashCode()) == null) {
-            DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
-            renderer.pathfinding.addPath(target.getUniqueID().hashCode(), target.getNavigator().getPath(), 0);
-            // TODO clear cache after enemy die (memory leak)
-            showedPaths.put(target.getNavigator().getPath().hashCode(), true);
-        }
+        AbstractShootingNavigator.addPathToDebug(target);
 
         return new Vec3d(attackAccelX, attackAccelY, attackAccelZ);
     }

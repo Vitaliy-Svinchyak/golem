@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SlabBlock;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.ZombieEntity;
@@ -17,9 +19,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
 import java.util.List;
 
 abstract class AbstractShootingNavigator {
+    private static HashMap<Integer, Boolean> showedPaths = new HashMap<>();
     final static Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
@@ -97,7 +101,7 @@ abstract class AbstractShootingNavigator {
             ticksForBullet -= usedTicks;
 
             if (ticksForBullet < 0 && previousPoint != null) {
-                // TODO return sth middle between previous and next point
+                // TODO 2 return sth middle between previous and next point
                 return previousPoint;
             }
             previousPoint = nextPoint;
@@ -139,5 +143,14 @@ abstract class AbstractShootingNavigator {
         }
 
         return accuratePath;
+    }
+
+    static void addPathToDebug(@Nonnull MobEntity target) {
+        if (target.getNavigator().getPath() != null && showedPaths.get(target.getNavigator().getPath().hashCode()) == null) {
+            DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
+            renderer.pathfinding.addPath(target.getUniqueID().hashCode(), target.getNavigator().getPath(), 0);
+            // TODO clear cache after enemy die (memory leack)
+            showedPaths.put(target.getNavigator().getPath().hashCode(), true);
+        }
     }
 }

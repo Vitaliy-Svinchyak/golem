@@ -14,6 +14,8 @@ public class ZombieComparator implements Comparator<ZombieEntity> {
         this.creature = creature;
     }
 
+    // TODO attack villager priority
+    // TODO hp priority
     public int compare(@Nonnull ZombieEntity mob1, @Nonnull ZombieEntity mob2) {
         int mob1HazardPoints = this.getHazardPoints(mob1);
         int mob2HazardPoints = this.getHazardPoints(mob2);

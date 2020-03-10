@@ -9,11 +9,10 @@ import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 public class SpiderShootingNavigator extends AbstractShootingNavigator {
-    private static HashMap<Integer, Boolean> showedPaths = new HashMap<>();
 
     @Nonnull
     public static Vec3d getShootPoint(@Nonnull MobEntity target, @Nonnull MobEntity creature) {
-        // TODO special case for climbing on walls (another speed etc)
+        // TODO 2 special case for climbing on walls (another speed etc)
         Vec3d targetPosition = SpiderShootingNavigator.guessWhereTargetWillBeWhileBulletIsInAir(target, creature);
         double targetHeight = target.getBoundingBox().maxY - target.getBoundingBox().minY;
 
@@ -21,12 +20,7 @@ public class SpiderShootingNavigator extends AbstractShootingNavigator {
         double attackAccelY = (targetPosition.y + (targetHeight / 2)) - (creature.posY + (creature.getHeight() / 1.2));
         double attackAccelZ = targetPosition.z - creature.posZ;
 
-        if (target.getNavigator().getPath() != null && showedPaths.get(target.getNavigator().getPath().hashCode()) == null) {
-            DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
-            renderer.pathfinding.addPath(target.getUniqueID().hashCode(), target.getNavigator().getPath(), 0);
-            // TODO clear cache after enemy die (memory leack)
-            showedPaths.put(target.getNavigator().getPath().hashCode(), true);
-        }
+        AbstractShootingNavigator.addPathToDebug(target);
 
         return new Vec3d(attackAccelX, attackAccelY, attackAccelZ);
     }

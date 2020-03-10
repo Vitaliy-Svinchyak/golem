@@ -18,7 +18,7 @@ public class BulletEntity extends DamagingProjectileEntity {
 
     private LivingEntity target = null;
 
-    public BulletEntity(World world, LivingEntity shooter, double accelX, double accelY, double accelZ, LivingEntity target) {
+    public BulletEntity(@Nonnull World world, @Nonnull LivingEntity shooter, double accelX, double accelY, double accelZ, LivingEntity target) {
         super(EntityType.SMALL_FIREBALL, world);
         this.target = target;
         this.shootingEntity = shooter;
@@ -46,7 +46,6 @@ public class BulletEntity extends DamagingProjectileEntity {
     }
 
     public void baseTick() {
-        // TODO detect miss to notify
         if (World.isYOutOfBounds((int) this.posY) || MathHelper.sqrt(this.getDistanceSq(this.shootingEntity)) > 64) {
             ShootExpectations.removeFromDeadList(this.target);
         }

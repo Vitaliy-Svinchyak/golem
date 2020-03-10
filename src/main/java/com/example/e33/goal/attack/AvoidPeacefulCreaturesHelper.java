@@ -5,6 +5,8 @@ import com.google.common.collect.Lists;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
+import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.BatEntity;
 import net.minecraft.entity.passive.GolemEntity;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -12,14 +14,15 @@ import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
-public class AvoidPeacefulCreaturesGoal {
+public class AvoidPeacefulCreaturesHelper {
     private final static Logger LOGGER = LogManager.getLogger();
     private List<NavigationParameters> peacefulCreatures;
     private MobEntity goalOwner;
 
-    public AvoidPeacefulCreaturesGoal(MobEntity goalOwner) {
+    public AvoidPeacefulCreaturesHelper(@Nonnull MobEntity goalOwner) {
         this.goalOwner = goalOwner;
     }
 
@@ -27,7 +30,7 @@ public class AvoidPeacefulCreaturesGoal {
         this.peacefulCreatures = Lists.newArrayList();
 
         AxisAlignedBB targetableArea = this.getTargetableArea(this.goalOwner.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue());
-        List<Class<? extends MobEntity>> avoid = Lists.newArrayList(VillagerEntity.class, EntityGolemShooter.class, GolemEntity.class);
+        List<Class<? extends MobEntity>> avoid = Lists.newArrayList(AnimalEntity.class, VillagerEntity.class, EntityGolemShooter.class, GolemEntity.class, BatEntity.class);
 
         for (Class<? extends MobEntity> mobClass : avoid) {
             List<MobEntity> entities = this.goalOwner.world.getEntitiesWithinAABB(mobClass, targetableArea, EntityPredicates.NOT_SPECTATING);
@@ -68,7 +71,7 @@ public class AvoidPeacefulCreaturesGoal {
 
         final String uniqueName;
 
-        private NavigationParameters(MobEntity goalOwner, MobEntity creature) {
+        private NavigationParameters(@Nonnull MobEntity goalOwner, @Nonnull MobEntity creature) {
             this.uniqueName = creature.getClass().toString() + " - " + creature.getUniqueID().toString();
 
             this.distance = MathHelper.sqrt(goalOwner.getDistanceSq(creature));
@@ -101,7 +104,7 @@ public class AvoidPeacefulCreaturesGoal {
             return angle;
         }
 
-        private boolean intersects(NavigationParameters targetNavParams) {
+        private boolean intersects(@Nonnull NavigationParameters targetNavParams) {
             if (this.distance > targetNavParams.distance) {
                 // creatures intersect by horizontal
                 if (!this.angleIntervalsIntersect(this.horizontalAngleStart, this.horizontalAngleEnd, targetNavParams.horizontalAngleStart, targetNavParams.horizontalAngleEnd)) {
