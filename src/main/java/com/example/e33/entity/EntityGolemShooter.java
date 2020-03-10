@@ -1,14 +1,9 @@
 package com.example.e33.entity;
 
 import com.example.e33.core.ModSounds;
-import com.example.e33.goal.attack.AttackSlimeGoal;
+import com.example.e33.goal.attack.*;
 import com.example.e33.goal.ShootBadGuysGoal;
-import com.example.e33.goal.attack.AttackZombieGoal;
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
@@ -18,12 +13,21 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 
+// TODO implement IRangedAttackMob
 public class EntityGolemShooter extends AnimalEntity {
+
+    public AvoidPeacefulCreaturesGoal avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesGoal(this);
 
     public EntityGolemShooter(EntityType<? extends EntityGolemShooter> golem, World world) {
         super(golem, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
+    }
+
+    @Override
+    public void tick() {
+        this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
+        super.tick();
     }
 
     @Override
@@ -37,14 +41,17 @@ public class EntityGolemShooter extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
-//        this.goalSelector.addGoal(7, new PatrollingGoal(this, 0.5D, AnvilBlock.class));
+        // TODO custom priority queue
         this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
-//        this.targetSelector.addGoal(6, new NearestAttackableTargetGoal<>(this, ZombieEntity.class, false));
+        this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
-        this.targetSelector.addGoal(10, new AttackSlimeGoal(this));
+        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
+        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
+        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
     }
 
     public void fall(float distance, float damageMultiplier) {
+        // TODO don't ignore fall damage
     }
 
     protected void registerAttributes() {
@@ -72,5 +79,11 @@ public class EntityGolemShooter extends AnimalEntity {
     }
 
     public void setFire(int seconds) {
+        // TODO don't ignore fire
+    }
+
+    public int getMaxFallHeight() {
+        // TODO set normal fall height
+        return 255;
     }
 }

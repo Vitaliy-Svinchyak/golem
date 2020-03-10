@@ -1,6 +1,7 @@
 package com.example.e33.goal;
 
 import com.example.e33.entity.BulletEntity;
+import com.example.e33.entity.EntityGolemShooter;
 import com.example.e33.fight.ShootExpectations;
 import com.example.e33.fight.ShootingNavigator;
 import net.minecraft.entity.CreatureEntity;
@@ -16,18 +17,19 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.EnumSet;
 import java.util.Random;
+import java.util.UUID;
 
 public class ShootBadGuysGoal extends Goal {
     private final static Logger LOGGER = LogManager.getLogger();
 
-    private final CreatureEntity entity;
-    protected static final Random random = new Random();
+    private final EntityGolemShooter entity;
+    private MobEntity lastTarget = null;
+    private static final Random random = new Random();
     private int attackStep;
     private int attackTime;
-    private Vec3d attackPoint;
     private int bulletsToShoot = -1;
 
-    public ShootBadGuysGoal(CreatureEntity entity) {
+    public ShootBadGuysGoal(EntityGolemShooter entity) {
         this.entity = entity;
         this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
     }
@@ -51,31 +53,44 @@ public class ShootBadGuysGoal extends Goal {
      * Keep ticking a continuous task that has already been started
      */
     public void tick() {
-        --this.attackTime;
+        this.attackTime--;
+        if (this.attackTime > 0) {
+            return;
+        }
 
         MobEntity attackTarget = (MobEntity) this.entity.getAttackTarget();
+        if (this.lastTarget == null) {
+            this.lastTarget = attackTarget;
+        }
+
+        if (!this.entity.avoidPeacefulCreaturesGoal.bulletPathIsClear(attackTarget)) {
+            this.entity.setAttackTarget(null);
+            return;
+        }
+
+        if (!this.lastTarget.equals(attackTarget)) {
+            ShootExpectations.removeFromBusyList(this.lastTarget);
+            this.lastTarget = attackTarget;
+        }
+
+
         if (attackTarget == null || !this.entity.getEntitySenses().canSee(attackTarget) || !attackTarget.isAlive()) {
             return;
         }
 
-
+        ShootExpectations.markAsBusy(attackTarget, this.entity);
         boolean mustBeDead = true;
         if (this.attackStep == 0 && this.attackTime <= 0) {
-            float targetHealth = attackTarget.getHealth();
-            if (targetHealth > attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue()) {
-                LOGGER.info("ooooops");
-                targetHealth = (float) attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue();
-            }
-            this.bulletsToShoot = (int) Math.ceil(targetHealth / 5);
+            this.setBulletsToShoot(attackTarget);
 
-            if (this.bulletsToShoot > 5) {
-                this.bulletsToShoot = 5;
+            if (this.bulletsToShoot > 1) {
+                this.bulletsToShoot = 1;
                 mustBeDead = false;
             }
         }
 
         if (this.attackTime <= 0) {
-            ++this.attackStep;
+            this.attackStep++;
             this.attackTime = 10;
 
             if (this.attackStep > this.bulletsToShoot) {
@@ -84,10 +99,7 @@ public class ShootBadGuysGoal extends Goal {
             }
 
             if (this.attackStep >= 1) {
-                Vec3d attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
-                BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, attackPoint.x, attackPoint.y, attackPoint.z, attackTarget);
-                this.entity.world.addEntity(bullet);
-                this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
+                this.makeShot(attackTarget);
             }
 
             // Last shot
@@ -100,5 +112,23 @@ public class ShootBadGuysGoal extends Goal {
         }
 
         this.entity.getLookController().setLookPositionWithEntity(attackTarget, 5.0F, 5.0F);
+    }
+
+    private void setBulletsToShoot(MobEntity attackTarget) {
+        float targetHealth = attackTarget.getHealth();
+
+        if (targetHealth > attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue()) {
+            LOGGER.info("ooooops");
+            targetHealth = (float) attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue();
+        }
+
+        this.bulletsToShoot = (int) Math.ceil(targetHealth / 5);
+    }
+
+    private void makeShot(MobEntity attackTarget) {
+        Vec3d attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
+        BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, attackPoint.x, attackPoint.y, attackPoint.z, attackTarget);
+        this.entity.world.addEntity(bullet);
+        this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
     }
 }

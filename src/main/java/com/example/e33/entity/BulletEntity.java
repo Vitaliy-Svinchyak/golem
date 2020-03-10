@@ -12,6 +12,8 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+
 public class BulletEntity extends DamagingProjectileEntity {
 
     private LivingEntity target = null;
@@ -25,14 +27,15 @@ public class BulletEntity extends DamagingProjectileEntity {
         ShootStatistic.bulletShot();
     }
 
-    public BulletEntity(EntityType<? extends BulletEntity> entityType, World world) {
+    private BulletEntity(EntityType<? extends BulletEntity> entityType, World world) {
         super(entityType, world);
     }
 
-    public void setBasicPosition(double x, double y, double z) {
+    private void setBasicPosition(double x, double y, double z) {
         this.setPosition(this.posX, this.shootingEntity.posY + (double) (this.shootingEntity.getHeight() / 2.0F) + 0.5D, this.posZ);
         this.setMotion(Vec3d.ZERO);
-        int d0 = 150;
+        // WHY?
+        int d0 = 100;
         this.accelerationX = x / d0;
         this.accelerationY = y / d0;
         this.accelerationZ = z / d0;
@@ -54,31 +57,27 @@ public class BulletEntity extends DamagingProjectileEntity {
     /**
      * Called when this BulletEntity hits a block or entity.
      */
-    protected void onImpact(RayTraceResult result) {
+    protected void onImpact(@Nonnull RayTraceResult result) {
         if (this.world.isRemote) {
             return;
         }
 
         if (result.getType() == RayTraceResult.Type.ENTITY) {
-            LOGGER.info("hit");
             LivingEntity target = (LivingEntity) ((EntityRayTraceResult) result).getEntity();
-            LOGGER.info(target.getHealth());
 
             if (target.isAlive()) {
                 ShootStatistic.bulletHitTheTarget();
             }
 
             DamageSource damagesource = DamageSource.causeMobDamage(this.shootingEntity);
-            target.attackEntityFrom(damagesource, (float) 5);
+            target.attackEntityFrom(damagesource, (float) 10);
 
             if (!target.isAlive()) {
                 // Dead, remove from memory
-                ShootExpectations.removeFromDeadList(this.target);
+                ShootExpectations.forgetTarget(this.target);
             }
-            LOGGER.info(target.getHealth());
         } else {
             // To shoot it again
-            LOGGER.info("miss");
             ShootExpectations.removeFromDeadList(this.target);
         }
 
@@ -105,7 +104,7 @@ public class BulletEntity extends DamagingProjectileEntity {
     /**
      * Called when the entity is attacked.
      */
-    public boolean attackEntityFrom(DamageSource source, float amount) {
+    public boolean attackEntityFrom(@Nonnull DamageSource source, float amount) {
         return false;
     }
 

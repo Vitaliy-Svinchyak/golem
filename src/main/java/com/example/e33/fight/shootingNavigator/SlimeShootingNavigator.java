@@ -1,4 +1,4 @@
-package com.example.e33.fight.shooting_navigator;
+package com.example.e33.fight.shootingNavigator;
 
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.controller.MovementController;
@@ -10,8 +10,7 @@ import java.lang.reflect.Field;
 
 public class SlimeShootingNavigator extends AbstractShootingNavigator {
 
-    public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
-        target = (SlimeEntity) target;
+    public static Vec3d getShootPoint(SlimeEntity target, MobEntity creature) {
         double targetX = target.posX;
         double targetZ = target.posZ;
         double targetY = SlimeShootingNavigator.getLowestBlockY(target);
@@ -20,7 +19,7 @@ public class SlimeShootingNavigator extends AbstractShootingNavigator {
         AxisAlignedBB targetBoundingBox = target.getBoundingBox();
 
         float ticksForBullet = SlimeShootingNavigator.getTicksForBullet(target, creature);
-        // How many jumps can he while bullet is in the air
+        // How many jumps can he make while bullet is in the air
         float jumpNumber = ticksForBullet / 20;
         if (SlimeShootingNavigator.getSlimeJumpDelay(target) <= 2) {
             jumpNumber += 0.3;
@@ -45,14 +44,16 @@ public class SlimeShootingNavigator extends AbstractShootingNavigator {
         return new Vec3d(attackAccelX, attackAccelY, attackAccelZ);
     }
 
-    private static int getSlimeJumpDelay(MobEntity target) {
-        MovementController moveCtrl = target.getMoveHelper();
+    /**
+     * @return ticks to next jump
+     */
+    private static int getSlimeJumpDelay(MobEntity slime) {
+        MovementController moveCtrl = slime.getMoveHelper();
 
         try {
             Field jumpDelayField = moveCtrl.getClass().getDeclaredField("jumpDelay");
             jumpDelayField.setAccessible(true);
-            int jumpDelay = (int) jumpDelayField.get(moveCtrl);
-            return jumpDelay;
+            return (int) jumpDelayField.get(moveCtrl);
         } catch (ReflectiveOperationException e) {
             LOGGER.error(e.getMessage());
         }
