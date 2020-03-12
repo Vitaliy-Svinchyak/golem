@@ -43,7 +43,7 @@ public class SkeletonComparator implements Comparator<SkeletonEntity> {
             hazardPoints += 10;
         }
 
-        double distanceToMob = this.creature.getDistanceSq(mob);
+        double distanceToMob = this.creature.getDistance(mob);
 
         if (distanceToMob <= 15) {
             hazardPoints += 3;

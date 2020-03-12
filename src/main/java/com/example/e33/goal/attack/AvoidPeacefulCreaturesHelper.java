@@ -74,7 +74,7 @@ public class AvoidPeacefulCreaturesHelper {
         private NavigationParameters(@Nonnull MobEntity goalOwner, @Nonnull MobEntity creature) {
             this.uniqueName = creature.getClass().toString() + " - " + creature.getUniqueID().toString();
 
-            this.distance = MathHelper.sqrt(goalOwner.getDistanceSq(creature));
+            this.distance = goalOwner.getDistance(creature);
 
             this.horizontalAngleStart = this.getHorizontalAngle(goalOwner.posX, goalOwner.posZ, creature.getBoundingBox().minX - 0.5, creature.getBoundingBox().minZ - 0.5);
             this.horizontalAngleEnd = this.getHorizontalAngle(goalOwner.posX, goalOwner.posZ, creature.getBoundingBox().maxX + 0.5, creature.getBoundingBox().maxZ + 0.5);

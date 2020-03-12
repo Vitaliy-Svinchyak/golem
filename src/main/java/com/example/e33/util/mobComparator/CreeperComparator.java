@@ -38,7 +38,7 @@ public class CreeperComparator implements Comparator<CreeperEntity> {
             hazardPoints += 10;
         }
 
-        double distanceToMob = this.creature.getDistanceSq(mob);
+        double distanceToMob = this.creature.getDistance(mob);
 
         if (distanceToMob <= 10) {
             hazardPoints += 2;

@@ -52,10 +52,11 @@ abstract class AbstractShootingNavigator {
      * @return how many ticks are needed for a bullet to reach the target
      */
     static float getTicksForBullet(@Nonnull MobEntity target, @Nonnull MobEntity creature) {
-        return MathHelper.sqrt(creature.getDistanceSq(target));
+        return creature.getDistance(target);
     }
 
     static double getLowestBlockY(@Nonnull MobEntity target) {
+        // todo use 1 cycle
         BlockPos position = target.getPosition();
         World world = target.getEntityWorld();
         while (!world.getBlockState(position).isSolid()) {

@@ -46,7 +46,7 @@ public class BulletEntity extends DamagingProjectileEntity {
     }
 
     public void baseTick() {
-        if (World.isYOutOfBounds((int) this.posY) || MathHelper.sqrt(this.getDistanceSq(this.shootingEntity)) > 64) {
+        if (World.isYOutOfBounds((int) this.posY) || this.getDistance(this.shootingEntity) > 64) {
             ShootExpectations.removeFromDeadList(this.target);
         }
 
