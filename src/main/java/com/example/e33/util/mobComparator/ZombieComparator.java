@@ -1,8 +1,11 @@
 package com.example.e33.util.mobComparator;
 
 import com.example.e33.entity.EntityGolemShooter;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
 import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.passive.IronGolemEntity;
 
 import javax.annotation.Nonnull;
 import java.util.Comparator;
@@ -14,8 +17,6 @@ public class ZombieComparator implements Comparator<ZombieEntity> {
         this.creature = creature;
     }
 
-    // TODO attack villager priority
-    // TODO hp priority
     public int compare(@Nonnull ZombieEntity mob1, @Nonnull ZombieEntity mob2) {
         int mob1HazardPoints = this.getHazardPoints(mob1);
         int mob2HazardPoints = this.getHazardPoints(mob2);
@@ -42,6 +43,15 @@ public class ZombieComparator implements Comparator<ZombieEntity> {
 
         if (mob.isChild()) {
             hazardPoints += 5;
+        }
+
+        if (mob.getHealth() < mob.getMaxHealth()) {
+            hazardPoints += 1;
+        }
+
+        LivingEntity target = mob.getAttackTarget();
+        if (target instanceof EntityGolemShooter || target instanceof IronGolemEntity || target instanceof AbstractVillagerEntity) {
+            hazardPoints += 10;
         }
 
         double distanceToMob = this.creature.getDistance(mob);

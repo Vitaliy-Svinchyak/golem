@@ -8,8 +8,8 @@ import net.minecraft.util.math.Vec3d;
 public class ShootingNavigator {
 
     public static Vec3d getShootPoint(MobEntity target, MobEntity creature) {
-        // TODO shoot to visible part of mob
-        // TODO don't shoot in advance if mob will be in invisible (wall etc)
+        // TODO 2 shoot to visible part of mob
+        // TODO 2 don't shoot in advance if mob will be in invisible (wall etc)
         if (target instanceof SlimeEntity) {
             return SlimeShootingNavigator.getShootPoint((SlimeEntity) target, creature);
         }

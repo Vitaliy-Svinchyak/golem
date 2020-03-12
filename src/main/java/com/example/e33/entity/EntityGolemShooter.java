@@ -50,10 +50,6 @@ public class EntityGolemShooter extends AnimalEntity {
         this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
     }
 
-    public void fall(float distance, float damageMultiplier) {
-        // TODO don't ignore fall damage
-    }
-
     // TODO 2 teams implementation (isOnSameTeam method)
     protected void registerAttributes() {
         super.registerAttributes();
@@ -79,12 +75,7 @@ public class EntityGolemShooter extends AnimalEntity {
         return ModSounds.ENTITY_GOLEM_HURT;
     }
 
-    public void setFire(int seconds) {
-        // TODO don't ignore fire
-    }
-
     public int getMaxFallHeight() {
-        // TODO set normal fall height
-        return 255;
+        return 3;
     }
 }

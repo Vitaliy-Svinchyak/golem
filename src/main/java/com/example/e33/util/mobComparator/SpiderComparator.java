@@ -2,8 +2,11 @@ package com.example.e33.util.mobComparator;
 
 import com.example.e33.entity.EntityGolemShooter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
 import net.minecraft.entity.monster.SpiderEntity;
+import net.minecraft.entity.passive.IronGolemEntity;
 
 import javax.annotation.Nonnull;
 import java.util.Comparator;
@@ -39,8 +42,13 @@ public class SpiderComparator implements Comparator<SpiderEntity> {
             return -100;
         }
 
-        if (mob.getAttackTarget() instanceof EntityGolemShooter) {
+        LivingEntity target = mob.getAttackTarget();
+        if (target instanceof EntityGolemShooter || target instanceof IronGolemEntity || target instanceof AbstractVillagerEntity) {
             hazardPoints += 10;
+        }
+
+        if (mob.getHealth() < mob.getMaxHealth()) {
+            hazardPoints += 1;
         }
 
         double distanceToMob = this.creature.getDistance(mob);

@@ -150,7 +150,7 @@ abstract class AbstractShootingNavigator {
         if (target.getNavigator().getPath() != null && showedPaths.get(target.getNavigator().getPath().hashCode()) == null) {
             DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
             renderer.pathfinding.addPath(target.getUniqueID().hashCode(), target.getNavigator().getPath(), 0);
-            // TODO clear cache after enemy die (memory leack)
+            // TODO clear cache after enemy die (memory leak)
             showedPaths.put(target.getNavigator().getPath().hashCode(), true);
         }
     }

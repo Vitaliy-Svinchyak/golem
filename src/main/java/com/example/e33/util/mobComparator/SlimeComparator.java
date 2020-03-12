@@ -1,8 +1,11 @@
 package com.example.e33.util.mobComparator;
 
 import com.example.e33.entity.EntityGolemShooter;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
 import net.minecraft.entity.monster.SlimeEntity;
+import net.minecraft.entity.passive.IronGolemEntity;
 
 import javax.annotation.Nonnull;
 import java.util.Comparator;
@@ -39,6 +42,15 @@ public class SlimeComparator implements Comparator<SlimeEntity> {
         }
 
         if (mob.getAttackTarget() instanceof EntityGolemShooter) {
+            hazardPoints += 10;
+        }
+
+        if (mob.getHealth() < mob.getMaxHealth()) {
+            hazardPoints += 1;
+        }
+
+        LivingEntity target = mob.getAttackTarget();
+        if (target instanceof EntityGolemShooter || target instanceof IronGolemEntity || target instanceof AbstractVillagerEntity) {
             hazardPoints += 10;
         }
 
