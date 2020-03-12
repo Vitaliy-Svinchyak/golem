@@ -2,6 +2,7 @@ package com.e33;
 
 import com.e33.client.renderer.RendererBullet;
 import com.e33.client.renderer.RendererGolemShooter;
+import com.e33.debug.DangerousZoneDebugRenderer;
 import com.e33.entity.BulletEntity;
 import com.e33.entity.EntityGolemShooter;
 import net.minecraft.client.Minecraft;
@@ -18,6 +19,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 @Mod(E33.MOD_ID)
 public class E33 {
     public static final String MOD_ID = "e33";
+    public static final DangerousZoneDebugRenderer dangerousZoneDebugRenderer = new DangerousZoneDebugRenderer(Minecraft.getInstance());
     private static DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
 
     public E33() {
@@ -37,5 +39,6 @@ public class E33 {
     public void renderWorldLastEvent(RenderWorldLastEvent event) {
         // TODO prevent HashMap null exception
 //        E33.renderer.pathfinding.render(50);
+        E33.dangerousZoneDebugRenderer.render(50);
     }
 }

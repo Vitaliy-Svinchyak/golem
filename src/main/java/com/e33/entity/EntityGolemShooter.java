@@ -1,8 +1,10 @@
 package com.e33.entity;
 
+import com.e33.E33;
 import com.e33.goal.attack.*;
 import com.e33.core.ModSounds;
 import com.e33.goal.ShootBadGuysGoal;
+import com.e33.goal.move.DangerousZone;
 import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.util.DamageSource;
@@ -22,6 +24,7 @@ public class EntityGolemShooter extends AnimalEntity {
         super(golem, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
+        E33.dangerousZoneDebugRenderer.addZone(new DangerousZone(this, 1, 2, 3));
     }
 
     @Override

@@ -13,9 +13,11 @@ import java.util.Comparator;
 
 public class SpiderComparator implements Comparator<SpiderEntity> {
     private MobEntity creature;
+    private Minecraft minecraft;
 
     public SpiderComparator(MobEntity creature) {
         this.creature = creature;
+        this.minecraft = Minecraft.getInstance();
     }
 
     public int compare(@Nonnull SpiderEntity mob1, @Nonnull SpiderEntity mob2) {
@@ -41,7 +43,7 @@ public class SpiderComparator implements Comparator<SpiderEntity> {
             return -100;
         }
 
-        if (Minecraft.getInstance().world.isDaytime() && mob.getAttackTarget() == null) {
+        if (this.minecraft.world != null && this.minecraft.world.isDaytime() && mob.getAttackTarget() == null) {
             return -100;
         }
 
