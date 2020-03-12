@@ -11,6 +11,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.state.properties.SlabType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -56,7 +57,7 @@ abstract class AbstractShootingNavigator {
     }
 
     static double getLowestBlockY(@Nonnull MobEntity target) {
-        // todo use 1 cycle
+        // TODO use 1 cycle
         BlockPos position = target.getPosition();
         World world = target.getEntityWorld();
         while (!world.getBlockState(position).isSolid()) {
@@ -65,8 +66,7 @@ abstract class AbstractShootingNavigator {
 
         BlockState blockState = world.getBlockState(position);
         Block block = blockState.getBlock();
-        // TODO fix deprecation
-        if (block instanceof SlabBlock && block.func_220074_n(blockState)) {
+        if (block instanceof SlabBlock && block.getDefaultState().get(SlabBlock.TYPE) == SlabType.BOTTOM) {
             return position.up().getY() + 0.5;
         }
 
