@@ -85,7 +85,7 @@ abstract class AbstractShootingNavigator {
         float targetBlocksPerTick = (float) (target.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
 
         if (target.isChild() && target instanceof ZombieEntity) {
-            targetBlocksPerTick *= 1.5;
+            targetBlocksPerTick *= 1.75;
         }
 
         Vec3d previousPoint = null;

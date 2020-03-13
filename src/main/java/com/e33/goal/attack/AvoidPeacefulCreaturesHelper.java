@@ -2,12 +2,14 @@ package com.e33.goal.attack;
 
 import com.e33.entity.EntityGolemShooter;
 import com.google.common.collect.Lists;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.BatEntity;
 import net.minecraft.entity.passive.GolemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.math.AxisAlignedBB;
 import org.apache.logging.log4j.LogManager;
@@ -29,12 +31,12 @@ public class AvoidPeacefulCreaturesHelper {
         this.peacefulCreatures = Lists.newArrayList();
 
         AxisAlignedBB targetableArea = this.getTargetableArea(this.goalOwner.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue());
-        List<Class<? extends MobEntity>> avoid = Lists.newArrayList(AnimalEntity.class, VillagerEntity.class, EntityGolemShooter.class, GolemEntity.class, BatEntity.class);
+        List<Class<? extends LivingEntity>> avoid = Lists.newArrayList(AnimalEntity.class, VillagerEntity.class, EntityGolemShooter.class, GolemEntity.class, BatEntity.class, PlayerEntity.class);
 
-        for (Class<? extends MobEntity> mobClass : avoid) {
-            List<MobEntity> entities = this.goalOwner.world.getEntitiesWithinAABB(mobClass, targetableArea, EntityPredicates.NOT_SPECTATING);
+        for (Class<? extends LivingEntity> mobClass : avoid) {
+            List<LivingEntity> entities = this.goalOwner.world.getEntitiesWithinAABB(mobClass, targetableArea, EntityPredicates.NOT_SPECTATING);
 
-            for (MobEntity creature : entities) {
+            for (LivingEntity creature : entities) {
                 if (!creature.equals(this.goalOwner)) {
                     this.peacefulCreatures.add(new NavigationParameters(this.goalOwner, creature));
                 }
@@ -70,7 +72,7 @@ public class AvoidPeacefulCreaturesHelper {
 
         final String uniqueName;
 
-        private NavigationParameters(@Nonnull MobEntity goalOwner, @Nonnull MobEntity creature) {
+        private NavigationParameters(@Nonnull LivingEntity goalOwner, @Nonnull LivingEntity creature) {
             this.uniqueName = creature.getClass().toString() + " - " + creature.getUniqueID().toString();
 
             this.distance = goalOwner.getDistance(creature);

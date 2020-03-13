@@ -24,7 +24,6 @@ public class EntityGolemShooter extends AnimalEntity {
         super(golem, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
-        E33.dangerousZoneDebugRenderer.addZone(new DangerousZone(this, 1, 2, 3));
     }
 
     @Override

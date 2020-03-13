@@ -11,7 +11,9 @@ import java.util.PriorityQueue;
 
 public class AttackCreeperGoal extends AbstractPriorityAttackGoal {
 
-    public AttackCreeperGoal(MobEntity goalOwner) { super(goalOwner); }
+    public AttackCreeperGoal(MobEntity goalOwner) {
+        super(goalOwner);
+    }
 
     protected void findTargetToAttack() {
         AxisAlignedBB targetableArea = this.getTargetableArea(this.getTargetDistance());

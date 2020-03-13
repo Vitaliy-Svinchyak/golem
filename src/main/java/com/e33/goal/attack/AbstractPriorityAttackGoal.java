@@ -16,7 +16,7 @@ abstract public class AbstractPriorityAttackGoal extends TargetGoal {
     final static Logger LOGGER = LogManager.getLogger();
     LivingEntity targetToAttack;
 
-    private final EntityPredicate entityPredicate = EntityPredicate.DEFAULT.setLineOfSiteRequired();
+    private final EntityPredicate entityPredicate = EntityPredicate.DEFAULT;
 
     AbstractPriorityAttackGoal(MobEntity goalOwner) {
         super(goalOwner, true, false);
