@@ -45,7 +45,7 @@ public class EntityGolemShooter extends AnimalEntity {
     @Override
     protected void registerGoals() {
         // TODO 2 custom priority queue
-        this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
+//        this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
         this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
@@ -80,5 +80,10 @@ public class EntityGolemShooter extends AnimalEntity {
 
     public int getMaxFallHeight() {
         return 3;
+    }
+
+    @Override
+    public EntitySize getSize(Pose poseIn) {
+        return EntitySize.fixed(0.6F, 1.85F);
     }
 }
