@@ -33,7 +33,6 @@ public class EntityRegistry {
         ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(EntityGolemShooter.class));
         EntityType<EntityGolemShooter> entity = EntityType.Builder
                 .create(EntityGolemShooter::new, EntityClassification.CREATURE)
-                .size(1.4F, 2F)
                 .setTrackingRange(128)
                 .build(location.toString());
         entity.setRegistryName(location);
