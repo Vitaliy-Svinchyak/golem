@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class GolemShooterRegistry {
+public class EntityRegistry {
     private final static Logger LOGGER = LogManager.getLogger();
     private static List<EntityType> entities = Lists.newArrayList();
     public static final EntityType<EntityGolemShooter> GOLEM = createGolem();
