@@ -59,7 +59,7 @@ public class E33 {
     public void renderWorldLastEvent(RenderWorldLastEvent event) {
         // TODO prevent HashMap null exception
 //        E33.renderer.pathfinding.render(50);
-//        E33.dangerousZoneDebugRenderer.render(50);
+        E33.dangerousZoneDebugRenderer.render(50);
     }
 
     @SubscribeEvent

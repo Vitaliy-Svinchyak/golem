@@ -2,12 +2,15 @@ package com.e33.client.model;
 
 import com.e33.entity.EntityGolemShooter;
 import net.minecraft.client.renderer.entity.model.EntityModel;
+import net.minecraft.client.renderer.entity.model.IHasArm;
+import net.minecraft.client.renderer.entity.model.IHasHead;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
+import net.minecraft.util.HandSide;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<T> {
+public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<T> implements IHasArm, IHasHead {
     private final RendererModel golem;
     private final RendererModel legs;
     private final RendererModel right;
@@ -264,6 +267,16 @@ public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<
 
     private void animateFalling() {
 
+    }
+
+    @Override
+    public void postRenderArm(float v, HandSide handSide) {
+
+    }
+
+    @Override
+    public RendererModel func_205072_a() {
+        return null;
     }
 
     @OnlyIn(Dist.CLIENT)

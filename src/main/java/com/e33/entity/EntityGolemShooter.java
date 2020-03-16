@@ -5,15 +5,23 @@ import com.e33.goal.attack.*;
 import com.e33.core.ModSounds;
 import com.e33.goal.ShootBadGuysGoal;
 import com.e33.goal.move.DangerousZone;
+import com.e33.init.BlockRegistry;
 import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 // TODO 2 implement IRangedAttackMob?
 public class EntityGolemShooter extends AnimalEntity {
@@ -85,5 +93,13 @@ public class EntityGolemShooter extends AnimalEntity {
     @Override
     public EntitySize getSize(Pose poseIn) {
         return EntitySize.fixed(0.6F, 1.85F);
+    }
+
+    @Nullable
+    public ILivingEntityData onInitialSpawn(IWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
+        spawnDataIn = super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
+
+        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(BlockRegistry.stickItem));
+        return spawnDataIn;
     }
 }

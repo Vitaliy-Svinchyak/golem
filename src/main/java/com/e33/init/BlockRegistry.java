@@ -8,20 +8,15 @@ import net.minecraft.block.material.Material;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class BlockRegistry {
-    private final static Logger LOGGER = LogManager.getLogger();
     private final static Block stickBlock = new ItemDangerousStick(Block.Properties.create(Material.MISCELLANEOUS).doesNotBlockMovement().lightValue(14).sound(SoundType.WOOD)).setRegistryName(ItemDangerousStick.registryName);
-    private final static Item stickItem = new BlockItem(stickBlock, (new Item.Properties()).group(ItemGroup.DECORATIONS)).setRegistryName(ItemDangerousStick.registryName);
+    public final static Item stickItem = new BlockItem(stickBlock, (new Item.Properties()).group(ItemGroup.DECORATIONS)).setRegistryName(ItemDangerousStick.registryName);
 
     @SubscribeEvent
     public static void registerBlock(RegistryEvent.Register<Block> event) {
