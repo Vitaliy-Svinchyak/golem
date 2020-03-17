@@ -1,6 +1,6 @@
 package com.e33.goal.attack;
 
-import com.e33.entity.EntityGolemShooter;
+import com.e33.entity.ShootyEntity;
 import com.e33.fight.ShootExpectations;
 import net.minecraft.entity.EntityPredicate;
 import net.minecraft.entity.LivingEntity;
@@ -30,7 +30,7 @@ abstract public class AbstractPriorityAttackGoal extends TargetGoal {
 
     boolean canShoot(MobEntity mob) {
         // TODO 2 custom canSee to check not only eyes to eyes. But eyes to legs/arms too. But only if first check returns 0 enemies in district
-        EntityGolemShooter goalOwner = (EntityGolemShooter) this.goalOwner;
+        ShootyEntity goalOwner = (ShootyEntity) this.goalOwner;
         // func_213344_a - canTarget
         return this.goalOwner.func_213344_a(mob, this.entityPredicate) && ShootExpectations.shouldAttack(mob, this.goalOwner) && goalOwner.avoidPeacefulCreaturesGoal.bulletPathIsClear(mob);
     }

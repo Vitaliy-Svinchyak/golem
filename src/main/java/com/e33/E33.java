@@ -1,31 +1,16 @@
 package com.e33;
 
 import com.e33.client.renderer.RendererBullet;
-import com.e33.client.renderer.RendererGolemShooter;
+import com.e33.client.renderer.ShootyRenderer;
 import com.e33.client.util.AnimationStateListener;
 import com.e33.debug.DangerousZoneDebugRenderer;
 import com.e33.entity.BulletEntity;
-import com.e33.entity.EntityGolemShooter;
-import com.e33.item.ItemDangerousStick;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.TorchBlock;
-import net.minecraft.block.material.Material;
+import com.e33.entity.ShootyEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.debug.DebugRenderer;
-import net.minecraft.client.renderer.model.ModelResourceLocation;
 
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.WallOrFloorItem;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.BusBuilder;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -35,7 +20,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import net.minecraft.util.registry.Registry;
 
 @Mod(E33.MOD_ID)
 public class E33 {
@@ -56,7 +40,7 @@ public class E33 {
     }
 
     private void setup(final FMLCommonSetupEvent event) {
-        RenderingRegistry.registerEntityRenderingHandler(EntityGolemShooter.class, RendererGolemShooter::new);
+        RenderingRegistry.registerEntityRenderingHandler(ShootyEntity.class, ShootyRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(BulletEntity.class, RendererBullet::new);
     }
 

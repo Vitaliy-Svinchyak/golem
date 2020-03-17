@@ -2,7 +2,7 @@ package com.e33.goal;
 
 import com.e33.E33;
 import com.e33.entity.BulletEntity;
-import com.e33.entity.EntityGolemShooter;
+import com.e33.entity.ShootyEntity;
 import com.e33.event.NewTargetEvent;
 import com.e33.event.NoTargetEvent;
 import com.e33.fight.ShootExpectations;
@@ -23,14 +23,14 @@ import java.util.Random;
 public class ShootBadGuysGoal extends Goal {
     public final static Logger LOGGER = LogManager.getLogger();
 
-    private final EntityGolemShooter entity;
+    private final ShootyEntity entity;
     private MobEntity lastTarget = null;
     private static final Random random = new Random();
     private int attackStep;
     private int ticksToNextAttack;
     private int bulletsToShoot = -1;
 
-    public ShootBadGuysGoal(EntityGolemShooter entity) {
+    public ShootBadGuysGoal(ShootyEntity entity) {
         this.entity = entity;
         this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
     }

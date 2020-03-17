@@ -1,6 +1,6 @@
 package com.e33.util.mobComparator;
 
-import com.e33.entity.EntityGolemShooter;
+import com.e33.entity.ShootyEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
@@ -49,12 +49,12 @@ public class SkeletonComparator implements Comparator<SkeletonEntity> {
             hazardPoints += 1;
         }
 
-        if (mob.getAttackTarget() instanceof EntityGolemShooter) {
+        if (mob.getAttackTarget() instanceof ShootyEntity) {
             hazardPoints += 10;
         }
 
         LivingEntity target = mob.getAttackTarget();
-        if (target instanceof EntityGolemShooter || target instanceof IronGolemEntity || target instanceof AbstractVillagerEntity) {
+        if (target instanceof ShootyEntity || target instanceof IronGolemEntity || target instanceof AbstractVillagerEntity) {
             hazardPoints += 10;
         }
 

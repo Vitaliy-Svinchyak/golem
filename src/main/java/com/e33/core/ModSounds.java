@@ -8,11 +8,11 @@ import net.minecraftforge.registries.ObjectHolder;
 
 @ObjectHolder(E33.MOD_ID)
 public class ModSounds {
-    public static SoundEvent ENTITY_GOLEM_HURT = null;
+    public static SoundEvent SHOOTY_HURT = null;
 
     public static void registerSounds(IForgeRegistry<SoundEvent> registry) {
-        ENTITY_GOLEM_HURT = create("entity_golem_hurt");
-        registry.register(ENTITY_GOLEM_HURT);
+        SHOOTY_HURT = create("entity_shooty_hurt");
+        registry.register(SHOOTY_HURT);
     }
 
     private static SoundEvent create(String soundNameIn) {

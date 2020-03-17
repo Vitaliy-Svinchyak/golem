@@ -14,7 +14,7 @@ issueTrackerURL="http://my.issue.tracker/" #optional
 [[mods]] #mandatory
     modId="e33" #mandatory
     version="${file.jarVersion}" #mandatory
-    displayName="Golem shooter" #mandatory
+    displayName="Shooty" #mandatory
     logoFile="e33.png" #optional
     description='''I am chaos.'''
 

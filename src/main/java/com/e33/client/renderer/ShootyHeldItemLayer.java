@@ -1,7 +1,7 @@
 package com.e33.client.renderer;
 
-import com.e33.client.model.SpaceMarineModel;
-import com.e33.entity.EntityGolemShooter;
+import com.e33.client.model.ShootyModel;
+import com.e33.entity.ShootyEntity;
 import com.e33.item.ItemDangerousStick;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
@@ -17,14 +17,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @OnlyIn(Dist.CLIENT)
-public class GolemHeldItemLayer<T extends LivingEntity> extends LayerRenderer<EntityGolemShooter, SpaceMarineModel<EntityGolemShooter>> {
+public class ShootyHeldItemLayer<T extends LivingEntity> extends LayerRenderer<ShootyEntity, ShootyModel<ShootyEntity>> {
     private final static Logger LOGGER = LogManager.getLogger();
 
-    public GolemHeldItemLayer(IEntityRenderer<EntityGolemShooter, SpaceMarineModel<EntityGolemShooter>> renderer) {
+    public ShootyHeldItemLayer(IEntityRenderer<ShootyEntity, ShootyModel<ShootyEntity>> renderer) {
         super(renderer);
     }
 
-    public void render(EntityGolemShooter entityIn, float p_212842_2_, float p_212842_3_, float p_212842_4_, float p_212842_5_, float p_212842_6_, float p_212842_7_, float p_212842_8_) {
+    public void render(ShootyEntity entityIn, float p_212842_2_, float p_212842_3_, float p_212842_4_, float p_212842_5_, float p_212842_6_, float p_212842_7_, float p_212842_8_) {
         ItemStack itemstack = entityIn.getHeldItemMainhand();
         if (itemstack.isEmpty()) {
             return;

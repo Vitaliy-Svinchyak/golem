@@ -1,16 +1,13 @@
 package com.e33.entity;
 
-import com.e33.E33;
 import com.e33.goal.attack.*;
 import com.e33.core.ModSounds;
 import com.e33.goal.ShootBadGuysGoal;
-import com.e33.goal.move.DangerousZone;
 import com.e33.init.BlockRegistry;
 import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
@@ -24,12 +21,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 // TODO 2 implement IRangedAttackMob?
-public class EntityGolemShooter extends AnimalEntity {
+public class ShootyEntity extends AnimalEntity {
 
     public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesHelper(this);
 
-    public EntityGolemShooter(EntityType<? extends EntityGolemShooter> golem, World world) {
-        super(golem, world);
+    public ShootyEntity(EntityType<? extends ShootyEntity> shooty, World world) {
+        super(shooty, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
     }
@@ -41,7 +38,7 @@ public class EntityGolemShooter extends AnimalEntity {
     }
 
     @Override
-    public EntityGolemShooter createChild(@Nonnull AgeableEntity ageable) {
+    public ShootyEntity createChild(@Nonnull AgeableEntity ageable) {
         return null;
     }
 
@@ -83,7 +80,7 @@ public class EntityGolemShooter extends AnimalEntity {
     }
 
     protected SoundEvent getHurtSound(DamageSource damageSourceIn) {
-        return ModSounds.ENTITY_GOLEM_HURT;
+        return ModSounds.SHOOTY_HURT;
     }
 
     public int getMaxFallHeight() {

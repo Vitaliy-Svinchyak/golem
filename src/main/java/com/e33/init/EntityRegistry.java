@@ -1,7 +1,7 @@
 package com.e33.init;
 
 import com.e33.entity.BulletEntity;
-import com.e33.entity.EntityGolemShooter;
+import com.e33.entity.ShootyEntity;
 import com.e33.E33;
 import com.e33.core.ModSounds;
 import com.google.common.base.CaseFormat;
@@ -26,13 +26,13 @@ import java.util.List;
 public class EntityRegistry {
     private final static Logger LOGGER = LogManager.getLogger();
     private static List<EntityType> entities = Lists.newArrayList();
-    public static final EntityType<EntityGolemShooter> GOLEM = createGolem();
+    public static final EntityType<ShootyEntity> SHOOTY = createShooty();
     public static final EntityType<BulletEntity> BULLET = createBulletEntity();
 
-    private static <T extends AnimalEntity> EntityType<EntityGolemShooter> createGolem() {
-        ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(EntityGolemShooter.class));
-        EntityType<EntityGolemShooter> entity = EntityType.Builder
-                .create(EntityGolemShooter::new, EntityClassification.CREATURE)
+    private static <T extends AnimalEntity> EntityType<ShootyEntity> createShooty() {
+        ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(ShootyEntity.class));
+        EntityType<ShootyEntity> entity = EntityType.Builder
+                .create(ShootyEntity::new, EntityClassification.CREATURE)
                 .setTrackingRange(128)
                 .build(location.toString());
         entity.setRegistryName(location);
@@ -70,7 +70,7 @@ public class EntityRegistry {
         for (EntityType entity : entities) {
             Preconditions.checkNotNull(entity.getRegistryName(), "registryName");
             event.getRegistry().register(entity);
-            EntitySpawnPlacementRegistry.register(entity, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, EntityGolemShooter::func_223316_b);
+            EntitySpawnPlacementRegistry.register(entity, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, ShootyEntity::func_223316_b);
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.e33.goal.attack;
 
-import com.e33.entity.EntityGolemShooter;
+import com.e33.entity.ShootyEntity;
 import com.google.common.collect.Lists;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -31,7 +31,7 @@ public class AvoidPeacefulCreaturesHelper {
         this.peacefulCreatures = Lists.newArrayList();
 
         AxisAlignedBB targetableArea = this.getTargetableArea(this.goalOwner.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue());
-        List<Class<? extends LivingEntity>> avoid = Lists.newArrayList(AnimalEntity.class, VillagerEntity.class, EntityGolemShooter.class, GolemEntity.class, BatEntity.class, PlayerEntity.class);
+        List<Class<? extends LivingEntity>> avoid = Lists.newArrayList(AnimalEntity.class, VillagerEntity.class, ShootyEntity.class, GolemEntity.class, BatEntity.class, PlayerEntity.class);
 
         for (Class<? extends LivingEntity> mobClass : avoid) {
             List<LivingEntity> entities = this.goalOwner.world.getEntitiesWithinAABB(mobClass, targetableArea, EntityPredicates.NOT_SPECTATING);

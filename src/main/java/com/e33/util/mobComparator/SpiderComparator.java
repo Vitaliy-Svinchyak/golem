@@ -1,6 +1,6 @@
 package com.e33.util.mobComparator;
 
-import com.e33.entity.EntityGolemShooter;
+import com.e33.entity.ShootyEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -48,7 +48,7 @@ public class SpiderComparator implements Comparator<SpiderEntity> {
         }
 
         LivingEntity target = mob.getAttackTarget();
-        if (target instanceof EntityGolemShooter || target instanceof IronGolemEntity || target instanceof AbstractVillagerEntity) {
+        if (target instanceof ShootyEntity || target instanceof IronGolemEntity || target instanceof AbstractVillagerEntity) {
             hazardPoints += 10;
         }
 

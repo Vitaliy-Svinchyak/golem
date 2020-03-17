@@ -1,21 +1,19 @@
 package com.e33.client.model;
 
 import com.e33.client.util.AnimationStateListener;
-import com.e33.entity.EntityGolemShooter;
+import com.e33.entity.ShootyEntity;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.IHasArm;
 import net.minecraft.client.renderer.entity.model.IHasHead;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
 import net.minecraft.util.HandSide;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<T> implements IHasArm, IHasHead {
+public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implements IHasArm, IHasHead {
     private final static Logger LOGGER = LogManager.getLogger();
-    private final RendererModel golem;
+    private final RendererModel shooty;
     private final RendererModel legs;
     private final RendererModel right;
     private final RendererModel step;
@@ -42,16 +40,16 @@ public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<
     private final RendererModel cup4;
     private final RendererModel head;
 
-    public SpaceMarineModel() {
+    public ShootyModel() {
         textureWidth = 64;
         textureHeight = 64;
 
-        golem = new RendererModel(this);
-        golem.setRotationPoint(0.0F, 19.0F, 0.0F);
+        shooty = new RendererModel(this);
+        shooty.setRotationPoint(0.0F, 19.0F, 0.0F);
 
         legs = new RendererModel(this);
         legs.setRotationPoint(0.0F, 0.0F, 0.0F);
-        golem.addChild(legs);
+        shooty.addChild(legs);
 
         right = new RendererModel(this);
         right.setRotationPoint(-0.3F, 0.0F, -0.4F);
@@ -138,7 +136,7 @@ public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<
         body = new RendererModel(this);
         body.setRotationPoint(0.0F, 0.0F, 0.0F);
         setRotationAngle(body, 0.0524F, 0.0F, 0.0F);
-        golem.addChild(body);
+        shooty.addChild(body);
 
         hips = new RendererModel(this);
         hips.setRotationPoint(0.0F, 0.0F, 0.0F);
@@ -172,7 +170,7 @@ public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<
         arms = new RendererModel(this);
         arms.setRotationPoint(0.0F, -0.3F, 3.0F);
         setRotationAngle(arms, 0.1745F, 0.0F, 0.0F);
-        golem.addChild(arms);
+        shooty.addChild(arms);
 
         right2 = new RendererModel(this);
         right2.setRotationPoint(0.0F, 0.0F, 0.0F);
@@ -233,7 +231,7 @@ public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<
         head = new RendererModel(this);
         head.setRotationPoint(0.0F, 0.0F, 0.0F);
         setRotationAngle(head, 0.0349F, 0.0F, 0.0F);
-        golem.addChild(head);
+        shooty.addChild(head);
         head.cubeList.add(new ModelBox(head, 14, 28, -1.4F, -23.0F, -1.1F, 3, 3, 3, 0.0F, false));
         head.cubeList.add(new ModelBox(head, 41, 41, -0.9F, -23.3F, -1.2F, 2, 1, 3, 0.0F, false));
         head.cubeList.add(new ModelBox(head, 26, 50, 0.8F, -22.6F, -0.5F, 1, 2, 2, 0.0F, false));
@@ -242,12 +240,12 @@ public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<
     }
 
     @Override
-    public void render(EntityGolemShooter entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+    public void render(ShootyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         scale = 0.08F;
-        golem.render(scale);
+        shooty.render(scale);
     }
 
-    public void setRotationAngles(EntityGolemShooter entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+    public void setRotationAngles(ShootyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
 
     }
 
