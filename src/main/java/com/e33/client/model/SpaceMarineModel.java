@@ -1,5 +1,6 @@
 package com.e33.client.model;
 
+import com.e33.client.util.AnimationStateListener;
 import com.e33.entity.EntityGolemShooter;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.IHasArm;
@@ -9,8 +10,11 @@ import net.minecraft.client.renderer.model.ModelBox;
 import net.minecraft.util.HandSide;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<T> implements IHasArm, IHasHead {
+    private final static Logger LOGGER = LogManager.getLogger();
     private final RendererModel golem;
     private final RendererModel legs;
     private final RendererModel right;
@@ -248,7 +252,7 @@ public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<
     }
 
     public void setLivingAnimations(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
-
+        LOGGER.info(AnimationStateListener.getAnimationState(entity));
     }
 
     private void setRotationAngle(RendererModel modelRenderer, float x, float y, float z) {
@@ -277,14 +281,5 @@ public class SpaceMarineModel<T extends EntityGolemShooter> extends EntityModel<
     @Override
     public RendererModel func_205072_a() {
         return null;
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static enum ArmPose {
-        DEFAULT,
-        SHOOT;
-
-        private ArmPose() {
-        }
     }
 }

@@ -53,7 +53,7 @@ public class EntityGolemShooter extends AnimalEntity {
     @Override
     protected void registerGoals() {
         // TODO 2 custom priority queue
-//        this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
+        this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
         this.targetSelector.addGoal(5, new AttackSpiderGoal(this));

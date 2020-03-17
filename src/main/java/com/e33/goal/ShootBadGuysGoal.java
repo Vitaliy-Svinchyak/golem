@@ -1,7 +1,10 @@
 package com.e33.goal;
 
+import com.e33.E33;
 import com.e33.entity.BulletEntity;
 import com.e33.entity.EntityGolemShooter;
+import com.e33.event.NewTargetEvent;
+import com.e33.event.NoTargetEvent;
 import com.e33.fight.ShootExpectations;
 import com.e33.fight.ShootingNavigator;
 import net.minecraft.entity.LivingEntity;
@@ -18,13 +21,13 @@ import java.util.EnumSet;
 import java.util.Random;
 
 public class ShootBadGuysGoal extends Goal {
-    private final static Logger LOGGER = LogManager.getLogger();
+    public final static Logger LOGGER = LogManager.getLogger();
 
     private final EntityGolemShooter entity;
     private MobEntity lastTarget = null;
     private static final Random random = new Random();
     private int attackStep;
-    private int attackTime;
+    private int ticksToNextAttack;
     private int bulletsToShoot = -1;
 
     public ShootBadGuysGoal(EntityGolemShooter entity) {
@@ -51,35 +54,39 @@ public class ShootBadGuysGoal extends Goal {
      * Keep ticking a continuous task that has already been started
      */
     public void tick() {
-        this.attackTime--;
-        if (this.attackTime > 0) {
+        this.ticksToNextAttack--;
+        if (this.ticksToNextAttack > 0) {
             return;
         }
 
         MobEntity attackTarget = (MobEntity) this.entity.getAttackTarget();
         if (this.lastTarget == null) {
             this.lastTarget = attackTarget;
+            this.newTarget(attackTarget);
         }
 
         if (!this.entity.avoidPeacefulCreaturesGoal.bulletPathIsClear(attackTarget)) {
             this.entity.setAttackTarget(null);
+            this.noTarget();
+            return;
+        }
+
+        if (attackTarget == null) {
             return;
         }
 
         if (!this.lastTarget.equals(attackTarget)) {
             ShootExpectations.removeFromBusyList(this.lastTarget);
             this.lastTarget = attackTarget;
-        }
 
-
-        if (attackTarget == null || !this.entity.getEntitySenses().canSee(attackTarget) || !attackTarget.isAlive()) {
+            this.newTarget(attackTarget);
             return;
         }
 
         ShootExpectations.markAsBusy(attackTarget, this.entity);
         boolean mustBeDead = true;
-        if (this.attackStep == 0 && this.attackTime <= 0) {
-            this.setBulletsToShoot(attackTarget);
+        if (this.attackStep == 0 && this.ticksToNextAttack <= 0) {
+//            this.setBulletsToShoot(attackTarget);
 
             if (this.bulletsToShoot > 1) {
                 this.bulletsToShoot = 1;
@@ -87,12 +94,12 @@ public class ShootBadGuysGoal extends Goal {
             }
         }
 
-        if (this.attackTime <= 0) {
+        if (this.ticksToNextAttack <= 0) {
             this.attackStep++;
-            this.attackTime = 10;
+            this.ticksToNextAttack = 10;
 
             if (this.attackStep > this.bulletsToShoot) {
-                this.attackTime = 20;
+                this.ticksToNextAttack = 20;
                 this.attackStep = 0;
             }
 
@@ -108,8 +115,6 @@ public class ShootBadGuysGoal extends Goal {
                 this.entity.setAttackTarget(null);
             }
         }
-
-        this.entity.getLookController().setLookPositionWithEntity(attackTarget, 5.0F, 5.0F);
     }
 
     private void setBulletsToShoot(MobEntity attackTarget) {
@@ -128,5 +133,17 @@ public class ShootBadGuysGoal extends Goal {
         BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, attackPoint.x, attackPoint.y, attackPoint.z, attackTarget);
         this.entity.world.addEntity(bullet);
         this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
+    }
+
+    private void newTarget(LivingEntity attackTarget) {
+        // Time for animation
+        this.entity.getLookController().setLookPositionWithEntity(attackTarget, 1.0F, 1.0F);
+        E33.internalEventBus.post(new NewTargetEvent(this.entity, attackTarget));
+        this.ticksToNextAttack = 20;
+    }
+
+    private void noTarget() {
+        // Time for animation
+        E33.internalEventBus.post(new NoTargetEvent(this.entity));
     }
 }
