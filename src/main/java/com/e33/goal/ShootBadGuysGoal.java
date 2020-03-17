@@ -29,6 +29,7 @@ public class ShootBadGuysGoal extends Goal {
     private int attackStep;
     private int ticksToNextAttack;
     private int bulletsToShoot = -1;
+    private String lastEvent = "no";
 
     public ShootBadGuysGoal(ShootyEntity entity) {
         this.entity = entity;
@@ -60,6 +61,20 @@ public class ShootBadGuysGoal extends Goal {
         }
 
         MobEntity attackTarget = (MobEntity) this.entity.getAttackTarget();
+        if (attackTarget != null) {
+            if (this.lastEvent.equals("no")) {
+                LOGGER.info("aim");
+                this.newTarget(attackTarget);
+                this.lastEvent = "aim";
+            } else {
+                LOGGER.info("no");
+                this.noTarget();
+                this.lastEvent = "no";
+            }
+
+            return;
+        }
+
         if (this.lastTarget == null) {
             this.lastTarget = attackTarget;
             this.newTarget(attackTarget);
@@ -145,5 +160,6 @@ public class ShootBadGuysGoal extends Goal {
     private void noTarget() {
         // Time for animation
         E33.internalEventBus.post(new NoTargetEvent(this.entity));
+        this.ticksToNextAttack = 20;
     }
 }

@@ -1,14 +1,12 @@
-package com.e33.client.model;
+package com.e33.client.animation.animatedModels;
 
-import com.e33.client.animation.ShootyAnimator;
+import com.e33.client.model.ShootyModelInterface;
 import com.e33.entity.ShootyEntity;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
 
-public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implements ShootyModelInterface {
-    private final ShootyAnimator animator;
-
+public class ShootyModelAimed<T extends ShootyEntity> extends EntityModel<T> implements ShootyModelInterface {
     public RendererModel shooty;
     public RendererModel legs;
     public RendererModel right;
@@ -36,20 +34,21 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
     public RendererModel cup4;
     public RendererModel head;
 
-    public ShootyModel() {
+    public ShootyModelAimed() {
         textureWidth = 64;
         textureHeight = 64;
 
         shooty = new RendererModel(this);
         shooty.setRotationPoint(0.0F, 19.0F, 0.0F);
+        setRotationAngle(shooty, 0.0F, 0.0873F, 0.0F);
 
         legs = new RendererModel(this);
         legs.setRotationPoint(0.0F, 0.0F, 0.0F);
         shooty.addChild(legs);
 
         right = new RendererModel(this);
-        right.setRotationPoint(-0.3F, 0.0F, -0.4F);
-        setRotationAngle(right, 0.0F, 0.2618F, 0.0F);
+        right.setRotationPoint(-0.3F, 0.0F, 0.3F);
+        setRotationAngle(right, 0.0F, 1.1345F, 0.0F);
         legs.addChild(right);
 
         step = new RendererModel(this);
@@ -89,8 +88,8 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
         cup.cubeList.add(new ModelBox(cup, 43, 4, -3.2F, -6.4F, -3.1F, 3, 2, 2, 0.0F, false));
 
         left = new RendererModel(this);
-        left.setRotationPoint(0.0F, 0.0F, -0.6F);
-        setRotationAngle(left, 0.0F, -0.2618F, 0.0F);
+        left.setRotationPoint(0.0F, 0.0F, -1.1F);
+        setRotationAngle(left, 0.0F, 0.4363F, 0.0F);
         legs.addChild(left);
 
         step2 = new RendererModel(this);
@@ -131,7 +130,7 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
 
         body = new RendererModel(this);
         body.setRotationPoint(0.0F, 0.0F, 0.0F);
-        setRotationAngle(body, 0.0524F, 0.0F, 0.0F);
+        setRotationAngle(body, 0.0524F, 0.9599F, 0.0F);
         shooty.addChild(body);
 
         hips = new RendererModel(this);
@@ -164,37 +163,37 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
         chest.cubeList.add(new ModelBox(chest, 24, 39, -2.0F, -19.1F, 2.5F, 4, 4, 1, 0.0F, false));
 
         arms = new RendererModel(this);
-        arms.setRotationPoint(0.0F, -0.3F, 3.4F);
+        arms.setRotationPoint(0.0F, -0.3F, 3.0F);
         setRotationAngle(arms, 0.1745F, 0.0F, 0.0F);
         body.addChild(arms);
 
         right2 = new RendererModel(this);
-        right2.setRotationPoint(0.0F, 0.0F, 0.0F);
+        right2.setRotationPoint(0.0F, 0.0F, 2.1F);
         arms.addChild(right2);
 
         shoulder = new RendererModel(this);
         shoulder.setRotationPoint(0.0F, 0.0F, 0.0F);
-        setRotationAngle(shoulder, -0.2618F, 0.0F, 0.0F);
+        setRotationAngle(shoulder, -0.6109F, -0.2618F, 0.4363F);
         right2.addChild(shoulder);
-        shoulder.cubeList.add(new ModelBox(shoulder, 24, 10, -6.2F, -19.4F, -6.5F, 3, 2, 4, 0.0F, false));
-        shoulder.cubeList.add(new ModelBox(shoulder, 51, 1, -6.5F, -18.9F, -6.6F, 1, 1, 4, 0.0F, false));
-        shoulder.cubeList.add(new ModelBox(shoulder, 8, 34, -5.5F, -19.7F, -6.6F, 2, 1, 4, 0.0F, false));
-        shoulder.cubeList.add(new ModelBox(shoulder, 37, 21, -5.9F, -17.9F, -6.0F, 2, 3, 3, 0.0F, false));
-        shoulder.cubeList.add(new ModelBox(shoulder, 44, 13, -5.91F, -15.9F, -5.5F, 2, 3, 2, 0.0F, false));
-        shoulder.cubeList.add(new ModelBox(shoulder, 0, 47, -6.1F, -17.9F, -5.0F, 2, 5, 1, 0.0F, false));
-        shoulder.cubeList.add(new ModelBox(shoulder, 34, 52, -6.2F, -16.9F, -6.1F, 1, 1, 3, 0.0F, false));
+        shoulder.cubeList.add(new ModelBox(shoulder, 24, 10, -13.8F, -15.0F, -8.8F, 3, 2, 4, 0.0F, false));
+        shoulder.cubeList.add(new ModelBox(shoulder, 51, 1, -14.1F, -14.5F, -8.9F, 1, 1, 4, 0.0F, false));
+        shoulder.cubeList.add(new ModelBox(shoulder, 8, 34, -13.1F, -15.3F, -8.9F, 2, 1, 4, 0.0F, false));
+        shoulder.cubeList.add(new ModelBox(shoulder, 37, 21, -13.5F, -13.5F, -8.3F, 2, 3, 3, 0.0F, false));
+        shoulder.cubeList.add(new ModelBox(shoulder, 44, 13, -13.51F, -11.5F, -7.8F, 2, 3, 2, 0.0F, false));
+        shoulder.cubeList.add(new ModelBox(shoulder, 0, 47, -13.7F, -13.5F, -7.3F, 2, 5, 1, 0.0F, false));
+        shoulder.cubeList.add(new ModelBox(shoulder, 34, 52, -13.8F, -12.5F, -8.4F, 1, 1, 3, 0.0F, false));
 
         preshoulder = new RendererModel(this);
         preshoulder.setRotationPoint(0.0F, 0.0F, 0.0F);
-        setRotationAngle(preshoulder, 0.0F, -0.6981F, 0.0873F);
+        setRotationAngle(preshoulder, 0.0873F, -1.0472F, 0.0F);
         right2.addChild(preshoulder);
-        preshoulder.cubeList.add(new ModelBox(preshoulder, 17, 2, -6.5F, -13.9F, -2.4F, 2, 2, 6, 0.0F, false));
-        preshoulder.cubeList.add(new ModelBox(preshoulder, 9, 22, -6.8F, -13.4F, -1.4F, 2, 1, 5, 0.0F, false));
+        preshoulder.cubeList.add(new ModelBox(preshoulder, 17, 2, -7.5F, -14.9F, -1.7F, 2, 2, 6, 0.0F, false));
+        preshoulder.cubeList.add(new ModelBox(preshoulder, 9, 22, -7.8F, -14.4F, -1.6F, 2, 1, 5, 0.0F, false));
 
         cup3 = new RendererModel(this);
         cup3.setRotationPoint(0.0F, 0.0F, 0.0F);
         right2.addChild(cup3);
-        cup3.cubeList.add(new ModelBox(cup3, 0, 2, -5.8F, -13.7F, -1.1F, 1, 1, 1, 0.0F, false));
+        cup3.cubeList.add(new ModelBox(cup3, 0, 2, -6.6F, -14.9F, -4.5F, 1, 1, 1, 0.0F, false));
 
         left2 = new RendererModel(this);
         left2.setRotationPoint(10.0F, 0.0F, 0.0F);
@@ -214,15 +213,16 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
 
         preshoulder2 = new RendererModel(this);
         preshoulder2.setRotationPoint(0.0F, 0.0F, 0.0F);
-        setRotationAngle(preshoulder2, 0.3491F, 0.3491F, -0.0873F);
+        setRotationAngle(preshoulder2, -0.2618F, -0.1745F, 0.0F);
         left2.addChild(preshoulder2);
-        preshoulder2.cubeList.add(new ModelBox(preshoulder2, 14, 14, -4.3F, -14.5F, -3.1F, 2, 2, 6, 0.0F, false));
-        preshoulder2.cubeList.add(new ModelBox(preshoulder2, 0, 20, -4.0F, -14.0F, -2.1F, 2, 1, 5, 0.0F, false));
+        preshoulder2.cubeList.add(new ModelBox(preshoulder2, 14, 14, -6.4F, -13.6F, -10.3F, 2, 2, 6, 0.0F, false));
+        preshoulder2.cubeList.add(new ModelBox(preshoulder2, 0, 20, -6.1F, -13.1F, -9.3F, 2, 1, 5, 0.0F, false));
 
         cup4 = new RendererModel(this);
         cup4.setRotationPoint(0.0F, 0.0F, 0.0F);
+        setRotationAngle(cup4, -0.1745F, 0.0F, 0.0F);
         left2.addChild(cup4);
-        cup4.cubeList.add(new ModelBox(cup4, 0, 0, -5.4F, -13.7F, -1.1F, 1, 1, 1, 0.0F, false));
+        cup4.cubeList.add(new ModelBox(cup4, 0, 0, -5.5F, -13.3F, -4.2F, 1, 1, 1, 0.0F, false));
 
         head = new RendererModel(this);
         head.setRotationPoint(0.0F, 0.0F, 0.0F);
@@ -233,25 +233,14 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
         head.cubeList.add(new ModelBox(head, 26, 50, 0.8F, -22.6F, -0.5F, 1, 2, 2, 0.0F, false));
         head.cubeList.add(new ModelBox(head, 9, 39, -0.9F, -22.6F, 1.1F, 2, 2, 1, 0.0F, false));
         head.cubeList.add(new ModelBox(head, 49, 29, -1.6F, -22.6F, -0.6F, 1, 2, 2, 0.0F, false));
-
-        this.animator = new ShootyAnimator(this);
     }
 
     @Override
-    public void render(ShootyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-        scale = 0.08F;
-        shooty.render(scale);
+    public void render(ShootyEntity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+        shooty.render(f5);
     }
 
-    public void setRotationAngles(ShootyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-        this.animator.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
-    }
-
-    public void setLivingAnimations(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.animator.setLivingAnimations(entity, limbSwing, limbSwingAmount, partialTick);
-    }
-
-    private void setRotationAngle(RendererModel modelRenderer, float x, float y, float z) {
+    public void setRotationAngle(RendererModel modelRenderer, float x, float y, float z) {
         modelRenderer.rotateAngleX = x;
         modelRenderer.rotateAngleY = y;
         modelRenderer.rotateAngleZ = z;

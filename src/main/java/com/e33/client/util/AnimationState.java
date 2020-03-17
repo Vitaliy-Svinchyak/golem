@@ -4,7 +4,7 @@ public enum AnimationState {
     DEFAULT,
     AIM;
 
-    private AnimationState() {
+    AnimationState() {
 
     }
 }

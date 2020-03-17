@@ -11,22 +11,25 @@ import java.util.UUID;
 
 public class AnimationStateListener {
 
-    private static final Map<UUID, AnimationState> map = new HashMap<>();
+    private static final Map<UUID, AnimationState> animationMap = new HashMap<>();
 
     public static void setup(IEventBus bus) {
         bus.addListener(AnimationStateListener::onNewTarget);
+        bus.addListener(AnimationStateListener::onNoTarget);
     }
 
     private static void onNewTarget(NewTargetEvent event) {
-        AnimationStateListener.map.put(event.getCreature().getUniqueID(), AnimationState.AIM);
+        animationMap.remove(event.getCreature().getUniqueID());
+        animationMap.put(event.getCreature().getUniqueID(), AnimationState.AIM);
     }
 
     private static void onNoTarget(NoTargetEvent event) {
-        AnimationStateListener.map.put(event.getCreature().getUniqueID(), AnimationState.DEFAULT);
+        animationMap.remove(event.getCreature().getUniqueID());
+        animationMap.put(event.getCreature().getUniqueID(), AnimationState.DEFAULT);
     }
 
     public static AnimationState getAnimationState(LivingEntity creature) {
-        AnimationState savedState = AnimationStateListener.map.get(creature.getUniqueID());
+        AnimationState savedState = AnimationStateListener.animationMap.get(creature.getUniqueID());
         if (savedState != null) {
             return savedState;
         }

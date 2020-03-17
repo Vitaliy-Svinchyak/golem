@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 // TODO 2 implement IRangedAttackMob?
+// TODO don't drop weapon when die
 public class ShootyEntity extends AnimalEntity {
 
     public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesHelper(this);
