@@ -4,7 +4,6 @@ import com.e33.client.util.ModelBoxParameters;
 import com.google.common.collect.Lists;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
-import net.minecraft.pathfinding.PathPoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,9 +12,9 @@ import java.util.List;
 
 class AnimationProgression {
     private final static Logger LOGGER = LogManager.getLogger();
-    public final List<Float> xProgression;
-    public final List<Float> yProgression;
-    public final List<Float> zProgression;
+    private List<Float> xProgression;
+    private List<Float> yProgression;
+    private List<Float> zProgression;
 
     private final ProgressionType progressionType;
     private RendererModel rendererModel;
@@ -42,28 +41,48 @@ class AnimationProgression {
         this.originalModelBoxParameters = originalModelBoxParameters;
     }
 
-    static AnimationProgression angle(RendererModel from, RendererModel to, int ticks) {
+    AnimationProgression reverse() {
+        this.reverseList(this.xProgression);
+        this.reverseList(this.yProgression);
+        this.reverseList(this.zProgression);
+
+        return this;
+    }
+
+    private void reverseList(List<Float> list) {
+        for (int i = 0, j = list.size() - 1; i < j; i++) {
+            list.add(i, list.remove(j));
+        }
+    }
+
+    void log() {
+        LOGGER.info(this.xProgression);
+        LOGGER.info(this.yProgression);
+        LOGGER.info(this.zProgression);
+    }
+
+    static AnimationProgression angle(RendererModel from, RendererModel to, int ticks, RendererModel model) {
         List<Float> xProgression = createProgress(from.rotateAngleX, to.rotateAngleX, ticks);
         List<Float> yProgression = createProgress(from.rotateAngleY, to.rotateAngleY, ticks);
         List<Float> zProgression = createProgress(from.rotateAngleZ, to.rotateAngleZ, ticks);
 
-        return new AnimationProgression(from, xProgression, yProgression, zProgression, ProgressionType.RendererModelRotationAngle);
+        return new AnimationProgression(model, xProgression, yProgression, zProgression, ProgressionType.RendererModelRotationAngle);
     }
 
-    static AnimationProgression point(RendererModel from, RendererModel to, int ticks) {
+    static AnimationProgression point(RendererModel from, RendererModel to, int ticks, RendererModel model) {
         List<Float> xProgression = createProgress(from.rotationPointX, to.rotationPointX, ticks);
         List<Float> yProgression = createProgress(from.rotationPointY, to.rotationPointY, ticks);
         List<Float> zProgression = createProgress(from.rotationPointZ, to.rotationPointZ, ticks);
 
-        return new AnimationProgression(from, xProgression, yProgression, zProgression, ProgressionType.RendererModelRotationPoint);
+        return new AnimationProgression(model, xProgression, yProgression, zProgression, ProgressionType.RendererModelRotationPoint);
     }
 
-    static AnimationProgression modelBox(RendererModel from, int ticks, int cubeNumber, ModelBoxParameters fromCube, ModelBoxParameters toCube) {
+    static AnimationProgression modelBox(RendererModel from, int ticks, RendererModel model, int cubeNumber, ModelBoxParameters fromCube, ModelBoxParameters toCube) {
         List<Float> xProgression = createProgress(fromCube.posX, toCube.posX, ticks);
         List<Float> yProgression = createProgress(fromCube.posY, toCube.posY, ticks);
         List<Float> zProgression = createProgress(fromCube.posZ, toCube.posZ, ticks);
 
-        return new AnimationProgression(from, xProgression, yProgression, zProgression, ProgressionType.ModelBoxPosition, cubeNumber, fromCube);
+        return new AnimationProgression(model, xProgression, yProgression, zProgression, ProgressionType.ModelBoxPosition, cubeNumber, fromCube);
     }
 
     void makeProgress() {
