@@ -1,12 +1,15 @@
 package com.e33.client.renderer.item;
 
-import com.e33.client.animation.animationProgression.AnimationProgression;
+import com.e33.client.animation.ShootyWeaponAnimator;
+import com.e33.client.animation.animated.items.AimedWeaponPosition;
+import com.e33.client.animation.animated.items.DefaultWeaponPosition;
+import com.e33.client.animation.animated.items.util.Rotation;
+import com.e33.client.animation.animated.items.util.Translation;
 import com.e33.client.model.ShootyModel;
 import com.e33.client.util.AnimationState;
 import com.e33.client.util.AnimationStateListener;
 import com.e33.entity.ShootyEntity;
 import com.e33.item.ItemDangerousStick;
-import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
@@ -24,13 +27,13 @@ import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
 public class ShootyHeldItemLayer<T extends LivingEntity> extends LayerRenderer<ShootyEntity, ShootyModel<ShootyEntity>> {
-    private final static Logger LOGGER = LogManager.getLogger();
-
-    private List<AnimationProgression> animations = Lists.newArrayList();
+    private final ShootyWeaponAnimator weaponAnimator;
     private AnimationState lastAnimationState = AnimationState.DEFAULT;
+    private final static Logger LOGGER = LogManager.getLogger();
 
     public ShootyHeldItemLayer(IEntityRenderer<ShootyEntity, ShootyModel<ShootyEntity>> renderer) {
         super(renderer);
+        this.weaponAnimator = new ShootyWeaponAnimator();
     }
 
     public void render(ShootyEntity entityIn, float p_212842_2_, float p_212842_3_, float p_212842_4_, float p_212842_5_, float p_212842_6_, float p_212842_7_, float p_212842_8_) {
@@ -40,50 +43,59 @@ public class ShootyHeldItemLayer<T extends LivingEntity> extends LayerRenderer<S
         }
 
         AnimationState animationState = AnimationStateListener.getAnimationState(entityIn);
-        if (this.lastAnimationState == animationState) {
-            for (AnimationProgression animation : this.animations) {
-//                animation.makeProgress();
-            }
-
+        if (this.weaponAnimator.isAnimationComplete() && this.lastAnimationState == animationState) {
+            LOGGER.info("complete " + animationState);
+            this.renderCurrentPose(entityIn);
             return;
         }
 
-        this.animations = Lists.newArrayList();
+        LOGGER.info("animate " + animationState);
+        this.weaponAnimator.animate(entityIn);
+        this.lastAnimationState = animationState;
+    }
+
+    private void renderCurrentPose(ShootyEntity entityIn) {
+        ItemStack itemstack = entityIn.getHeldItemMainhand();
+        if (itemstack.isEmpty()) {
+            return;
+        }
+
+        Item item = itemstack.getItem();
+
+        if (!item.toString().equals(ItemDangerousStick.registryName)) {
+            return;
+        }
 
         GlStateManager.color3f(1.0F, 1.0F, 1.0F);
         GlStateManager.pushMatrix();
-
-        switch (animationState) {
+        switch (AnimationStateListener.getAnimationState(entityIn)) {
             case DEFAULT:
-                this.animateDefaultPose(entityIn, itemstack);
+                this.renderDefaultPose();
                 break;
             case AIM:
-                this.animateAiming(entityIn, itemstack);
+                this.renderAimedPose();
                 break;
         }
 
         Minecraft.getInstance().getFirstPersonRenderer().renderItem(entityIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND);
         GlStateManager.popMatrix();
-
-        this.lastAnimationState = AnimationStateListener.getAnimationState(entityIn);
     }
 
-    private void animateAiming(ShootyEntity entityIn, ItemStack itemstack) {
-        LOGGER.info("aim");
+    private void renderAimedPose() {
+        this.renderPose(AimedWeaponPosition.getTranslations(), AimedWeaponPosition.getRotations());
     }
 
-    private void animateDefaultPose(ShootyEntity entityIn, ItemStack itemstack) {
-        LOGGER.info("default");
-        Item item = itemstack.getItem();
+    private void renderDefaultPose() {
+        this.renderPose(DefaultWeaponPosition.getTranslations(), DefaultWeaponPosition.getRotations());
+    }
 
-        if (item.toString().equals(ItemDangerousStick.registryName)) {
-//            GlStateManager.translatef(2.5F, 0.0F, 0.0F);// to right
-            GlStateManager.translatef(0.3F, 0.65F, -0.45F);
+    private void renderPose(List<Translation> translations, List<Rotation> rotations) {
+        for (Translation translation : translations) {
+            GlStateManager.translatef(translation.x, translation.y, translation.z);
+        }
 
-            GlStateManager.rotatef(-80.0F, 1.0F, 0.0F, 0.0F);
-            GlStateManager.rotatef(70.0F, 0.0F, 1.0F, 0.0F);
-            GlStateManager.rotatef(-90.0F, 0.0F, 0.0F, 1.0F);
-            GlStateManager.rotatef(-20.0F, 0.0F, 1.0F, 0.0F);
+        for (Rotation rotation : rotations) {
+            GlStateManager.rotatef(rotation.angle, rotation.x, rotation.y, rotation.z);
         }
     }
 

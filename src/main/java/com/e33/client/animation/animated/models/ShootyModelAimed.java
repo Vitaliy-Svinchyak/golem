@@ -1,12 +1,11 @@
-package com.e33.client.animation.animatedModels;
+package com.e33.client.animation.animated.models;
 
-import com.e33.client.model.ShootyModelInterface;
 import com.e33.entity.ShootyEntity;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
 
-public class ShootyModelAimed<T extends ShootyEntity> extends EntityModel<T> implements ShootyModelInterface {
+public class ShootyModelAimed<T extends ShootyEntity> extends EntityModel<T> {
     public RendererModel shooty;
     public RendererModel legs;
     public RendererModel right;

@@ -70,6 +70,7 @@ public class ShootBadGuysGoal extends Goal {
                 this.lastEvent = "no";
             }
 
+            this.ticksToNextAttack = 20;
             return;
         }
 

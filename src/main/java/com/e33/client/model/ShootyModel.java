@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
 
-public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implements ShootyModelInterface {
+public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> {
     private final ShootyAnimator animator;
 
     public RendererModel shooty;
