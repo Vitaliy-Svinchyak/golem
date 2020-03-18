@@ -1,6 +1,7 @@
-package com.e33.client.renderer;
+package com.e33.client.renderer.entity;
 
 import com.e33.client.model.ShootyModel;
+import com.e33.client.renderer.item.ShootyHeldItemLayer;
 import com.e33.entity.ShootyEntity;
 import com.e33.E33;
 import net.minecraft.client.renderer.entity.EntityRendererManager;

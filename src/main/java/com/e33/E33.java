@@ -1,7 +1,7 @@
 package com.e33;
 
-import com.e33.client.renderer.RendererBullet;
-import com.e33.client.renderer.ShootyRenderer;
+import com.e33.client.renderer.entity.RendererBullet;
+import com.e33.client.renderer.entity.ShootyRenderer;
 import com.e33.client.util.AnimationStateListener;
 import com.e33.debug.DangerousZoneDebugRenderer;
 import com.e33.entity.BulletEntity;

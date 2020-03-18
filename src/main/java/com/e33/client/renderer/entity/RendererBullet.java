@@ -1,4 +1,4 @@
-package com.e33.client.renderer;
+package com.e33.client.renderer.entity;
 
 import com.e33.E33;
 import net.minecraft.client.Minecraft;
@@ -18,7 +18,6 @@ public class RendererBullet extends SpriteRenderer {
 
     @Override
     protected ResourceLocation getEntityTexture(Entity bulletEntity) {
-        LOGGER.info("getEntityTexture");
         return new ResourceLocation(E33.MOD_ID, "textures/bullet.png");
     }
 }

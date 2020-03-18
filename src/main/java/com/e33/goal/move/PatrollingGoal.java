@@ -46,7 +46,6 @@ public class PatrollingGoal extends RandomWalkingGoal {
     private BlockPos findNearestBlockToPatrol(Class<? extends Block> block) {
         BlockPos creaturePosition = this.creature.getPosition();
         AxisAlignedBB creatureView = new AxisAlignedBB(creaturePosition.getX() - 30, creaturePosition.getY() - 1, creaturePosition.getZ() - 30, creaturePosition.getX() + 30, creaturePosition.getY() + 1, creaturePosition.getZ() + 30);
-        LOGGER.info(creatureView);
         return this.findBlockPosInArea(creatureView, block);
     }
 

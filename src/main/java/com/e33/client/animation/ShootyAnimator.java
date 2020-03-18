@@ -1,8 +1,8 @@
 package com.e33.client.animation;
 
+import com.e33.client.animation.animationProgression.AnimationProgression;
 import com.e33.client.model.ShootyModel;
 import com.e33.client.animation.animatedModels.ShootyModelAimed;
-import com.e33.client.model.ShootyModelInterface;
 import com.e33.client.util.AnimationState;
 import com.e33.client.util.AnimationStateListener;
 import com.e33.client.util.ModelBoxParameters;
@@ -48,7 +48,6 @@ public class ShootyAnimator<T extends ShootyEntity> {
                 this.animateAiming();
                 break;
         }
-        LOGGER.info(this.animations.size());
 
         this.lastAnimationState = AnimationStateListener.getAnimationState(entity);
     }
@@ -74,7 +73,6 @@ public class ShootyAnimator<T extends ShootyEntity> {
         ShootyModelAimed to = new ShootyModelAimed();
 
         animations.add(AnimationProgression.angle(from.shooty, to.shooty, ticksForAnimation, this.model.shooty));
-        animations.get(0).log();
 
         animations.add(AnimationProgression.point(from.right, to.right, ticksForAnimation, this.model.right));
         animations.add(AnimationProgression.angle(from.right, to.right, ticksForAnimation, this.model.right));
@@ -90,61 +88,61 @@ public class ShootyAnimator<T extends ShootyEntity> {
 
         animations.add(AnimationProgression.angle(from.shoulder, to.shoulder, ticksForAnimation, this.model.shoulder));
 
-        animations.add(AnimationProgression.modelBox(from.shoulder, ticksForAnimation, this.model.shoulder, 0,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 0,
                 new ModelBoxParameters(from.shoulder, 24, 10, -6.2F, -19.4F, -6.5F, 3, 2, 4, 0.0F, false),
                 new ModelBoxParameters(from.shoulder, 24, 10, -13.8F, -15.0F, -8.8F, 3, 2, 4, 0.0F, false)
         ));
-        animations.add(AnimationProgression.modelBox(from.shoulder, ticksForAnimation, this.model.shoulder, 1,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 1,
                 new ModelBoxParameters(from.shoulder, 51, 1, -6.5F, -18.9F, -6.6F, 1, 1, 4, 0.0F, false),
                 new ModelBoxParameters(from.shoulder, 51, 1, -14.1F, -14.5F, -8.9F, 1, 1, 4, 0.0F, false)
         ));
-        animations.add(AnimationProgression.modelBox(from.shoulder, ticksForAnimation, this.model.shoulder, 2,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 2,
                 new ModelBoxParameters(from.shoulder, 8, 34, -5.5F, -19.7F, -6.6F, 2, 1, 4, 0.0F, false),
                 new ModelBoxParameters(from.shoulder, 8, 34, -13.1F, -15.3F, -8.9F, 2, 1, 4, 0.0F, false)
         ));
-        animations.add(AnimationProgression.modelBox(from.shoulder, ticksForAnimation, this.model.shoulder, 3,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 3,
                 new ModelBoxParameters(from.shoulder, 37, 21, -5.9F, -17.9F, -6.0F, 2, 3, 3, 0.0F, false),
                 new ModelBoxParameters(from.shoulder, 37, 21, -13.5F, -13.5F, -8.3F, 2, 3, 3, 0.0F, false)
         ));
-        animations.add(AnimationProgression.modelBox(from.shoulder, ticksForAnimation, this.model.shoulder, 4,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 4,
                 new ModelBoxParameters(from.shoulder, 44, 13, -5.91F, -15.9F, -5.5F, 2, 3, 2, 0.0F, false),
                 new ModelBoxParameters(from.shoulder, 44, 13, -13.51F, -11.5F, -7.8F, 2, 3, 2, 0.0F, false)
         ));
-        animations.add(AnimationProgression.modelBox(from.shoulder, ticksForAnimation, this.model.shoulder, 5,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 5,
                 new ModelBoxParameters(from.shoulder, 0, 47, -6.1F, -17.9F, -5.0F, 2, 5, 1, 0.0F, false),
                 new ModelBoxParameters(from.shoulder, 0, 47, -13.7F, -13.5F, -7.3F, 2, 5, 1, 0.0F, false)
         ));
-        animations.add(AnimationProgression.modelBox(from.shoulder, ticksForAnimation, this.model.shoulder, 6,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 6,
                 new ModelBoxParameters(from.shoulder, 34, 52, -6.2F, -16.9F, -6.1F, 1, 1, 3, 0.0F, false),
                 new ModelBoxParameters(from.shoulder, 34, 52, -13.8F, -12.5F, -8.4F, 1, 1, 3, 0.0F, false)
         ));
 
         animations.add(AnimationProgression.angle(from.preshoulder, to.preshoulder, ticksForAnimation, this.model.preshoulder));
-        animations.add(AnimationProgression.modelBox(from.preshoulder, ticksForAnimation, this.model.preshoulder, 0,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.preshoulder, 0,
                 new ModelBoxParameters(from.preshoulder, 17, 2, -6.5F, -13.9F, -2.4F, 2, 2, 6, 0.0F, false),
                 new ModelBoxParameters(from.preshoulder, 17, 2, -7.5F, -14.9F, -1.7F, 2, 2, 6, 0.0F, false)
         ));
-        animations.add(AnimationProgression.modelBox(from.preshoulder, ticksForAnimation, this.model.preshoulder, 1,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.preshoulder, 1,
                 new ModelBoxParameters(from.preshoulder, 9, 22, -6.8F, -13.4F, -1.4F, 2, 1, 5, 0.0F, false),
                 new ModelBoxParameters(from.preshoulder, 9, 22, -7.8F, -14.4F, -1.6F, 2, 1, 5, 0.0F, false)
         ));
 
-        animations.add(AnimationProgression.modelBox(from.cup3, ticksForAnimation, this.model.shoulder, 0,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 0,
                 new ModelBoxParameters(from.cup3, 0, 2, -5.8F, -13.7F, -1.1F, 1, 1, 1, 0.0F, false),
                 new ModelBoxParameters(from.cup3, 0, 2, -6.6F, -14.9F, -4.5F, 1, 1, 1, 0.0F, false)
         ));
 
         animations.add(AnimationProgression.angle(from.preshoulder2, to.preshoulder2, ticksForAnimation, this.model.preshoulder2));
-        animations.add(AnimationProgression.modelBox(from.preshoulder2, ticksForAnimation, this.model.preshoulder2, 0,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.preshoulder2, 0,
                 new ModelBoxParameters(from.preshoulder2, 14, 14, -4.3F, -14.5F, -3.1F, 2, 2, 6, 0.0F, false),
                 new ModelBoxParameters(from.preshoulder2, 14, 14, -6.4F, -13.6F, -10.3F, 2, 2, 6, 0.0F, false)
         ));
-        animations.add(AnimationProgression.modelBox(from.preshoulder2, ticksForAnimation, this.model.preshoulder2, 1,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.preshoulder2, 1,
                 new ModelBoxParameters(from.preshoulder2, 0, 20, -4.0F, -14.0F, -2.1F, 2, 1, 5, 0.0F, false),
                 new ModelBoxParameters(from.preshoulder2, 0, 20, -6.1F, -13.1F, -9.3F, 2, 1, 5, 0.0F, false)
         ));
 
-        animations.add(AnimationProgression.modelBox(from.cup4, ticksForAnimation, this.model.cup4, 0,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.cup4, 0,
                 new ModelBoxParameters(from.cup4, 0, 0, -5.4F, -13.7F, -1.1F, 1, 1, 1, 0.0F, false),
                 new ModelBoxParameters(from.cup4, 0, 0, -5.5F, -13.3F, -4.2F, 1, 1, 1, 0.0F, false)
         ));
