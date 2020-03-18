@@ -127,7 +127,7 @@ public class ShootyAnimator<T extends ShootyEntity> {
                 new ModelBoxParameters(from.preshoulder, 9, 22, -7.8F, -14.4F, -1.6F, 2, 1, 5, 0.0F, false)
         ));
 
-        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.shoulder, 0,
+        animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.cup3, 0,
                 new ModelBoxParameters(from.cup3, 0, 2, -5.8F, -13.7F, -1.1F, 1, 1, 1, 0.0F, false),
                 new ModelBoxParameters(from.cup3, 0, 2, -6.6F, -14.9F, -4.5F, 1, 1, 1, 0.0F, false)
         ));
@@ -142,6 +142,7 @@ public class ShootyAnimator<T extends ShootyEntity> {
                 new ModelBoxParameters(from.preshoulder2, 0, 20, -6.1F, -13.1F, -9.3F, 2, 1, 5, 0.0F, false)
         ));
 
+        animations.add(AnimationProgression.angle(from.cup4, to.cup4, ticksForAnimation, this.model.cup4));
         animations.add(AnimationProgression.modelBox(ticksForAnimation, this.model.cup4, 0,
                 new ModelBoxParameters(from.cup4, 0, 0, -5.4F, -13.7F, -1.1F, 1, 1, 1, 0.0F, false),
                 new ModelBoxParameters(from.cup4, 0, 0, -5.5F, -13.3F, -4.2F, 1, 1, 1, 0.0F, false)
