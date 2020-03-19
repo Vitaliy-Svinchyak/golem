@@ -8,6 +8,18 @@ import java.util.List;
 
 public class AnimationProgressionBuilder {
 
+    public static boolean angleDiffers(RendererModel from, RendererModel to) {
+        return from.rotateAngleX != to.rotateAngleX || from.rotateAngleY != to.rotateAngleY || from.rotateAngleZ != to.rotateAngleZ;
+    }
+
+    public static boolean pointDiffers(RendererModel from, RendererModel to) {
+        return from.rotationPointX != to.rotationPointX || from.rotationPointY != to.rotationPointY || from.rotationPointZ != to.rotationPointZ;
+    }
+
+    public static boolean cubeDiffers(ModelBoxParameters from, ModelBoxParameters to) {
+        return from.posX != to.posX || from.posY != to.posY || from.posZ != to.posZ;
+    }
+
     public static AnimationProgression angle(RendererModel from, RendererModel to, int ticks, RendererModel model) {
         List<Float> xProgression = createProgress(from.rotateAngleX, to.rotateAngleX, ticks);
         List<Float> yProgression = createProgress(from.rotateAngleY, to.rotateAngleY, ticks);

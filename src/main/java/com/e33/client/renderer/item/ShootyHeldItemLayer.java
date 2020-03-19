@@ -44,12 +44,10 @@ public class ShootyHeldItemLayer<T extends LivingEntity> extends LayerRenderer<S
 
         AnimationState animationState = AnimationStateListener.getAnimationState(entityIn);
         if (this.weaponAnimator.isAnimationComplete() && this.lastAnimationState == animationState) {
-            LOGGER.info("complete " + animationState);
             this.renderCurrentPose(entityIn);
             return;
         }
 
-        LOGGER.info("animate " + animationState);
         this.weaponAnimator.animate(entityIn);
         this.lastAnimationState = animationState;
     }

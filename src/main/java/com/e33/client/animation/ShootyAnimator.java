@@ -2,17 +2,20 @@ package com.e33.client.animation;
 
 import com.e33.client.animation.animationProgression.AnimationProgression;
 import com.e33.client.animation.animationProgression.AnimationProgressionBuilder;
+import com.e33.client.model.ModelBoxWithParameters;
 import com.e33.client.model.ShootyModel;
 import com.e33.client.animation.animated.models.ShootyModelAimed;
 import com.e33.client.util.AnimationState;
 import com.e33.client.util.AnimationStateListener;
-import com.e33.client.util.ModelBoxParameters;
 import com.e33.entity.ShootyEntity;
 import com.google.common.collect.Lists;
+import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.client.renderer.model.ModelBox;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -82,85 +85,42 @@ public class ShootyAnimator<T extends ShootyEntity> {
     }
 
     private List<AnimationProgression> createAimingAnimation(int ticksForAnimation) {
+        return this.createAnimation(new ShootyModel(), new ShootyModelAimed(), ticksForAnimation);
+    }
+
+    private List<AnimationProgression> createAnimation(ShootyModel from, ShootyModel to, int ticks) {
         List<AnimationProgression> animations = Lists.newArrayList();
-        ShootyModel from = new ShootyModel();
-        ShootyModelAimed to = new ShootyModelAimed();
+        Map<String, RendererModel> fromModels = from.getAllModels();
+        Map<String, RendererModel> toModels = to.getAllModels();
+        Map<String, RendererModel> entityModels = this.model.getAllModels();
 
-        animations.add(AnimationProgressionBuilder.angle(from.shooty, to.shooty, ticksForAnimation, this.model.shooty));
+        for (String key : entityModels.keySet()) {
+            RendererModel fromModel = fromModels.get(key);
+            RendererModel toModel = toModels.get(key);
+            RendererModel entityModel = entityModels.get(key);
 
-        animations.add(AnimationProgressionBuilder.point(from.right, to.right, ticksForAnimation, this.model.right));
-        animations.add(AnimationProgressionBuilder.angle(from.right, to.right, ticksForAnimation, this.model.right));
+            if (AnimationProgressionBuilder.angleDiffers(fromModel, toModel)) {
+                animations.add(AnimationProgressionBuilder.angle(fromModel, toModel, ticks, entityModel));
+            }
 
-        animations.add(AnimationProgressionBuilder.point(from.left, to.left, ticksForAnimation, this.model.left));
-        animations.add(AnimationProgressionBuilder.angle(from.left, to.left, ticksForAnimation, this.model.left));
+            if (AnimationProgressionBuilder.pointDiffers(fromModel, toModel)) {
+                animations.add(AnimationProgressionBuilder.point(fromModel, toModel, ticks, entityModel));
+            }
 
-        animations.add(AnimationProgressionBuilder.angle(from.body, to.body, ticksForAnimation, this.model.body));
+            List<ModelBox> fromCubes = fromModel.cubeList;
+            List<ModelBox> toCubes = toModel.cubeList;
 
-        animations.add(AnimationProgressionBuilder.point(from.arms, to.arms, ticksForAnimation, this.model.arms));
+            for (int i = 0; i < fromCubes.size(); i++) {
+                ModelBoxWithParameters fromCube = (ModelBoxWithParameters) fromCubes.get(i);
+                ModelBoxWithParameters toCube = (ModelBoxWithParameters) toCubes.get(i);
 
-        animations.add(AnimationProgressionBuilder.point(from.right2, to.right2, ticksForAnimation, this.model.right2));
-
-        animations.add(AnimationProgressionBuilder.angle(from.shoulder, to.shoulder, ticksForAnimation, this.model.shoulder));
-
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.shoulder, 0,
-                new ModelBoxParameters(from.shoulder, 24, 10, -6.2F, -19.4F, -6.5F, 3, 2, 4, 0.0F, false),
-                new ModelBoxParameters(from.shoulder, 24, 10, -13.8F, -15.0F, -8.8F, 3, 2, 4, 0.0F, false)
-        ));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.shoulder, 1,
-                new ModelBoxParameters(from.shoulder, 51, 1, -6.5F, -18.9F, -6.6F, 1, 1, 4, 0.0F, false),
-                new ModelBoxParameters(from.shoulder, 51, 1, -14.1F, -14.5F, -8.9F, 1, 1, 4, 0.0F, false)
-        ));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.shoulder, 2,
-                new ModelBoxParameters(from.shoulder, 8, 34, -5.5F, -19.7F, -6.6F, 2, 1, 4, 0.0F, false),
-                new ModelBoxParameters(from.shoulder, 8, 34, -13.1F, -15.3F, -8.9F, 2, 1, 4, 0.0F, false)
-        ));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.shoulder, 3,
-                new ModelBoxParameters(from.shoulder, 37, 21, -5.9F, -17.9F, -6.0F, 2, 3, 3, 0.0F, false),
-                new ModelBoxParameters(from.shoulder, 37, 21, -13.5F, -13.5F, -8.3F, 2, 3, 3, 0.0F, false)
-        ));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.shoulder, 4,
-                new ModelBoxParameters(from.shoulder, 44, 13, -5.91F, -15.9F, -5.5F, 2, 3, 2, 0.0F, false),
-                new ModelBoxParameters(from.shoulder, 44, 13, -13.51F, -11.5F, -7.8F, 2, 3, 2, 0.0F, false)
-        ));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.shoulder, 5,
-                new ModelBoxParameters(from.shoulder, 0, 47, -6.1F, -17.9F, -5.0F, 2, 5, 1, 0.0F, false),
-                new ModelBoxParameters(from.shoulder, 0, 47, -13.7F, -13.5F, -7.3F, 2, 5, 1, 0.0F, false)
-        ));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.shoulder, 6,
-                new ModelBoxParameters(from.shoulder, 34, 52, -6.2F, -16.9F, -6.1F, 1, 1, 3, 0.0F, false),
-                new ModelBoxParameters(from.shoulder, 34, 52, -13.8F, -12.5F, -8.4F, 1, 1, 3, 0.0F, false)
-        ));
-
-        animations.add(AnimationProgressionBuilder.angle(from.preshoulder, to.preshoulder, ticksForAnimation, this.model.preshoulder));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.preshoulder, 0,
-                new ModelBoxParameters(from.preshoulder, 17, 2, -6.5F, -13.9F, -2.4F, 2, 2, 6, 0.0F, false),
-                new ModelBoxParameters(from.preshoulder, 17, 2, -7.5F, -14.9F, -1.7F, 2, 2, 6, 0.0F, false)
-        ));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.preshoulder, 1,
-                new ModelBoxParameters(from.preshoulder, 9, 22, -6.8F, -13.4F, -1.4F, 2, 1, 5, 0.0F, false),
-                new ModelBoxParameters(from.preshoulder, 9, 22, -7.8F, -14.4F, -1.6F, 2, 1, 5, 0.0F, false)
-        ));
-
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.cup3, 0,
-                new ModelBoxParameters(from.cup3, 0, 2, -5.8F, -13.7F, -1.1F, 1, 1, 1, 0.0F, false),
-                new ModelBoxParameters(from.cup3, 0, 2, -6.6F, -14.9F, -4.5F, 1, 1, 1, 0.0F, false)
-        ));
-
-        animations.add(AnimationProgressionBuilder.angle(from.preshoulder2, to.preshoulder2, ticksForAnimation, this.model.preshoulder2));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.preshoulder2, 0,
-                new ModelBoxParameters(from.preshoulder2, 14, 14, -4.3F, -14.5F, -3.1F, 2, 2, 6, 0.0F, false),
-                new ModelBoxParameters(from.preshoulder2, 14, 14, -6.4F, -13.6F, -10.3F, 2, 2, 6, 0.0F, false)
-        ));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.preshoulder2, 1,
-                new ModelBoxParameters(from.preshoulder2, 0, 20, -4.0F, -14.0F, -2.1F, 2, 1, 5, 0.0F, false),
-                new ModelBoxParameters(from.preshoulder2, 0, 20, -6.1F, -13.1F, -9.3F, 2, 1, 5, 0.0F, false)
-        ));
-
-        animations.add(AnimationProgressionBuilder.angle(from.cup4, to.cup4, ticksForAnimation, this.model.cup4));
-        animations.add(AnimationProgressionBuilder.modelBox(ticksForAnimation, this.model.cup4, 0,
-                new ModelBoxParameters(from.cup4, 0, 0, -5.4F, -13.7F, -1.1F, 1, 1, 1, 0.0F, false),
-                new ModelBoxParameters(from.cup4, 0, 0, -5.5F, -13.3F, -4.2F, 1, 1, 1, 0.0F, false)
-        ));
+                if (AnimationProgressionBuilder.cubeDiffers(fromCube.parameters, toCube.parameters)) {
+                    animations.add(
+                            AnimationProgressionBuilder.modelBox(ticks, entityModel, i, fromCube.parameters, toCube.parameters)
+                    );
+                }
+            }
+        }
 
         return animations;
     }
