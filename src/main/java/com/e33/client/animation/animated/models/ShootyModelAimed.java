@@ -6,6 +6,7 @@ import com.e33.entity.ShootyEntity;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 
 public class ShootyModelAimed<T extends ShootyEntity> extends ShootyModel {
+
     public ShootyModelAimed() {
         textureWidth = 64;
         textureHeight = 64;

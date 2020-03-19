@@ -15,7 +15,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -89,36 +88,48 @@ public class ShootyAnimator<T extends ShootyEntity> {
     }
 
     private List<AnimationProgression> createAnimation(ShootyModel from, ShootyModel to, int ticks) {
+        RendererModel fromModel = from.getMainRendererModel();
+        RendererModel toModel = to.getMainRendererModel();
+        RendererModel entityModel = this.model.getMainRendererModel();
+
+        return this.getAnimatedChanges(fromModel, toModel, entityModel, ticks);
+    }
+
+    private List<AnimationProgression> getAnimatedChanges(RendererModel fromModel, RendererModel toModel, RendererModel entityModel, int ticks) {
         List<AnimationProgression> animations = Lists.newArrayList();
-        Map<String, RendererModel> fromModels = from.getAllModels();
-        Map<String, RendererModel> toModels = to.getAllModels();
-        Map<String, RendererModel> entityModels = this.model.getAllModels();
 
-        for (String key : entityModels.keySet()) {
-            RendererModel fromModel = fromModels.get(key);
-            RendererModel toModel = toModels.get(key);
-            RendererModel entityModel = entityModels.get(key);
+        if (AnimationProgressionBuilder.angleDiffers(fromModel, toModel)) {
+            animations.add(AnimationProgressionBuilder.angle(fromModel, toModel, ticks, entityModel));
+        }
 
-            if (AnimationProgressionBuilder.angleDiffers(fromModel, toModel)) {
-                animations.add(AnimationProgressionBuilder.angle(fromModel, toModel, ticks, entityModel));
+        if (AnimationProgressionBuilder.pointDiffers(fromModel, toModel)) {
+            animations.add(AnimationProgressionBuilder.point(fromModel, toModel, ticks, entityModel));
+        }
+
+        List<ModelBox> fromCubes = fromModel.cubeList;
+        List<ModelBox> toCubes = toModel.cubeList;
+
+        for (int i = 0; i < fromCubes.size(); i++) {
+            ModelBoxWithParameters fromCube = (ModelBoxWithParameters) fromCubes.get(i);
+            ModelBoxWithParameters toCube = (ModelBoxWithParameters) toCubes.get(i);
+
+            if (AnimationProgressionBuilder.cubeDiffers(fromCube.parameters, toCube.parameters)) {
+                animations.add(
+                        AnimationProgressionBuilder.modelBox(ticks, entityModel, i, fromCube.parameters, toCube.parameters)
+                );
             }
+        }
 
-            if (AnimationProgressionBuilder.pointDiffers(fromModel, toModel)) {
-                animations.add(AnimationProgressionBuilder.point(fromModel, toModel, ticks, entityModel));
-            }
+        List<RendererModel> fromChildModels = fromModel.childModels;
+        List<RendererModel> toChildModels = toModel.childModels;
+        List<RendererModel> entityChildModels = entityModel.childModels;
 
-            List<ModelBox> fromCubes = fromModel.cubeList;
-            List<ModelBox> toCubes = toModel.cubeList;
-
-            for (int i = 0; i < fromCubes.size(); i++) {
-                ModelBoxWithParameters fromCube = (ModelBoxWithParameters) fromCubes.get(i);
-                ModelBoxWithParameters toCube = (ModelBoxWithParameters) toCubes.get(i);
-
-                if (AnimationProgressionBuilder.cubeDiffers(fromCube.parameters, toCube.parameters)) {
-                    animations.add(
-                            AnimationProgressionBuilder.modelBox(ticks, entityModel, i, fromCube.parameters, toCube.parameters)
-                    );
-                }
+        if (fromChildModels != null) {
+            for (int i = 0; i < fromChildModels.size(); i++) {
+                animations = this.concatLists(
+                        animations,
+                        this.getAnimatedChanges(fromChildModels.get(i), toChildModels.get(i), entityChildModels.get(i), ticks)
+                );
             }
         }
 

@@ -2,41 +2,38 @@ package com.e33.client.model;
 
 import com.e33.client.animation.ShootyAnimator;
 import com.e33.entity.ShootyEntity;
-import com.google.common.collect.Maps;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 
-import java.util.Map;
-
-public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> {
+public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implements DynamicAnimationInterface {
     private final ShootyAnimator animator;
 
-    public RendererModel shooty;
-    public RendererModel legs;
-    public RendererModel right;
-    public RendererModel step;
-    public RendererModel knee;
-    public RendererModel hip;
-    public RendererModel cup;
-    public RendererModel left;
-    public RendererModel step2;
-    public RendererModel knee2;
-    public RendererModel hip2;
-    public RendererModel cup2;
-    public RendererModel body;
-    public RendererModel hips;
-    public RendererModel press;
-    public RendererModel chest;
-    public RendererModel arms;
-    public RendererModel right2;
-    public RendererModel shoulder;
-    public RendererModel preshoulder;
-    public RendererModel cup3;
-    public RendererModel left2;
-    public RendererModel shoulder2;
-    public RendererModel preshoulder2;
-    public RendererModel cup4;
-    public RendererModel head;
+    protected RendererModel shooty;
+    protected RendererModel legs;
+    protected RendererModel right;
+    protected RendererModel step;
+    protected RendererModel knee;
+    protected RendererModel hip;
+    protected RendererModel cup;
+    protected RendererModel left;
+    protected RendererModel step2;
+    protected RendererModel knee2;
+    protected RendererModel hip2;
+    protected RendererModel cup2;
+    protected RendererModel body;
+    protected RendererModel hips;
+    protected RendererModel press;
+    protected RendererModel chest;
+    protected RendererModel arms;
+    protected RendererModel right2;
+    protected RendererModel shoulder;
+    protected RendererModel preshoulder;
+    protected RendererModel cup3;
+    protected RendererModel left2;
+    protected RendererModel shoulder2;
+    protected RendererModel preshoulder2;
+    protected RendererModel cup4;
+    protected RendererModel head;
 
     public ShootyModel() {
         textureWidth = 64;
@@ -239,37 +236,8 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> {
         this.animator = new ShootyAnimator(this);
     }
 
-    public Map<String, RendererModel> getAllModels() {
-        Map<String, RendererModel> map = Maps.newHashMap();
-
-        map.put("shooty", this.shooty);
-        map.put("legs", this.legs);
-        map.put("right", this.right);
-        map.put("step", this.step);
-        map.put("knee", this.knee);
-        map.put("hip", this.hip);
-        map.put("cup", this.cup);
-        map.put("left", this.left);
-        map.put("step2", this.step2);
-        map.put("knee2", this.knee2);
-        map.put("hip2", this.hip2);
-        map.put("cup2", this.cup2);
-        map.put("body", this.body);
-        map.put("hips", this.hips);
-        map.put("press", this.press);
-        map.put("chest", this.chest);
-        map.put("arms", this.arms);
-        map.put("right2", this.right2);
-        map.put("shoulder", this.shoulder);
-        map.put("preshoulder", this.preshoulder);
-        map.put("cup3", this.cup3);
-        map.put("left2", this.left2);
-        map.put("shoulder2", this.shoulder2);
-        map.put("preshoulder2", this.preshoulder2);
-        map.put("cup4", this.cup4);
-        map.put("head", this.head);
-
-        return map;
+    public RendererModel getMainRendererModel() {
+        return this.shooty;
     }
 
     public void render(ShootyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
