@@ -1,6 +1,5 @@
-package com.e33.client.model;
+package com.e33.client.detail.modelBox;
 
-import com.e33.client.util.ModelBoxParameters;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
 import net.minecraftforge.api.distmarker.Dist;

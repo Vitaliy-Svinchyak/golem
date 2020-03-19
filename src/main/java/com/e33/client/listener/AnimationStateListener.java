@@ -1,5 +1,6 @@
-package com.e33.client.util;
+package com.e33.client.listener;
 
+import com.e33.client.detail.AnimationState;
 import com.e33.event.NewTargetEvent;
 import com.e33.event.NoTargetEvent;
 import net.minecraft.entity.LivingEntity;

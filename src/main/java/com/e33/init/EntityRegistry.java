@@ -3,7 +3,6 @@ package com.e33.init;
 import com.e33.entity.BulletEntity;
 import com.e33.entity.ShootyEntity;
 import com.e33.E33;
-import com.e33.core.ModSounds;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

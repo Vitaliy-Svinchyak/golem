@@ -1,7 +1,7 @@
-package com.e33.client.animation.animated.items;
+package com.e33.client.animation.animated.item;
 
-import com.e33.client.animation.animated.items.util.Rotation;
-import com.e33.client.animation.animated.items.util.Translation;
+import com.e33.client.detail.item.Rotation;
+import com.e33.client.detail.item.Translation;
 
 import java.util.Arrays;
 import java.util.List;

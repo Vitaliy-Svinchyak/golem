@@ -1,4 +1,4 @@
-package com.e33.core;
+package com.e33.init;
 
 import com.e33.E33;
 import net.minecraft.util.ResourceLocation;
@@ -10,7 +10,7 @@ import net.minecraftforge.registries.ObjectHolder;
 public class ModSounds {
     public static SoundEvent SHOOTY_HURT = null;
 
-    public static void registerSounds(IForgeRegistry<SoundEvent> registry) {
+    static void registerSounds(IForgeRegistry<SoundEvent> registry) {
         SHOOTY_HURT = create("entity_shooty_hurt");
         registry.register(SHOOTY_HURT);
     }

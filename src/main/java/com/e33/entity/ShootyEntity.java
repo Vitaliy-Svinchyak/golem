@@ -1,7 +1,7 @@
 package com.e33.entity;
 
 import com.e33.goal.attack.*;
-import com.e33.core.ModSounds;
+import com.e33.init.ModSounds;
 import com.e33.goal.ShootBadGuysGoal;
 import com.e33.init.BlockRegistry;
 import net.minecraft.entity.*;

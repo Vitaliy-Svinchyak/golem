@@ -9,10 +9,10 @@ import net.minecraft.util.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class RendererBullet extends SpriteRenderer {
+public class BulletRenderer extends SpriteRenderer {
     private final static Logger LOGGER = LogManager.getLogger();
 
-    public RendererBullet(EntityRendererManager renderManager) {
+    public BulletRenderer(EntityRendererManager renderManager) {
         super(renderManager, Minecraft.getInstance().getItemRenderer(), 0.75F);
     }
 

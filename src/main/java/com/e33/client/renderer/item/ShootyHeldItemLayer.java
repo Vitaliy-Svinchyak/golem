@@ -1,13 +1,13 @@
 package com.e33.client.renderer.item;
 
-import com.e33.client.animation.ShootyWeaponAnimator;
-import com.e33.client.animation.animated.items.AimedWeaponPosition;
-import com.e33.client.animation.animated.items.DefaultWeaponPosition;
-import com.e33.client.animation.animated.items.util.Rotation;
-import com.e33.client.animation.animated.items.util.Translation;
+import com.e33.client.animation.animator.ShootyWeaponAnimator;
+import com.e33.client.animation.animated.item.AimedWeaponPosition;
+import com.e33.client.animation.animated.item.DefaultWeaponPosition;
+import com.e33.client.detail.item.Rotation;
+import com.e33.client.detail.item.Translation;
 import com.e33.client.model.ShootyModel;
-import com.e33.client.util.AnimationState;
-import com.e33.client.util.AnimationStateListener;
+import com.e33.client.detail.AnimationState;
+import com.e33.client.listener.AnimationStateListener;
 import com.e33.entity.ShootyEntity;
 import com.e33.item.ItemDangerousStick;
 import com.mojang.blaze3d.platform.GlStateManager;

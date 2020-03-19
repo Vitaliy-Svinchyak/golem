@@ -1,7 +1,5 @@
 package com.e33.client.animation.animationProgression;
 
-import com.e33.client.util.ModelBoxParameters;
-import com.google.common.collect.Lists;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

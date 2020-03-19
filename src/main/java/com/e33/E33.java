@@ -1,8 +1,8 @@
 package com.e33;
 
-import com.e33.client.renderer.entity.RendererBullet;
+import com.e33.client.renderer.entity.BulletRenderer;
 import com.e33.client.renderer.entity.ShootyRenderer;
-import com.e33.client.util.AnimationStateListener;
+import com.e33.client.listener.AnimationStateListener;
 import com.e33.debug.DangerousZoneDebugRenderer;
 import com.e33.entity.BulletEntity;
 import com.e33.entity.ShootyEntity;
@@ -41,7 +41,7 @@ public class E33 {
 
     private void setup(final FMLCommonSetupEvent event) {
         RenderingRegistry.registerEntityRenderingHandler(ShootyEntity.class, ShootyRenderer::new);
-        RenderingRegistry.registerEntityRenderingHandler(BulletEntity.class, RendererBullet::new);
+        RenderingRegistry.registerEntityRenderingHandler(BulletEntity.class, BulletRenderer::new);
     }
 
     @SubscribeEvent

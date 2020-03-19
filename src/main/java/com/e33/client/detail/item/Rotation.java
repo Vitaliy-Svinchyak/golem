@@ -1,4 +1,4 @@
-package com.e33.client.animation.animated.items.util;
+package com.e33.client.detail.item;
 
 public class Rotation {
     public final float angle;

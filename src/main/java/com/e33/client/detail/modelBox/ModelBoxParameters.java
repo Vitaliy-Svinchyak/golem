@@ -1,4 +1,4 @@
-package com.e33.client.util;
+package com.e33.client.detail.modelBox;
 
 import net.minecraft.client.renderer.entity.model.RendererModel;
 

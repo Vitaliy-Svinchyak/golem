@@ -1,5 +1,6 @@
 package com.e33.goal.move;
 
+import com.e33.util.Helper;
 import com.google.common.collect.Lists;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -7,8 +8,6 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DangerousZone {
 
@@ -74,7 +73,7 @@ public class DangerousZone {
     public List<BlockPos> getRedBlocksPos() {
         if (this.cachedRedBocks == null) {
             List<BlockPos> violetBlocks = this.getVioletBlocksPos();
-            List<BlockPos> whereToCheck = this.concatLists(this.getCenterBlocksPos(), violetBlocks);
+            List<BlockPos> whereToCheck = Helper.concatLists(this.getCenterBlocksPos(), violetBlocks);
 
             this.cachedRedBocks = this.createBlocksPos(this.redRadius, violetBlocks, whereToCheck);
         }
@@ -85,8 +84,8 @@ public class DangerousZone {
     public List<BlockPos> getYellowBlocksPos() {
         if (this.cachedYellowBocks == null) {
             List<BlockPos> redBlocks = this.getRedBlocksPos();
-            List<BlockPos> whereToCheck = this.concatLists(this.getCenterBlocksPos(), this.getVioletBlocksPos());
-            whereToCheck = this.concatLists(whereToCheck, redBlocks);
+            List<BlockPos> whereToCheck = Helper.concatLists(this.getCenterBlocksPos(), this.getVioletBlocksPos());
+            whereToCheck = Helper.concatLists(whereToCheck, redBlocks);
 
             this.cachedYellowBocks = this.createBlocksPos(this.yellowRadius, redBlocks, whereToCheck);
         }
@@ -115,8 +114,8 @@ public class DangerousZone {
                 this.addUniqueBlockPos(currentCircle, whereToCheck, new BlockPos(previousBlock.getX() + 1, previousBlock.getY(), previousBlock.getZ() - 1));
             }
             previousBlocks = currentCircle;
-            blocksPos = this.concatLists(blocksPos, currentCircle);
-            whereToCheck = this.concatLists(whereToCheck, currentCircle);
+            blocksPos = Helper.concatLists(blocksPos, currentCircle);
+            whereToCheck = Helper.concatLists(whereToCheck, currentCircle);
 
         }
 
@@ -127,10 +126,5 @@ public class DangerousZone {
         if (!whereToAdd.contains(block) && !whereToCheck.contains(block)) {
             whereToAdd.add(block);
         }
-    }
-
-    private List<BlockPos> concatLists(List<BlockPos> list1, List<BlockPos> list2) {
-        return Stream.concat(list1.stream(), list2.stream())
-                .collect(Collectors.toList());
     }
 }

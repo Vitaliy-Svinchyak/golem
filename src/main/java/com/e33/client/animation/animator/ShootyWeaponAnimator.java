@@ -1,15 +1,16 @@
-package com.e33.client.animation;
+package com.e33.client.animation.animator;
 
-import com.e33.client.animation.animated.items.AimedWeaponPosition;
-import com.e33.client.animation.animated.items.DefaultWeaponPosition;
-import com.e33.client.animation.animated.items.util.Rotation;
-import com.e33.client.animation.animated.items.util.Translation;
+import com.e33.client.animation.animated.item.AimedWeaponPosition;
+import com.e33.client.animation.animated.item.DefaultWeaponPosition;
+import com.e33.client.detail.item.Rotation;
+import com.e33.client.detail.item.Translation;
 import com.e33.client.animation.animationProgression.AnimationProgression;
 import com.e33.client.animation.animationProgression.AnimationProgressionBuilder;
-import com.e33.client.util.AnimationState;
-import com.e33.client.util.AnimationStateListener;
+import com.e33.client.detail.AnimationState;
+import com.e33.client.listener.AnimationStateListener;
 import com.e33.entity.ShootyEntity;
 import com.e33.item.ItemDangerousStick;
+import com.e33.util.Helper;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
@@ -21,7 +22,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ShootyWeaponAnimator {
     private final static Logger LOGGER = LogManager.getLogger();
@@ -93,13 +93,13 @@ public class ShootyWeaponAnimator {
                 .map(animation -> animation.reverse())
                 .collect(Collectors.toList());
 
-        this.animations = this.concatLists(this.animations, animations);
+        this.animations = Helper.concatLists(this.animations, animations);
     }
 
     private void animateAiming() {
         List<AnimationProgression> animations = this.createAimingAnimation();
 
-        this.animations = this.concatLists(this.animations, animations);
+        this.animations = Helper.concatLists(this.animations, animations);
     }
 
     private List<AnimationProgression> createAimingAnimation() {
@@ -124,8 +124,4 @@ public class ShootyWeaponAnimator {
         return animations;
     }
 
-    private List<AnimationProgression> concatLists(List<AnimationProgression> list1, List<AnimationProgression> list2) {
-        return Stream.concat(list1.stream(), list2.stream())
-                .collect(Collectors.toList());
-    }
 }

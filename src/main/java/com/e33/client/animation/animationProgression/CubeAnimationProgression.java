@@ -1,6 +1,6 @@
 package com.e33.client.animation.animationProgression;
 
-import com.e33.client.util.ModelBoxParameters;
+import com.e33.client.detail.modelBox.ModelBoxParameters;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
 

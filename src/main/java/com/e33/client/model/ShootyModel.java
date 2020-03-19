@@ -1,6 +1,7 @@
 package com.e33.client.model;
 
-import com.e33.client.animation.ShootyAnimator;
+import com.e33.client.animation.animator.ShootyAnimator;
+import com.e33.client.detail.modelBox.ModelBoxWithParameters;
 import com.e33.entity.ShootyEntity;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;

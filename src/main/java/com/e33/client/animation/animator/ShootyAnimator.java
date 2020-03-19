@@ -1,13 +1,15 @@
-package com.e33.client.animation;
+package com.e33.client.animation.animator;
 
 import com.e33.client.animation.animationProgression.AnimationProgression;
 import com.e33.client.animation.animationProgression.AnimationProgressionBuilder;
-import com.e33.client.model.ModelBoxWithParameters;
+import com.e33.client.model.DynamicAnimationInterface;
+import com.e33.client.detail.modelBox.ModelBoxWithParameters;
 import com.e33.client.model.ShootyModel;
-import com.e33.client.animation.animated.models.ShootyModelAimed;
-import com.e33.client.util.AnimationState;
-import com.e33.client.util.AnimationStateListener;
+import com.e33.client.animation.animated.model.ShootyModelAimed;
+import com.e33.client.detail.AnimationState;
+import com.e33.client.listener.AnimationStateListener;
 import com.e33.entity.ShootyEntity;
+import com.e33.util.Helper;
 import com.google.common.collect.Lists;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
@@ -16,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ShootyAnimator<T extends ShootyEntity> {
     private final static Logger LOGGER = LogManager.getLogger();
@@ -74,20 +75,20 @@ public class ShootyAnimator<T extends ShootyEntity> {
                 .map(animation -> animation.reverse())
                 .collect(Collectors.toList());
 
-        this.animations = this.concatLists(this.animations, animations);
+        this.animations = Helper.concatLists(this.animations, animations);
     }
 
     private void animateAiming() {
         List<AnimationProgression> animations = this.createAimingAnimation(20);
 
-        this.animations = this.concatLists(this.animations, animations);
+        this.animations = Helper.concatLists(this.animations, animations);
     }
 
     private List<AnimationProgression> createAimingAnimation(int ticksForAnimation) {
         return this.createAnimation(new ShootyModel(), new ShootyModelAimed(), ticksForAnimation);
     }
 
-    private List<AnimationProgression> createAnimation(ShootyModel from, ShootyModel to, int ticks) {
+    private List<AnimationProgression> createAnimation(DynamicAnimationInterface from, DynamicAnimationInterface to, int ticks) {
         RendererModel fromModel = from.getMainRendererModel();
         RendererModel toModel = to.getMainRendererModel();
         RendererModel entityModel = this.model.getMainRendererModel();
@@ -126,7 +127,7 @@ public class ShootyAnimator<T extends ShootyEntity> {
 
         if (fromChildModels != null) {
             for (int i = 0; i < fromChildModels.size(); i++) {
-                animations = this.concatLists(
+                animations = Helper.concatLists(
                         animations,
                         this.getAnimatedChanges(fromChildModels.get(i), toChildModels.get(i), entityChildModels.get(i), ticks)
                 );
@@ -134,10 +135,5 @@ public class ShootyAnimator<T extends ShootyEntity> {
         }
 
         return animations;
-    }
-
-    private List<AnimationProgression> concatLists(List<AnimationProgression> list1, List<AnimationProgression> list2) {
-        return Stream.concat(list1.stream(), list2.stream())
-                .collect(Collectors.toList());
     }
 }

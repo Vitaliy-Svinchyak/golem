@@ -1,4 +1,4 @@
-package com.e33.client.util;
+package com.e33.client.detail;
 
 public enum AnimationState {
     DEFAULT,
