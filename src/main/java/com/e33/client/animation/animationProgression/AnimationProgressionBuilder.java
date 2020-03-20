@@ -3,10 +3,14 @@ package com.e33.client.animation.animationProgression;
 import com.e33.client.detail.modelBox.ModelBoxParameters;
 import com.google.common.collect.Lists;
 import net.minecraft.client.renderer.entity.model.RendererModel;
+import net.minecraft.particles.BasicParticleType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 
 public class AnimationProgressionBuilder {
+    public final static Logger LOGGER = LogManager.getLogger();
 
     public static boolean angleDiffers(RendererModel from, RendererModel to) {
         return from.rotateAngleX != to.rotateAngleX || from.rotateAngleY != to.rotateAngleY || from.rotateAngleZ != to.rotateAngleZ;
@@ -58,6 +62,14 @@ public class AnimationProgressionBuilder {
         return new ItemAnimationProgression(xProgression, yProgression, zProgression, AnimationProgression.ProgressionType.ItemTranslation);
     }
 
+    public static AnimationProgression particle(float fromX, float fromY, float fromZ, float toX, float toY, float toZ, BasicParticleType particleType, int ticks) {
+        List<Float> xProgression = createProgress(fromX, toX, ticks);
+        List<Float> yProgression = createProgress(fromY, toY, ticks);
+        List<Float> zProgression = createProgress(fromZ, toZ, ticks);
+
+        return new ParticleAnimation(xProgression, yProgression, zProgression, particleType, AnimationProgression.ProgressionType.Particle);
+    }
+
     private static List<Float> createProgress(float from, float to, int ticks) {
         List<Float> progression = Lists.newArrayList();
         float step = (to - from) / ticks;
@@ -66,6 +78,7 @@ public class AnimationProgressionBuilder {
         for (int i = 0; i < ticks; i++) {
             progression.add(progression.get(progression.size() - 1) + step);
         }
+        progression.remove(0);
 
         return progression;
     }

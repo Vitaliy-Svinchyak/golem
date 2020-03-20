@@ -5,6 +5,7 @@ import com.e33.entity.BulletEntity;
 import com.e33.entity.ShootyEntity;
 import com.e33.event.NewTargetEvent;
 import com.e33.event.NoTargetEvent;
+import com.e33.event.ShotEvent;
 import com.e33.fight.ShootExpectations;
 import com.e33.fight.ShootingNavigator;
 import net.minecraft.entity.LivingEntity;
@@ -63,11 +64,14 @@ public class ShootBadGuysGoal extends Goal {
         MobEntity attackTarget = (MobEntity) this.entity.getAttackTarget();
         if (attackTarget != null) {
             if (this.lastEvent.equals("no")) {
+                LOGGER.info("NEW TARGET");
                 this.newTarget(attackTarget);
                 this.lastEvent = "aim";
             } else {
-                this.noTarget();
-                this.lastEvent = "no";
+                LOGGER.info("SHOT");
+                this.shot(attackTarget);
+//                this.noTarget();
+//                this.lastEvent = "no";
             }
 
             this.ticksToNextAttack = 20;
@@ -150,15 +154,18 @@ public class ShootBadGuysGoal extends Goal {
     }
 
     private void newTarget(LivingEntity attackTarget) {
-        // Time for animation
-        this.entity.getLookController().setLookPositionWithEntity(attackTarget, 1.0F, 1.0F);
+        this.entity.getLookController().func_220679_a(attackTarget.posX, attackTarget.posY + (double) attackTarget.getEyeHeight(), attackTarget.posZ);
+
         E33.internalEventBus.post(new NewTargetEvent(this.entity, attackTarget));
         this.ticksToNextAttack = 20;
     }
 
     private void noTarget() {
-        // Time for animation
         E33.internalEventBus.post(new NoTargetEvent(this.entity));
         this.ticksToNextAttack = 20;
+    }
+
+    private void shot(LivingEntity attackTarget) {
+        E33.internalEventBus.post(new ShotEvent(this.entity, attackTarget));
     }
 }

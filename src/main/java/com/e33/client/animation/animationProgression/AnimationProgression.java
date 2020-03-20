@@ -8,14 +8,14 @@ import java.util.List;
 
 abstract public class AnimationProgression {
     protected final static Logger LOGGER = LogManager.getLogger();
-    List<Float> xProgression;
-    List<Float> yProgression;
-    List<Float> zProgression;
+    private List<Float> xProgression;
+    private List<Float> yProgression;
+    private List<Float> zProgression;
 
     ProgressionType progressionType;
     RendererModel rendererModel;
 
-    int currentTick = 0;
+    private int currentTick = 0;
 
     AnimationProgression(RendererModel rendererModel, List<Float> xProgression, List<Float> yProgression, List<Float> zProgression, ProgressionType progressionType) {
         this.rendererModel = rendererModel;
@@ -36,7 +36,8 @@ abstract public class AnimationProgression {
     }
 
     public boolean makeProgress() {
-        if (this.currentTick > this.xProgression.size() - 1) {
+        if (this.currentTick == this.xProgression.size()) {
+            LOGGER.error("I said NO!");
             return false;
         }
 
@@ -47,6 +48,10 @@ abstract public class AnimationProgression {
         this.progress(newX, newY, newZ);
 
         this.currentTick++;
+
+        if (this.currentTick == this.xProgression.size()) {
+            return false;
+        }
 
         return true;
     }
@@ -73,7 +78,9 @@ abstract public class AnimationProgression {
         ModelBoxPosition,
 
         ItemRotation,
-        ItemTranslation;
+        ItemTranslation,
+
+        Particle;
 
         ProgressionType() {
 

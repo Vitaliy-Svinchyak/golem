@@ -22,22 +22,6 @@ public class ItemAnimationProgression extends AnimationProgression {
         super(null, xProgression, yProgression, zProgression, progressionType);
     }
 
-    public boolean makeProgress() {
-        float newX = this.xProgression.get(this.currentTick);
-        float newY = this.yProgression.get(this.currentTick);
-        float newZ = this.zProgression.get(this.currentTick);
-
-        this.progress(newX, newY, newZ);
-
-        this.currentTick++;
-
-        if (this.currentTick > this.xProgression.size() - 1) {
-            return false;
-        }
-
-        return true;
-    }
-
     protected void progress(float newX, float newY, float newZ) {
         switch (this.progressionType) {
             case ItemRotation:

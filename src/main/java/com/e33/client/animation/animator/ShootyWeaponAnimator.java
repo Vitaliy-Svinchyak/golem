@@ -2,6 +2,7 @@ package com.e33.client.animation.animator;
 
 import com.e33.client.animation.animated.item.AimedWeaponPosition;
 import com.e33.client.animation.animated.item.DefaultWeaponPosition;
+import com.e33.client.detail.UniqueAnimationState;
 import com.e33.client.detail.item.Rotation;
 import com.e33.client.detail.item.Translation;
 import com.e33.client.animation.animationProgression.AnimationProgression;
@@ -17,9 +18,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.util.math.Vec3d;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,42 +31,39 @@ public class ShootyWeaponAnimator {
     private final static Logger LOGGER = LogManager.getLogger();
 
     private List<AnimationProgression> animations = Lists.newArrayList();
-    private AnimationState lastAnimationState = AnimationState.DEFAULT;
-    private boolean animationComplete = true;
+    private UniqueAnimationState lastAnimationState = AnimationStateListener.getDefaultUniqueAnimationState();
 
     public boolean isAnimationComplete() {
-        return this.animationComplete;
+        return this.animations.size() == 0;
     }
 
-    public void animate(ShootyEntity entity) {
-        ItemStack itemstack = entity.getHeldItemMainhand();
-        if (itemstack.isEmpty()) {
+    public void animate(ShootyEntity entity, ItemStack itemstack) {
+        UniqueAnimationState animationState = AnimationStateListener.getUniqueAnimationState(entity);
+
+        if (this.isAnimationComplete() && this.lastAnimationState.equals(animationState)) {
+            this.renderCurrentPose(entity);
             return;
+        } else if (animationState.state == AnimationState.SHOT) {
+            this.renderAimed();
         }
 
-        Item item = itemstack.getItem();
+        if (!this.lastAnimationState.equals(animationState)) {
+            this.animations = Lists.newArrayList();
 
-        if (!item.toString().equals(ItemDangerousStick.registryName)) {
-            return;
-        }
-
-        AnimationState animationState = AnimationStateListener.getAnimationState(entity);
-        if (this.lastAnimationState == animationState) {
-            this.animateAllProgressions(entity, itemstack);
-
-            return;
-        }
-
-        this.animationComplete = false;
-        this.animations = Lists.newArrayList();
-
-        switch (animationState) {
-            case DEFAULT:
-                this.animateDefaultPose();
-                break;
-            case AIM:
-                this.animateAiming();
-                break;
+            switch (animationState.state) {
+                case DEFAULT:
+                    this.createDefaultPoseAnimations();
+                    break;
+                case AIM:
+                    this.createAimAnimation();
+                    break;
+                case SHOT:
+                    this.createShotAnimation(entity);
+                    break;
+                default:
+                    LOGGER.error("no animation");
+                    break;
+            }
         }
 
         this.lastAnimationState = animationState;
@@ -70,25 +71,30 @@ public class ShootyWeaponAnimator {
     }
 
     private void animateAllProgressions(ShootyEntity entity, ItemStack itemstack) {
-        boolean animationComplete = true;
         GlStateManager.color3f(1.0F, 1.0F, 1.0F);
         GlStateManager.pushMatrix();
+        List<Integer> animationsToRemove = Lists.newArrayList();
 
-        for (AnimationProgression animation : this.animations) {
+        for (int i = 0; i < this.animations.size(); i++) {
+            AnimationProgression animation = this.animations.get(i);
             boolean animationResult = animation.makeProgress();
 
-            if (animationResult) {
-                animationComplete = false;
+            if (!animationResult) {
+                animationsToRemove.add(i);
             }
+        }
+
+        Collections.reverse(animationsToRemove);
+        for (Integer key : animationsToRemove) {
+            this.animations.remove(key.intValue());
         }
 
         Minecraft.getInstance().getFirstPersonRenderer().renderItem(entity, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND);
         GlStateManager.popMatrix();
-        this.animationComplete = animationComplete;
     }
 
-    private void animateDefaultPose() {
-        List<AnimationProgression> animations = this.createAimingAnimation();
+    private void createDefaultPoseAnimations() {
+        List<AnimationProgression> animations = this.createAimingAnimation(20);
         animations.stream()
                 .map(animation -> animation.reverse())
                 .collect(Collectors.toList());
@@ -96,14 +102,28 @@ public class ShootyWeaponAnimator {
         this.animations = Helper.concatLists(this.animations, animations);
     }
 
-    private void animateAiming() {
-        List<AnimationProgression> animations = this.createAimingAnimation();
+    private void createAimAnimation() {
+        List<AnimationProgression> animations = this.createAimingAnimation(10);
 
         this.animations = Helper.concatLists(this.animations, animations);
     }
 
-    private List<AnimationProgression> createAimingAnimation() {
-        return this.createAnimation(DefaultWeaponPosition.getTranslations(), DefaultWeaponPosition.getRotations(), AimedWeaponPosition.getTranslations(), AimedWeaponPosition.getRotations(), 20);
+    private void createShotAnimation(ShootyEntity entity) {
+
+        Vec3d position = entity.getPositionVector();
+        float radius = 1.35F;
+        float angle = Math.abs(entity.rotationYaw);
+
+        float y = (float) position.getY() + 1.1F;
+        float x = (float) (Math.sin(angle) * radius + position.getX());
+        float z = (float) (Math.cos(angle) * radius + position.getZ());
+
+        this.animations.add(AnimationProgressionBuilder.particle(x, y, z, x, y, z, ParticleTypes.SMOKE, 2));
+        this.animations.add(AnimationProgressionBuilder.particle(x, y, z, x, y, z, ParticleTypes.FLAME, 1));
+    }
+
+    private List<AnimationProgression> createAimingAnimation(int ticks) {
+        return this.createAnimation(DefaultWeaponPosition.getTranslations(), DefaultWeaponPosition.getRotations(), AimedWeaponPosition.getTranslations(), AimedWeaponPosition.getRotations(), ticks);
     }
 
     private List<AnimationProgression> createAnimation(List<Translation> fromTranslations, List<Rotation> fromRotations, List<Translation> toTranslations, List<Rotation> toRotations, int ticks) {
@@ -122,6 +142,56 @@ public class ShootyWeaponAnimator {
         }
 
         return animations;
+    }
+
+    private void renderCurrentPose(ShootyEntity entityIn) {
+        ItemStack itemstack = entityIn.getHeldItemMainhand();
+        if (itemstack.isEmpty()) {
+            return;
+        }
+
+        Item item = itemstack.getItem();
+
+        if (!item.toString().equals(ItemDangerousStick.registryName)) {
+            return;
+        }
+
+        GlStateManager.color3f(1.0F, 1.0F, 1.0F);
+        GlStateManager.pushMatrix();
+        switch (AnimationStateListener.getAnimationState(entityIn)) {
+            case DEFAULT:
+                this.renderDefaultPose();
+                break;
+            case SHOT:
+            case AIM:
+                this.renderAimed();
+                break;
+        }
+
+        Minecraft.getInstance().getFirstPersonRenderer().renderItem(entityIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND);
+        GlStateManager.popMatrix();
+    }
+
+    private void renderAimed() {
+        this.renderPose(AimedWeaponPosition.getTranslations(), AimedWeaponPosition.getRotations());
+    }
+
+    private void renderDefaultPose() {
+        this.renderPose(DefaultWeaponPosition.getTranslations(), DefaultWeaponPosition.getRotations());
+    }
+
+    private void renderPose(List<Translation> translations, List<Rotation> rotations) {
+        for (Translation translation : translations) {
+            GlStateManager.translatef(translation.x, translation.y, translation.z);
+        }
+
+        for (Rotation rotation : rotations) {
+            GlStateManager.rotatef(rotation.angle, rotation.x, rotation.y, rotation.z);
+        }
+    }
+
+    private void log(String message) {
+//        LOGGER.info(message);
     }
 
 }

@@ -2,6 +2,7 @@ package com.e33.client.animation.animator;
 
 import com.e33.client.animation.animationProgression.AnimationProgression;
 import com.e33.client.animation.animationProgression.AnimationProgressionBuilder;
+import com.e33.client.detail.UniqueAnimationState;
 import com.e33.client.model.DynamicAnimationInterface;
 import com.e33.client.detail.modelBox.ModelBoxWithParameters;
 import com.e33.client.model.ShootyModel;
@@ -16,22 +17,23 @@ import net.minecraft.client.renderer.model.ModelBox;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ShootyAnimator<T extends ShootyEntity> {
     private final static Logger LOGGER = LogManager.getLogger();
+
     private final ShootyModel model;
     private List<AnimationProgression> animations = Lists.newArrayList();
-    private AnimationState lastAnimationState = AnimationState.DEFAULT;
-    private boolean animationComplete = true;
+    private UniqueAnimationState lastAnimationState = AnimationStateListener.getDefaultUniqueAnimationState();
 
     public ShootyAnimator(ShootyModel model) {
         this.model = model;
     }
 
     public boolean isAnimationComplete() {
-        return this.animationComplete;
+        return this.animations.size() == 0;
     }
 
     public void setRotationAngles(ShootyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
@@ -39,37 +41,88 @@ public class ShootyAnimator<T extends ShootyEntity> {
     }
 
     public void setLivingAnimations(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
-        AnimationState animationState = AnimationStateListener.getAnimationState(entity);
-        if (this.lastAnimationState == animationState) {
-            boolean animationComplete = true;
+        this.log("have " + this.animations.size() + " animations");
+        UniqueAnimationState animationState = AnimationStateListener.getUniqueAnimationState(entity);
 
-            for (AnimationProgression animation : this.animations) {
-                boolean animationResult = animation.makeProgress();
-                if (animationResult) {
-                    animationComplete = false;
-                }
-            }
-            this.animationComplete = animationComplete;
-
-            return;
+        if (this.isAnimationComplete() && this.lastAnimationState.equals(animationState)) {
+            this.renderCurrentPose(entity);
+            this.animateAllProgressions();
+        } else if (animationState.state == AnimationState.SHOT) {
+            this.renderAimed();
         }
 
-        this.animations = Lists.newArrayList();
-        this.animationComplete = false;
+        // New animation requested
+        if (!this.lastAnimationState.equals(animationState)) {
+            switch (animationState.state) {
+                case DEFAULT:
+                    this.animateDefaultPose();
+                    break;
+                case AIM:
+                    this.animateAiming();
+                    break;
+                case SHOT:
+                    this.animateShot();
+                    break;
+                default:
+                    LOGGER.error("no animation");
+                    break;
+            }
+        }
+
+        this.lastAnimationState = animationState;
+        this.animateAllProgressions();
+    }
+
+    private void animateAllProgressions() {
+        this.log("animateAllProgressions " + this.animations.size());
+        List<Integer> animationsToRemove = Lists.newArrayList();
+
+        for (int i = 0; i < this.animations.size(); i++) {
+            AnimationProgression animation = this.animations.get(i);
+            boolean animationResult = animation.makeProgress();
+
+            if (!animationResult) {
+                animationsToRemove.add(i);
+            }
+        }
+
+        Collections.reverse(animationsToRemove);
+        for (Integer key : animationsToRemove) {
+            this.animations.remove(key.intValue());
+        }
+    }
+
+    private void renderCurrentPose(T entity) {
+        this.log("renderCurrentPose ");
+        AnimationState animationState = AnimationStateListener.getAnimationState(entity);
 
         switch (animationState) {
             case DEFAULT:
-                this.animateDefaultPose();
+                this.renderDefaultPose();
                 break;
+            case SHOT:
             case AIM:
-                this.animateAiming();
+                this.renderAimed();
                 break;
         }
+    }
 
-        this.lastAnimationState = AnimationStateListener.getAnimationState(entity);
+    private void renderAimed() {
+        this.log("renderAimed");
+        List<AnimationProgression> animations = this.createAnimation(new ShootyModel(), new ShootyModelAimed(), 1);
+
+        this.animations = Helper.concatLists(this.animations, animations);
+    }
+
+    private void renderDefaultPose() {
+        this.log("renderDefaultPose");
+        List<AnimationProgression> animations = this.createAnimation(new ShootyModelAimed(), new ShootyModel(), 1);
+
+        this.animations = Helper.concatLists(this.animations, animations);
     }
 
     private void animateDefaultPose() {
+        this.log("animateDefaultPose");
         List<AnimationProgression> animations = this.createAimingAnimation(20);
         animations.stream()
                 .map(animation -> animation.reverse())
@@ -79,9 +132,14 @@ public class ShootyAnimator<T extends ShootyEntity> {
     }
 
     private void animateAiming() {
-        List<AnimationProgression> animations = this.createAimingAnimation(20);
+        this.log("animateAiming");
+        List<AnimationProgression> animations = this.createAimingAnimation(10);
 
         this.animations = Helper.concatLists(this.animations, animations);
+    }
+
+    private void animateShot() {
+        this.log("animateShot");
     }
 
     private List<AnimationProgression> createAimingAnimation(int ticksForAnimation) {
@@ -135,5 +193,9 @@ public class ShootyAnimator<T extends ShootyEntity> {
         }
 
         return animations;
+    }
+
+    private void log(String message) {
+//        LOGGER.info(message);
     }
 }

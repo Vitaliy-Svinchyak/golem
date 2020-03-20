@@ -2,7 +2,8 @@ package com.e33.client.detail;
 
 public enum AnimationState {
     DEFAULT,
-    AIM;
+    AIM,
+    SHOT;
 
     AnimationState() {
 
