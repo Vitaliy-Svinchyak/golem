@@ -10,6 +10,7 @@ import com.e33.client.animation.animationProgression.AnimationProgressionBuilder
 import com.e33.client.detail.AnimationState;
 import com.e33.client.listener.AnimationStateListener;
 import com.e33.entity.ShootyEntity;
+import com.e33.init.ParticleRegistry;
 import com.e33.item.ItemDangerousStick;
 import com.e33.util.Helper;
 import com.google.common.collect.Lists;
@@ -109,7 +110,6 @@ public class ShootyWeaponAnimator {
     }
 
     private void createShotAnimation(ShootyEntity entity) {
-
         Vec3d position = entity.getPositionVector();
         float radius = 1.35F;
         float angle = Math.abs(entity.rotationYaw);
@@ -120,6 +120,8 @@ public class ShootyWeaponAnimator {
 
         this.animations.add(AnimationProgressionBuilder.particle(x, y, z, x, y, z, ParticleTypes.SMOKE, 2));
         this.animations.add(AnimationProgressionBuilder.particle(x, y, z, x, y, z, ParticleTypes.FLAME, 1));
+
+        this.animations.add(AnimationProgressionBuilder.particle(x, y, z, x, y, z, ParticleRegistry.SLEEVE, 1));
     }
 
     private List<AnimationProgression> createAimingAnimation(int ticks) {

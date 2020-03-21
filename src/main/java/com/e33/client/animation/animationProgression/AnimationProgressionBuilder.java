@@ -3,7 +3,7 @@ package com.e33.client.animation.animationProgression;
 import com.e33.client.detail.modelBox.ModelBoxParameters;
 import com.google.common.collect.Lists;
 import net.minecraft.client.renderer.entity.model.RendererModel;
-import net.minecraft.particles.BasicParticleType;
+import net.minecraft.particles.IParticleData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -62,7 +62,7 @@ public class AnimationProgressionBuilder {
         return new ItemAnimationProgression(xProgression, yProgression, zProgression, AnimationProgression.ProgressionType.ItemTranslation);
     }
 
-    public static AnimationProgression particle(float fromX, float fromY, float fromZ, float toX, float toY, float toZ, BasicParticleType particleType, int ticks) {
+    public static AnimationProgression particle(float fromX, float fromY, float fromZ, float toX, float toY, float toZ, IParticleData particleType, int ticks) {
         List<Float> xProgression = createProgress(fromX, toX, ticks);
         List<Float> yProgression = createProgress(fromY, toY, ticks);
         List<Float> zProgression = createProgress(fromZ, toZ, ticks);

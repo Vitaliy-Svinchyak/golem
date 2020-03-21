@@ -2,16 +2,16 @@ package com.e33.client.animation.animationProgression;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.particles.BasicParticleType;
+import net.minecraft.particles.IParticleData;
 
 import java.util.List;
 
 public class ParticleAnimation extends AnimationProgression {
 
-    private final BasicParticleType particleType;
+    private IParticleData particleType;
     private final ClientWorld world;
 
-    ParticleAnimation(List<Float> xProgression, List<Float> yProgression, List<Float> zProgression, BasicParticleType particleType, ProgressionType progressionType) {
+    ParticleAnimation(List<Float> xProgression, List<Float> yProgression, List<Float> zProgression, IParticleData particleType, ProgressionType progressionType) {
         super(null, xProgression, yProgression, zProgression, progressionType);
 
         this.particleType = particleType;

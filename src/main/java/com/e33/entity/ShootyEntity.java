@@ -1,9 +1,9 @@
 package com.e33.entity;
 
 import com.e33.goal.attack.*;
+import com.e33.init.ItemRegistry;
 import com.e33.init.ModSounds;
 import com.e33.goal.ShootBadGuysGoal;
-import com.e33.init.BlockRegistry;
 import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -97,7 +97,7 @@ public class ShootyEntity extends AnimalEntity {
     public ILivingEntityData onInitialSpawn(IWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
         spawnDataIn = super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
 
-        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(BlockRegistry.stickItem));
+        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(ItemRegistry.stickItem));
         return spawnDataIn;
     }
 }
