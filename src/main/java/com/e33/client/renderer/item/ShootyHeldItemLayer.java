@@ -38,7 +38,7 @@ public class ShootyHeldItemLayer<T extends LivingEntity> extends LayerRenderer<S
             return;
         }
 
-        this.weaponAnimator.animate(entityIn, itemstack);
+        this.weaponAnimator.animate(entityIn);
     }
 
     public boolean shouldCombineTextures() {

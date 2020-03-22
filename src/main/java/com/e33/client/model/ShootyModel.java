@@ -1,5 +1,6 @@
 package com.e33.client.model;
 
+import com.e33.client.animation.animator.Animator;
 import com.e33.client.animation.animator.ShootyAnimator;
 import com.e33.client.detail.modelBox.ModelBoxWithParameters;
 import com.e33.entity.ShootyEntity;
@@ -7,7 +8,7 @@ import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 
 public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implements DynamicAnimationInterface {
-    private final ShootyAnimator animator;
+    private Animator animator;
 
     protected RendererModel shooty;
     protected RendererModel legs;
@@ -233,9 +234,6 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
         head.cubeList.add(new ModelBoxWithParameters(head, 26, 50, 0.8F, -22.6F, -0.5F, 1, 2, 2, 0.0F, false));
         head.cubeList.add(new ModelBoxWithParameters(head, 9, 39, -0.9F, -22.6F, 1.1F, 2, 2, 1, 0.0F, false));
         head.cubeList.add(new ModelBoxWithParameters(head, 49, 29, -1.6F, -22.6F, -0.6F, 1, 2, 2, 0.0F, false));
-
-        this.animator = new ShootyAnimator(this);
-//        this.animator = new ShootyAnimatorOld(this);
     }
 
     public RendererModel getMainRendererModel() {
@@ -248,11 +246,15 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
     }
 
     public void setRotationAngles(ShootyEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-        this.animator.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+        if (this.animator == null) {
+            this.animator = new ShootyAnimator(this);
+        }
+
+        this.animator.animate(entity);
     }
 
     public void setLivingAnimations(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.animator.animate(entity, limbSwing, limbSwingAmount, partialTick);
+
     }
 
     private void setRotationAngle(RendererModel modelRenderer, float x, float y, float z) {

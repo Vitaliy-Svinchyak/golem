@@ -64,7 +64,7 @@ public class ShootBadGuysGoal extends Goal {
         MobEntity attackTarget = (MobEntity) this.entity.getAttackTarget();
         if (attackTarget != null) {
             if (this.lastEvent.equals("no")) {
-                LOGGER.info("NEW TARGET");
+//                LOGGER.info("NEW TARGET");
                 this.newTarget(attackTarget);
                 this.lastEvent = "aim";
             } else {
