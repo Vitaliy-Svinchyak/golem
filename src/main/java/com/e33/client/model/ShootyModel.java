@@ -235,6 +235,7 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
         head.cubeList.add(new ModelBoxWithParameters(head, 49, 29, -1.6F, -22.6F, -0.6F, 1, 2, 2, 0.0F, false));
 
         this.animator = new ShootyAnimator(this);
+//        this.animator = new ShootyAnimatorOld(this);
     }
 
     public RendererModel getMainRendererModel() {
@@ -251,7 +252,7 @@ public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> implemen
     }
 
     public void setLivingAnimations(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.animator.setLivingAnimations(entity, limbSwing, limbSwingAmount, partialTick);
+        this.animator.animate(entity, limbSwing, limbSwingAmount, partialTick);
     }
 
     private void setRotationAngle(RendererModel modelRenderer, float x, float y, float z) {

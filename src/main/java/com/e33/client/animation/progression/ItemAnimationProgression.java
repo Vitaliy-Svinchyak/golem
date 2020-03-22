@@ -1,4 +1,4 @@
-package com.e33.client.animation.animationProgression;
+package com.e33.client.animation.progression;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 

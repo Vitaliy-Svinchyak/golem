@@ -1,20 +1,11 @@
 package com.e33.client.renderer.item;
 
 import com.e33.client.animation.animator.ShootyWeaponAnimator;
-import com.e33.client.animation.animated.item.AimedWeaponPosition;
-import com.e33.client.animation.animated.item.DefaultWeaponPosition;
-import com.e33.client.detail.UniqueAnimationState;
-import com.e33.client.detail.item.Rotation;
-import com.e33.client.detail.item.Translation;
 import com.e33.client.model.ShootyModel;
-import com.e33.client.listener.AnimationStateListener;
 import com.e33.entity.ShootyEntity;
 import com.e33.item.ItemDangerousStick;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;

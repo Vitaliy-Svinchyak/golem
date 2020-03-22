@@ -68,10 +68,10 @@ public class ShootBadGuysGoal extends Goal {
                 this.newTarget(attackTarget);
                 this.lastEvent = "aim";
             } else {
-                LOGGER.info("SHOT");
-                this.shot(attackTarget);
-//                this.noTarget();
-//                this.lastEvent = "no";
+//                LOGGER.info("SHOT");
+//                this.shot(attackTarget);
+                this.noTarget();
+                this.lastEvent = "no";
             }
 
             this.ticksToNextAttack = 20;

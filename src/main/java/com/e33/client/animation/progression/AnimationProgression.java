@@ -1,4 +1,4 @@
-package com.e33.client.animation.animationProgression;
+package com.e33.client.animation.progression;
 
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +25,12 @@ abstract public class AnimationProgression {
         this.zProgression = zProgression;
 
         this.progressionType = progressionType;
+    }
+
+    public AnimationProgression reset() {
+        this.currentTick = 0;
+
+        return this;
     }
 
     public AnimationProgression reverse() {

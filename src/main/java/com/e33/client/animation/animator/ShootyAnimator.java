@@ -1,32 +1,28 @@
 package com.e33.client.animation.animator;
 
-import com.e33.client.animation.animationProgression.AnimationProgression;
-import com.e33.client.animation.animationProgression.AnimationProgressionBuilder;
+import com.e33.client.animation.animation.entity.AimingAnimation;
+import com.e33.client.animation.animation.Animation;
 import com.e33.client.detail.UniqueAnimationState;
-import com.e33.client.model.DynamicAnimationInterface;
-import com.e33.client.detail.modelBox.ModelBoxWithParameters;
 import com.e33.client.model.ShootyModel;
-import com.e33.client.animation.animated.model.ShootyModelAimed;
 import com.e33.client.detail.AnimationState;
 import com.e33.client.listener.AnimationStateListener;
 import com.e33.entity.ShootyEntity;
-import com.e33.util.Helper;
 import com.google.common.collect.Lists;
-import net.minecraft.client.renderer.entity.model.RendererModel;
-import net.minecraft.client.renderer.model.ModelBox;
+import com.google.common.collect.Maps;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class ShootyAnimator<T extends ShootyEntity> {
     private final static Logger LOGGER = LogManager.getLogger();
 
     private final ShootyModel model;
-    private List<AnimationProgression> animations = Lists.newArrayList();
+    private List<Animation> animations = Lists.newArrayList();
     private UniqueAnimationState lastAnimationState = AnimationStateListener.getDefaultUniqueAnimationState();
+    private Map<Class, Animation> animationCache = Maps.newHashMap();
 
     public ShootyAnimator(ShootyModel model) {
         this.model = model;
@@ -40,25 +36,24 @@ public class ShootyAnimator<T extends ShootyEntity> {
 
     }
 
-    public void setLivingAnimations(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
+    public void animate(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
         this.log("have " + this.animations.size() + " animations");
         UniqueAnimationState animationState = AnimationStateListener.getUniqueAnimationState(entity);
 
         if (this.isAnimationComplete() && this.lastAnimationState.equals(animationState)) {
             this.renderCurrentPose(entity);
-            this.animateAllProgressions();
         } else if (animationState.state == AnimationState.SHOT) {
-            this.renderAimed();
+            this.renderAimed(entity);
         }
 
         // New animation requested
         if (!this.lastAnimationState.equals(animationState)) {
             switch (animationState.state) {
                 case DEFAULT:
-                    this.animateDefaultPose();
+                    this.animateDefaultPose(entity);
                     break;
                 case AIM:
-                    this.animateAiming();
+                    this.animateAiming(entity);
                     break;
                 case SHOT:
                     this.animateShot();
@@ -78,8 +73,8 @@ public class ShootyAnimator<T extends ShootyEntity> {
         List<Integer> animationsToRemove = Lists.newArrayList();
 
         for (int i = 0; i < this.animations.size(); i++) {
-            AnimationProgression animation = this.animations.get(i);
-            boolean animationResult = animation.makeProgress();
+            Animation animation = this.animations.get(i);
+            boolean animationResult = animation.animate();
 
             if (!animationResult) {
                 animationsToRemove.add(i);
@@ -93,106 +88,58 @@ public class ShootyAnimator<T extends ShootyEntity> {
     }
 
     private void renderCurrentPose(T entity) {
-        this.log("renderCurrentPose ");
+        this.log("renderCurrentPose");
         AnimationState animationState = AnimationStateListener.getAnimationState(entity);
 
         switch (animationState) {
             case DEFAULT:
-                this.renderDefaultPose();
+                this.renderDefaultPose(entity);
                 break;
             case SHOT:
             case AIM:
-                this.renderAimed();
+                this.renderAimed(entity);
                 break;
         }
     }
 
-    private void renderAimed() {
+    private void renderAimed(T entity) {
         this.log("renderAimed");
-        List<AnimationProgression> animations = this.createAnimation(new ShootyModel(), new ShootyModelAimed(), 1);
+        Animation aimingAnimation = this.createAimingAnimation(entity).lastFrame().create();
 
-        this.animations = Helper.concatLists(this.animations, animations);
+        this.animations.add(aimingAnimation);
     }
 
-    private void renderDefaultPose() {
+    private void renderDefaultPose(T entity) {
         this.log("renderDefaultPose");
-        List<AnimationProgression> animations = this.createAnimation(new ShootyModelAimed(), new ShootyModel(), 1);
+        Animation aimingAnimation = this.createAimingAnimation(entity).firstFrame().create();
 
-        this.animations = Helper.concatLists(this.animations, animations);
+        this.animations.add(aimingAnimation);
     }
 
-    private void animateDefaultPose() {
+    private void animateDefaultPose(T entity) {
         this.log("animateDefaultPose");
-        List<AnimationProgression> animations = this.createAimingAnimation(20);
-        animations.stream()
-                .map(animation -> animation.reverse())
-                .collect(Collectors.toList());
+        Animation aimingAnimation = this.createAimingAnimation(entity).reset().setReverse(true).create();
 
-        this.animations = Helper.concatLists(this.animations, animations);
+        this.animations.add(aimingAnimation);
     }
 
-    private void animateAiming() {
+    private void animateAiming(T entity) {
         this.log("animateAiming");
-        List<AnimationProgression> animations = this.createAimingAnimation(10);
+        Animation aimingAnimation = this.createAimingAnimation(entity).reset().setReverse(false).create();
 
-        this.animations = Helper.concatLists(this.animations, animations);
+        this.animations.add(aimingAnimation);
     }
 
     private void animateShot() {
         this.log("animateShot");
     }
 
-    private List<AnimationProgression> createAimingAnimation(int ticksForAnimation) {
-        return this.createAnimation(new ShootyModel(), new ShootyModelAimed(), ticksForAnimation);
-    }
-
-    private List<AnimationProgression> createAnimation(DynamicAnimationInterface from, DynamicAnimationInterface to, int ticks) {
-        RendererModel fromModel = from.getMainRendererModel();
-        RendererModel toModel = to.getMainRendererModel();
-        RendererModel entityModel = this.model.getMainRendererModel();
-
-        return this.getAnimatedChanges(fromModel, toModel, entityModel, ticks);
-    }
-
-    private List<AnimationProgression> getAnimatedChanges(RendererModel fromModel, RendererModel toModel, RendererModel entityModel, int ticks) {
-        List<AnimationProgression> animations = Lists.newArrayList();
-
-        if (AnimationProgressionBuilder.angleDiffers(fromModel, toModel)) {
-            animations.add(AnimationProgressionBuilder.angle(fromModel, toModel, ticks, entityModel));
+    private Animation createAimingAnimation(T entity) {
+        if (this.animationCache.get(AimingAnimation.class) == null) {
+            this.animationCache.put(AimingAnimation.class, new AimingAnimation(this.model, entity));
         }
 
-        if (AnimationProgressionBuilder.pointDiffers(fromModel, toModel)) {
-            animations.add(AnimationProgressionBuilder.point(fromModel, toModel, ticks, entityModel));
-        }
-
-        List<ModelBox> fromCubes = fromModel.cubeList;
-        List<ModelBox> toCubes = toModel.cubeList;
-
-        for (int i = 0; i < fromCubes.size(); i++) {
-            ModelBoxWithParameters fromCube = (ModelBoxWithParameters) fromCubes.get(i);
-            ModelBoxWithParameters toCube = (ModelBoxWithParameters) toCubes.get(i);
-
-            if (AnimationProgressionBuilder.cubeDiffers(fromCube.parameters, toCube.parameters)) {
-                animations.add(
-                        AnimationProgressionBuilder.modelBox(ticks, entityModel, i, fromCube.parameters, toCube.parameters)
-                );
-            }
-        }
-
-        List<RendererModel> fromChildModels = fromModel.childModels;
-        List<RendererModel> toChildModels = toModel.childModels;
-        List<RendererModel> entityChildModels = entityModel.childModels;
-
-        if (fromChildModels != null) {
-            for (int i = 0; i < fromChildModels.size(); i++) {
-                animations = Helper.concatLists(
-                        animations,
-                        this.getAnimatedChanges(fromChildModels.get(i), toChildModels.get(i), entityChildModels.get(i), ticks)
-                );
-            }
-        }
-
-        return animations;
+        return this.animationCache.get(AimingAnimation.class);
     }
 
     private void log(String message) {

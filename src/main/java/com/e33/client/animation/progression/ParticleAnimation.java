@@ -1,4 +1,4 @@
-package com.e33.client.animation.animationProgression;
+package com.e33.client.animation.progression;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
