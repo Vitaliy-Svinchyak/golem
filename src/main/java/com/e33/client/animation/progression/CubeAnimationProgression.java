@@ -14,6 +14,7 @@ public class CubeAnimationProgression extends AnimationProgression {
 
     CubeAnimationProgression(RendererModel rendererModel, List<Float> xProgression, List<Float> yProgression, List<Float> zProgression, ProgressionType progressionType, int cubeNumber, ModelBoxParameters originalModelBoxParameters) {
         super(rendererModel, xProgression, yProgression, zProgression, progressionType);
+        LOGGER.error("CUBES CHANGED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
         this.cubeNumber = cubeNumber;
         this.originalModelBoxParameters = originalModelBoxParameters;
