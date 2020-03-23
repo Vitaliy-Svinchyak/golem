@@ -18,6 +18,7 @@ import java.util.UUID;
 abstract public class Animator {
     final static Logger LOGGER = LogManager.getLogger();
 
+    protected boolean log = false;
     private Map<UUID, List<Animation>> animations = Maps.newHashMap();
     private Map<UUID, UniqueAnimationState> lastAnimationState = Maps.newHashMap();
     private Map<UUID, Map<Class, Animation>> animationCache = Maps.newHashMap();
@@ -26,8 +27,10 @@ abstract public class Animator {
 
     abstract Animation createShotAnimation(LivingEntity entity);
 
+    abstract Animation createMoveAnimation(LivingEntity entity);
+
     public void animate(LivingEntity entity) {
-        this.log(entity.getUniqueID().toString() + " have " + this.getAnimationsFor(entity).size() + " animations");
+        this.log(" have " + this.getAnimationsFor(entity).size() + " animations");
         UniqueAnimationState animationState = AnimationStateListener.getUniqueAnimationState(entity);
 
         if (this.isAnimationComplete(entity) && this.getLastAnimationState(entity).equals(animationState)) {
@@ -48,6 +51,9 @@ abstract public class Animator {
                 case SHOT:
                     this.animateShot(entity);
                     break;
+                case MOVE:
+                    this.animateMove(entity);
+                    break;
                 default:
                     this.error("No animation!");
                     break;
@@ -55,19 +61,20 @@ abstract public class Animator {
         }
 
         this.setLastAnimationState(entity, animationState);
-        this.animateAllProgressions(entity);
+        this.animateAll(entity);
     }
 
-    void animateAllProgressions(LivingEntity entity) {
-        this.log(entity.getUniqueID().toString() + " animateAllProgressions " + this.getAnimationsFor(entity).size());
+    void animateAll(LivingEntity entity) {
+        this.log(" animateAll " + this.getAnimationsFor(entity).size());
         List<Integer> animationsToRemove = Lists.newArrayList();
         List<Animation> entityAnimations = this.getAnimationsFor(entity);
 
         for (int i = 0; i < entityAnimations.size(); i++) {
             Animation animation = entityAnimations.get(i);
-            boolean animationResult = animation.animate();
+            boolean animationComplete = animation.animate();
 
-            if (!animationResult) {
+            if (animationComplete) {
+                this.log("animation finished " + animation.getClass());
                 animationsToRemove.add(i);
             }
         }
@@ -89,46 +96,56 @@ abstract public class Animator {
             case AIM:
                 this.renderAimed(entity);
                 break;
+            default:
+                this.error("No position! " + AnimationStateListener.getAnimationState(entity));
+                break;
         }
     }
 
     void renderAimed(LivingEntity entity) {
-        this.log(entity.getUniqueID().toString() + " renderAimed");
-        Animation aimingAnimation = this.createAimingAnimation(entity).lastFrame().create();
+        this.log(" renderAimed");
+        Animation animation = this.createAimingAnimation(entity).lastFrame().create();
 
-        this.addAnimation(entity, aimingAnimation);
+        this.addAnimation(entity, animation);
     }
 
     void renderDefaultPose(LivingEntity entity) {
-        this.log(entity.getUniqueID().toString() + " renderDefaultPose");
-        Animation aimingAnimation = this.createAimingAnimation(entity).firstFrame().create();
+        this.log(" renderDefaultPose");
+        Animation animation = this.createAimingAnimation(entity).firstFrame().create();
 
-        this.addAnimation(entity, aimingAnimation);
+        this.addAnimation(entity, animation);
     }
 
     void animateDefaultPose(LivingEntity entity) {
-        this.log(entity.getUniqueID().toString() + " animateDefaultPose");
-        Animation aimingAnimation = this.createAimingAnimation(entity).reset().setReverse(true).create();
+        this.log(" animateDefaultPose");
+        Animation animation = this.createAimingAnimation(entity).reset().setReverse(true).create();
 
-        this.addAnimation(entity, aimingAnimation);
+        this.addAnimation(entity, animation);
     }
 
     void animateAiming(LivingEntity entity) {
-        this.log(entity.getUniqueID().toString() + " animateAiming");
-        Animation aimingAnimation = this.createAimingAnimation(entity).reset().setReverse(false).create();
+        this.log(" animateAiming");
+        Animation animation = this.createAimingAnimation(entity).reset().create();
 
-        this.addAnimation(entity, aimingAnimation);
+        this.addAnimation(entity, animation);
     }
 
     void animateShot(LivingEntity entity) {
-        this.log(entity.getUniqueID().toString() + " animateShot");
-        Animation aimingAnimation = this.createShotAnimation(entity).reset().setReverse(false).create();
+        this.log(" animateShot");
+        Animation animation = this.createShotAnimation(entity).reset().create();
 
-        this.addAnimation(entity, aimingAnimation);
+        this.addAnimation(entity, animation);
+    }
+
+    void animateMove(LivingEntity entity) {
+        this.log(" animateMove");
+        Animation animation = this.createMoveAnimation(entity).reset().setEndless(true).create();
+
+        this.addAnimation(entity, animation);
     }
 
     List<Animation> getAnimationsFor(LivingEntity entity) {
-        if (this.animations.get(entity.getUniqueID()) == null) {
+        if (!this.animations.containsKey(entity.getUniqueID())) {
             this.animations.put(entity.getUniqueID(), Lists.newArrayList());
         }
 
@@ -164,10 +181,14 @@ abstract public class Animator {
     }
 
     void log(String message) {
-//        LOGGER.info(message);
+        if (this.log) {
+            LOGGER.info(message);
+        }
     }
 
     void error(String message) {
-        LOGGER.info(message);
+        if (this.log) {
+            LOGGER.info(message);
+        }
     }
 }

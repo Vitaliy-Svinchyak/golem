@@ -1,4 +1,4 @@
-const filename = 'default_pose'
+const filename = 'moving_pose4'
 const className = 'small_golem'
 const fs = require('fs')
 console.log(fs.readdirSync('./'))
@@ -16,7 +16,7 @@ import com.e33.entity.ShootyEntity;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.entity.model.RendererModel;`)
 
-content = content.replace(`public class ${className} extends ModelBase {`, `public class ShootyModel<T extends ShootyEntity> extends EntityModel<T> {`)
+content = content.replace(`public class ${className} extends ModelBase {`, `public class ShootyModel<T extends ShootyEntity> extends ShootyModel<T> {`)
 content = content.replace(`public ${className}() {`, `public ShootyModel() {`)
 content = content.replace(`render(Entity`, `render(ShootyEntity`)
 content = content.split('ModelRenderer').join('RendererModel')

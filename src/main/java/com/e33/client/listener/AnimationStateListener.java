@@ -2,6 +2,7 @@ package com.e33.client.listener;
 
 import com.e33.client.detail.AnimationState;
 import com.e33.client.detail.UniqueAnimationState;
+import com.e33.event.MoveEvent;
 import com.e33.event.NewTargetEvent;
 import com.e33.event.NoTargetEvent;
 import com.e33.event.ShotEvent;
@@ -26,6 +27,7 @@ public class AnimationStateListener {
         bus.addListener(AnimationStateListener::onNewTarget);
         bus.addListener(AnimationStateListener::onNoTarget);
         bus.addListener(AnimationStateListener::onShot);
+        bus.addListener(AnimationStateListener::onMove);
     }
 
     private static void onNewTarget(NewTargetEvent event) {
@@ -43,6 +45,12 @@ public class AnimationStateListener {
     private static void onShot(ShotEvent event) {
         animationMap.remove(event.getCreature().getUniqueID());
         animationMap.put(event.getCreature().getUniqueID(), new UniqueAnimationState(AnimationState.SHOT));
+        eventMap.put(event.getCreature().getUniqueID(), event);
+    }
+
+    private static void onMove(MoveEvent event) {
+        animationMap.remove(event.getCreature().getUniqueID());
+        animationMap.put(event.getCreature().getUniqueID(), new UniqueAnimationState(AnimationState.MOVE));
         eventMap.put(event.getCreature().getUniqueID(), event);
     }
 

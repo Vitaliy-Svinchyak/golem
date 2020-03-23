@@ -1,5 +1,8 @@
 package com.e33.goal.move;
 
+import com.e33.E33;
+import com.e33.event.MoveEvent;
+import com.e33.event.NoTargetEvent;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -98,6 +101,7 @@ public class PatrollingGoal extends RandomWalkingGoal {
         this.patrolRoute.add(new Vec3d(x - 10, y - 1, z + 10));
         this.patrolRoute.add(new Vec3d(x + 10, y - 1, z + 10));
         this.patrolRoute.add(new Vec3d(x + 10, y - 1, z - 10));
+        this.move();
     }
 
     @Nullable
@@ -162,5 +166,9 @@ public class PatrollingGoal extends RandomWalkingGoal {
         }
 
         return nearestPoint;
+    }
+
+    private void move() {
+        E33.internalEventBus.post(new MoveEvent(this.creature));
     }
 }

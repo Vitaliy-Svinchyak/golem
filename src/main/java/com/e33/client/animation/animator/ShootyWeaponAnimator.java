@@ -13,15 +13,24 @@ import java.util.Map;
 
 public class ShootyWeaponAnimator extends Animator {
 
-    void animateAllProgressions(LivingEntity entity) {
+    void animateAll(LivingEntity entity) {
         ItemStack itemstack = entity.getHeldItemMainhand();
         GlStateManager.color3f(1.0F, 1.0F, 1.0F);
         GlStateManager.pushMatrix();
 
-        super.animateAllProgressions(entity);
+        super.animateAll(entity);
 
         Minecraft.getInstance().getFirstPersonRenderer().renderItem(entity, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON_RIGHT_HAND);
         GlStateManager.popMatrix();
+    }
+
+    @Override
+    void animateMove(LivingEntity entity) {
+        return;
+    }
+
+    Animation createMoveAnimation(LivingEntity entity) {
+        return null;
     }
 
     Animation createShotAnimation(LivingEntity entity) {

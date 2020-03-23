@@ -11,26 +11,52 @@ import com.google.common.collect.Lists;
 import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.client.renderer.model.ModelBox;
 import net.minecraft.entity.LivingEntity;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 abstract public class Animation {
+    protected final static Logger LOGGER = LogManager.getLogger();
 
+    protected boolean log = false;
     private boolean reverse = false;
+    private boolean oneFrame = false;
+    private boolean endless = false;
     private boolean oneTime = false;
+    private boolean wasAnimated = false;
 
     protected final DynamicAnimationInterface model;
     protected final LivingEntity entity;
+    private Animation childAnimation;
 
     private List<AnimationProgression> animations;
     private List<AnimationProgression> cachedNormalAnimations;
     private List<AnimationProgression> cachedReversedAnimations;
 
-    protected Animation(DynamicAnimationInterface model, LivingEntity entity) {
+    public Animation(DynamicAnimationInterface model, LivingEntity entity) {
         this.model = model;
         this.entity = entity;
+    }
+
+    public Animation then(Animation childAnimation) {
+        this.childAnimation = childAnimation;
+
+        return this;
+    }
+
+    public Animation setEndless(boolean endless) {
+        this.endless = endless;
+
+        return this;
+    }
+
+    public Animation setOneTime(boolean oneTime) {
+        this.oneTime = oneTime;
+
+        return this;
     }
 
     public Animation create() {
@@ -38,6 +64,10 @@ abstract public class Animation {
 
         for (AnimationProgression progression : this.animations) {
             progression.reset();
+        }
+
+        if (this.childAnimation != null) {
+            this.childAnimation.create();
         }
 
         return this;
@@ -48,7 +78,13 @@ abstract public class Animation {
     protected abstract List<AnimationProgression> createReversedAnimation();
 
     public Animation reset() {
-        this.oneTime = false;
+        this.oneFrame = false;
+        this.reverse = false;
+        this.endless = false;
+
+        if (this.childAnimation != null) {
+            this.childAnimation.reset();
+        }
 
         return this;
     }
@@ -56,24 +92,37 @@ abstract public class Animation {
     public Animation setReverse(boolean reverse) {
         this.reverse = reverse;
 
+        if (this.childAnimation != null) {
+            this.childAnimation.setReverse(reverse);
+        }
+
         return this;
     }
 
     public Animation firstFrame() {
-        this.reset().setReverse(false);
-        this.oneTime = true;
+        this.reset();
+        this.oneFrame = true;
+
+        if (this.childAnimation != null) {
+            this.childAnimation.firstFrame();
+        }
 
         return this;
     }
 
     public Animation lastFrame() {
         this.reset().setReverse(true);
-        this.oneTime = true;
+        this.oneFrame = true;
+
+        if (this.childAnimation != null) {
+            this.childAnimation.lastFrame();
+        }
 
         return this;
     }
 
     public boolean animate() {
+        this.wasAnimated = true;
         List<Integer> animationsToRemove = Lists.newArrayList();
 
         for (int i = 0; i < this.animations.size(); i++) {
@@ -90,11 +139,27 @@ abstract public class Animation {
             this.animations.remove(key.intValue());
         }
 
-        if (this.oneTime) {
+        if (this.oneFrame) {
             return false;
         }
 
-        return !this.isAnimationComplete();
+        if (this.isAnimationComplete() && this.childAnimation != null) {
+            boolean childAnimationComplete = this.childAnimation.animate();
+
+            if (this.endless && childAnimationComplete) {
+                this.log("RESETTING ALL ANIMATIONS");
+                this.create();
+
+                return false;
+            }
+
+            this.log("child not finished");
+            return childAnimationComplete;
+        }
+
+        this.log("I MUST NOT BE HERE!!!!!!!!!!!");
+
+        return this.isAnimationComplete();
     }
 
     protected List<AnimationProgression> getAnimatedChangesForEntity(RendererModel fromModel, RendererModel toModel, RendererModel entityModel, int ticks) {
@@ -169,6 +234,10 @@ abstract public class Animation {
             this.cachedReversedAnimations = this.createReversedAnimation();
         }
 
+        if (this.oneTime && this.wasAnimated) {
+            return;
+        }
+
         if (this.isReversed()) {
             this.animations = new ArrayList<>(this.cachedReversedAnimations);
         } else {
@@ -178,5 +247,11 @@ abstract public class Animation {
 
     private boolean isAnimationComplete() {
         return this.animations.size() == 0;
+    }
+
+    void log(String message) {
+        if (this.log) {
+//            LOGGER.info(message);
+        }
     }
 }

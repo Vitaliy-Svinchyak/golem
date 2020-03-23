@@ -16,16 +16,6 @@ public class AimingAnimation extends Animation {
         super(model, entity);
     }
 
-    protected List<AnimationProgression> createReversedAnimation() {
-        DynamicAnimationInterface from = new ShootyModelAimed();
-        DynamicAnimationInterface to = new ShootyModel();
-        RendererModel fromModel = from.getMainRendererModel();
-        RendererModel toModel = to.getMainRendererModel();
-        RendererModel entityModel = this.model.getMainRendererModel();
-
-        return this.getAnimatedChangesForEntity(fromModel, toModel, entityModel, 20);
-    }
-
     protected List<AnimationProgression> createNormalAnimation() {
         DynamicAnimationInterface from = new ShootyModel();
         DynamicAnimationInterface to = new ShootyModelAimed();
@@ -34,5 +24,15 @@ public class AimingAnimation extends Animation {
         RendererModel entityModel = this.model.getMainRendererModel();
 
         return this.getAnimatedChangesForEntity(fromModel, toModel, entityModel, 10);
+    }
+
+    protected List<AnimationProgression> createReversedAnimation() {
+        DynamicAnimationInterface from = new ShootyModelAimed();
+        DynamicAnimationInterface to = new ShootyModel();
+        RendererModel fromModel = from.getMainRendererModel();
+        RendererModel toModel = to.getMainRendererModel();
+        RendererModel entityModel = this.model.getMainRendererModel();
+
+        return this.getAnimatedChangesForEntity(fromModel, toModel, entityModel, 20);
     }
 }
