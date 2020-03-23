@@ -1,9 +1,12 @@
 package com.e33.entity;
 
 import com.e33.goal.attack.*;
+import com.e33.goal.move.PatrollingGoal;
 import com.e33.init.ItemRegistry;
-import com.e33.init.ModSounds;
+import com.e33.init.SoundsRegistry;
 import com.e33.goal.ShootBadGuysGoal;
+import net.minecraft.block.AnvilBlock;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -12,7 +15,9 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -51,7 +56,8 @@ public class ShootyEntity extends AnimalEntity {
     @Override
     protected void registerGoals() {
         // TODO 2 custom priority queue
-        this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
+        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
+//        this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
         this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
@@ -81,7 +87,19 @@ public class ShootyEntity extends AnimalEntity {
     }
 
     protected SoundEvent getHurtSound(DamageSource damageSourceIn) {
-        return ModSounds.SHOOTY_HURT;
+        return SoundsRegistry.SHOOTY_HURT;
+    }
+
+    protected SoundEvent getDeathSound() {
+        return SoundsRegistry.SHOOTY_DEATH;
+    }
+
+    protected void playStepSound(BlockPos pos, BlockState blockIn) {
+        this.playSound(this.getStepSound(), 0.15F, 1.0F);
+    }
+
+    protected SoundEvent getStepSound() {
+        return SoundsRegistry.SHOOTY_STEP;
     }
 
     public int getMaxFallHeight() {

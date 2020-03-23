@@ -8,12 +8,12 @@ import com.e33.event.NoTargetEvent;
 import com.e33.event.ShotEvent;
 import com.e33.fight.ShootExpectations;
 import com.e33.fight.ShootingNavigator;
+import com.e33.init.SoundsRegistry;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -67,9 +67,9 @@ public class ShootBadGuysGoal extends Goal {
                 this.newTarget(attackTarget);
                 this.lastEvent = "aim";
             } else {
-//                this.shot(attackTarget);
-                this.noTarget();
-                this.lastEvent = "no";
+                this.shot(attackTarget);
+//                this.noTarget();
+//                this.lastEvent = "no";
             }
 
             this.ticksToNextAttack = 20;
@@ -148,7 +148,6 @@ public class ShootBadGuysGoal extends Goal {
         Vec3d attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
         BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, attackPoint.x, attackPoint.y, attackPoint.z, attackTarget);
         this.entity.world.addEntity(bullet);
-        this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
     }
 
     private void newTarget(LivingEntity attackTarget) {
@@ -165,5 +164,6 @@ public class ShootBadGuysGoal extends Goal {
 
     private void shot(LivingEntity attackTarget) {
         E33.internalEventBus.post(new ShotEvent(this.entity, attackTarget));
+        this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundsRegistry.SHOOTY_SHOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
     }
 }

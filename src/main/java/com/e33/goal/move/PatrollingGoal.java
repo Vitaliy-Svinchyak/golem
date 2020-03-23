@@ -121,7 +121,6 @@ public class PatrollingGoal extends RandomWalkingGoal {
             this.patrolPoint = 0;
         }
 
-        Path path = this.creature.getNavigator().getPathToPos(new BlockPos(this.getCurrentPatrolTask().x, this.getCurrentPatrolTask().y, this.getCurrentPatrolTask().z), 1);
         return this.patrolRoute.get(this.patrolPoint);
     }
 

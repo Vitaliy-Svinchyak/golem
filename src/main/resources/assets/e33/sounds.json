@@ -2,7 +2,29 @@
   "entity_shooty_hurt": {
     "category": "animal",
     "sounds": [
-      "e33:entity/shooty_hurt"
+      "e33:entity/hurt/1",
+      "e33:entity/hurt/2"
+    ]
+  },
+  "entity_shooty_shot": {
+    "category": "animal",
+    "sounds": [
+      "e33:entity/shot/1",
+      "e33:entity/shot/2",
+      "e33:entity/shot/3"
+    ]
+  },
+  "entity_shooty_death": {
+    "category": "animal",
+    "sounds": [
+      "e33:entity/death/1"
+    ]
+  },
+  "entity_shooty_step": {
+    "category": "animal",
+    "sounds": [
+      "e33:entity/step/1",
+      "e33:entity/step/2"
     ]
   }
 }

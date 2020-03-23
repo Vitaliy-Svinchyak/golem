@@ -61,7 +61,7 @@ public class EntityRegistry {
 
     @SubscribeEvent
     public static void onRegisterSounds(RegistryEvent.Register<SoundEvent> event) {
-        ModSounds.registerSounds(event.getRegistry());
+        SoundsRegistry.registerSounds(event.getRegistry());
     }
 
     @SubscribeEvent
