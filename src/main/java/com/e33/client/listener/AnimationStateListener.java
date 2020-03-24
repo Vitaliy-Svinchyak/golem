@@ -4,7 +4,7 @@ import com.e33.client.detail.AnimationState;
 import com.e33.client.detail.UniqueAnimationState;
 import com.e33.event.MoveEvent;
 import com.e33.event.NewTargetEvent;
-import com.e33.event.NoTargetEvent;
+import com.e33.event.NoActionEvent;
 import com.e33.event.ShotEvent;
 import net.minecraft.entity.LivingEntity;
 import net.minecraftforge.eventbus.api.Event;
@@ -25,7 +25,7 @@ public class AnimationStateListener {
 
     public static void setup(IEventBus bus) {
         bus.addListener(AnimationStateListener::onNewTarget);
-        bus.addListener(AnimationStateListener::onNoTarget);
+        bus.addListener(AnimationStateListener::onNoAction);
         bus.addListener(AnimationStateListener::onShot);
         bus.addListener(AnimationStateListener::onMove);
     }
@@ -36,7 +36,11 @@ public class AnimationStateListener {
         eventMap.put(event.getCreature().getUniqueID(), event);
     }
 
-    private static void onNoTarget(NoTargetEvent event) {
+    private static void onNoAction(NoActionEvent event) {
+        if (getAnimationState(event.getCreature()) == AnimationState.DEFAULT) {
+            return;
+        }
+
         animationMap.remove(event.getCreature().getUniqueID());
         animationMap.put(event.getCreature().getUniqueID(), new UniqueAnimationState(AnimationState.DEFAULT));
         eventMap.put(event.getCreature().getUniqueID(), event);
@@ -60,28 +64,21 @@ public class AnimationStateListener {
     }
 
     public static AnimationState getAnimationState(LivingEntity creature) {
-        UniqueAnimationState savedState = AnimationStateListener.animationMap.get(creature.getUniqueID());
-        if (savedState != null) {
-            return savedState.state;
-        }
-
-        animationMap.put(creature.getUniqueID(), getDefaultUniqueAnimationState());
-
-        return AnimationState.DEFAULT;
+        return getUniqueAnimationState(creature).state;
     }
 
     public static UniqueAnimationState getUniqueAnimationState(LivingEntity creature) {
-        UniqueAnimationState savedState = AnimationStateListener.animationMap.get(creature.getUniqueID());
-        if (savedState != null) {
-            return savedState;
+        UniqueAnimationState savedState = animationMap.get(creature.getUniqueID());
+
+        if (savedState == null) {
+            animationMap.put(creature.getUniqueID(), getDefaultUniqueAnimationState());
         }
 
-        animationMap.put(creature.getUniqueID(), getDefaultUniqueAnimationState());
-
-        return new UniqueAnimationState(AnimationState.DEFAULT);
+        return animationMap.get(creature.getUniqueID());
     }
 
-    public static UniqueAnimationState getDefaultUniqueAnimationState() {
+    static UniqueAnimationState getDefaultUniqueAnimationState() {
+        LOGGER.info("Creating new");
         return new UniqueAnimationState(AnimationState.DEFAULT);
     }
 }

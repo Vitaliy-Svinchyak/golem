@@ -140,24 +140,20 @@ abstract public class Animation {
         }
 
         if (this.oneFrame) {
-            return false;
+            return true;
         }
 
         if (this.isAnimationComplete() && this.childAnimation != null) {
             boolean childAnimationComplete = this.childAnimation.animate();
 
             if (this.endless && childAnimationComplete) {
-                this.log("RESETTING ALL ANIMATIONS");
                 this.create();
 
                 return false;
             }
 
-            this.log("child not finished");
             return childAnimationComplete;
         }
-
-        this.log("I MUST NOT BE HERE!!!!!!!!!!!");
 
         return this.isAnimationComplete();
     }

@@ -154,7 +154,7 @@ abstract public class Animator {
 
     UniqueAnimationState getLastAnimationState(LivingEntity entity) {
         if (this.lastAnimationState.get(entity.getUniqueID()) == null) {
-            this.lastAnimationState.put(entity.getUniqueID(), AnimationStateListener.getDefaultUniqueAnimationState());
+            this.lastAnimationState.put(entity.getUniqueID(), AnimationStateListener.getUniqueAnimationState(entity));
         }
 
         return this.lastAnimationState.get(entity.getUniqueID());

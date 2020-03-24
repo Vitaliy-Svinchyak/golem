@@ -2,14 +2,12 @@ package com.e33.goal.move;
 
 import com.e33.E33;
 import com.e33.event.MoveEvent;
-import com.e33.event.NoTargetEvent;
+import com.e33.event.NoActionEvent;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.ai.goal.RandomWalkingGoal;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -21,7 +19,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
 import java.util.List;
 
 public class PatrollingGoal extends RandomWalkingGoal {
@@ -41,20 +38,27 @@ public class PatrollingGoal extends RandomWalkingGoal {
     }
 
     public boolean shouldExecute() {
-        this.createPatrolRoute(this.blockToPatrol);
+        if (this.patrolPointExists()) {
+            this.createPatrolRoute();
+        } else {
+            this.patrolRoute = Lists.newArrayList();
+            this.stop();
+            return false;
+        }
 
         return super.shouldExecute();
     }
 
-    private BlockPos findNearestBlockToPatrol(Class<? extends Block> block) {
+    private BlockPos findNearestBlockToPatrol() {
         BlockPos creaturePosition = this.creature.getPosition();
         AxisAlignedBB creatureView = new AxisAlignedBB(creaturePosition.getX() - 30, creaturePosition.getY() - 1, creaturePosition.getZ() - 30, creaturePosition.getX() + 30, creaturePosition.getY() + 1, creaturePosition.getZ() + 30);
-        return this.findBlockPosInArea(creatureView, block);
+
+        return this.findBlockPosInArea(creatureView);
     }
 
     @Nullable
     @OnlyIn(Dist.CLIENT)
-    private BlockPos findBlockPosInArea(AxisAlignedBB area, Class<? extends Block> blockIn) {
+    private BlockPos findBlockPosInArea(AxisAlignedBB area) {
         int i = MathHelper.floor(area.minX);
         int j = MathHelper.ceil(area.maxX);
         int k = MathHelper.floor(area.minY);
@@ -72,7 +76,7 @@ public class PatrollingGoal extends RandomWalkingGoal {
                 for (int l1 = k; l1 < l; ++l1) {
                     for (int i2 = i1; i2 < j1; ++i2) {
                         BlockState blockstate = this.world.getBlockState(blockpos$pooledmutableblockpos.setPos(k1, l1, i2));
-                        if (blockstate.getBlock().getClass().toString().equals(blockIn.toString())) {
+                        if (blockstate.getBlock().getClass().toString().equals(this.blockToPatrol.toString())) {
                             return new BlockPos(k1, l1, i2);
                         }
                     }
@@ -83,12 +87,16 @@ public class PatrollingGoal extends RandomWalkingGoal {
         return null;
     }
 
-    private void createPatrolRoute(Class<? extends Block> block) {
+    private boolean patrolPointExists() {
+        return this.findNearestBlockToPatrol() != null;
+    }
+
+    private void createPatrolRoute() {
         if (!this.patrolRoute.isEmpty()) {
             return;
         }
 
-        BlockPos blockToPatrol = this.findNearestBlockToPatrol(block);
+        BlockPos blockToPatrol = this.findNearestBlockToPatrol();
         if (blockToPatrol == null) {
             return;
         }
@@ -107,6 +115,11 @@ public class PatrollingGoal extends RandomWalkingGoal {
     @Nullable
     protected Vec3d getPosition() {
         if (this.patrolRoute.isEmpty()) {
+            return null;
+        }
+
+        if (!this.patrolPointExists()) {
+            this.stop();
             return null;
         }
 
@@ -170,5 +183,9 @@ public class PatrollingGoal extends RandomWalkingGoal {
 
     private void move() {
         E33.internalEventBus.post(new MoveEvent(this.creature));
+    }
+
+    private void stop() {
+        E33.internalEventBus.post(new NoActionEvent(this.creature));
     }
 }

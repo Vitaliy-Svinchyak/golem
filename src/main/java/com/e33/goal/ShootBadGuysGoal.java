@@ -4,7 +4,7 @@ import com.e33.E33;
 import com.e33.entity.BulletEntity;
 import com.e33.entity.ShootyEntity;
 import com.e33.event.NewTargetEvent;
-import com.e33.event.NoTargetEvent;
+import com.e33.event.NoActionEvent;
 import com.e33.event.ShotEvent;
 import com.e33.fight.ShootExpectations;
 import com.e33.fight.ShootingNavigator;
@@ -158,7 +158,7 @@ public class ShootBadGuysGoal extends Goal {
     }
 
     private void noTarget() {
-        E33.internalEventBus.post(new NoTargetEvent(this.entity));
+        E33.internalEventBus.post(new NoActionEvent(this.entity));
         this.ticksToNextAttack = 20;
     }
 
