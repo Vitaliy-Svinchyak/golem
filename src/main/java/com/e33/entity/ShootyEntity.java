@@ -56,7 +56,7 @@ public class ShootyEntity extends AnimalEntity {
     protected void registerGoals() {
         // TODO 2 custom priority queue
         this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
-//        this.goalSelector.addGoal(1, new ShootBadGuysGoal(this));
+        this.goalSelector.addGoal(2, new ShootBadGuysGoal(this));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
         this.targetSelector.addGoal(5, new AttackSpiderGoal(this));

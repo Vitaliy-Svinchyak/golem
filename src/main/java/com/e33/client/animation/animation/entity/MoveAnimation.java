@@ -4,7 +4,9 @@ import com.e33.client.animation.animation.Animation;
 import com.e33.client.animation.animation.entity.move.*;
 import com.e33.client.animation.progression.AnimationProgression;
 import com.e33.client.model.DynamicAnimationInterface;
+import com.e33.client.model.ShootyModel;
 import com.google.common.collect.Lists;
+import net.minecraft.client.renderer.entity.model.RendererModel;
 import net.minecraft.entity.LivingEntity;
 
 import java.util.List;
@@ -30,6 +32,19 @@ public class MoveAnimation extends Animation {
         LOGGER.info("Animation created");
     }
 
+    public Animation create() {
+        if (!this.isReversed()) {
+            super.create();
+        } else {
+            this.createAnimation();
+            this.childAnimation.finish();
+
+            this.cachedReversedAnimations = null;
+        }
+
+        return this;
+    }
+
     @Override
     protected List<AnimationProgression> createNormalAnimation() {
         return Lists.newArrayList();
@@ -37,6 +52,13 @@ public class MoveAnimation extends Animation {
 
     @Override
     protected List<AnimationProgression> createReversedAnimation() {
-        return Lists.newArrayList();
+        LOGGER.info("createReversedAnimation");
+        DynamicAnimationInterface from = this.model;
+        DynamicAnimationInterface to = new ShootyModel();
+        RendererModel fromModel = from.getMainRendererModel();
+        RendererModel toModel = to.getMainRendererModel();
+        RendererModel entityModel = this.model.getMainRendererModel();
+
+        return this.getAnimatedChangesForEntity(fromModel, toModel, entityModel, 10);
     }
 }

@@ -15,6 +15,7 @@ import java.util.List;
 public class ShootingAnimation extends Animation {
     public ShootingAnimation(DynamicAnimationInterface model, LivingEntity entity) {
         super(model, entity);
+        this.log = true;
     }
 
     protected List<AnimationProgression> createNormalAnimation() {

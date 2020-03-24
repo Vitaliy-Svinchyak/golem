@@ -1,6 +1,7 @@
 package com.e33.client.animation.animator;
 
 import com.e33.client.animation.animation.Animation;
+import com.e33.client.animation.animation.EmptyAnimation;
 import com.e33.client.animation.animation.item.AimingAnimation;
 import com.e33.client.animation.animation.item.ShootingAnimation;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -24,13 +25,15 @@ public class ShootyWeaponAnimator extends Animator {
         GlStateManager.popMatrix();
     }
 
-    @Override
-    void animateMove(LivingEntity entity) {
-        return;
-    }
 
     Animation createMoveAnimation(LivingEntity entity) {
-        return null;
+        Map<Class, Animation> animationCache = this.getAnimationCacheFor(entity);
+
+        if (animationCache.get(EmptyAnimation.class) == null) {
+            animationCache.put(EmptyAnimation.class, new EmptyAnimation(null, entity));
+        }
+
+        return animationCache.get(EmptyAnimation.class);
     }
 
     Animation createShotAnimation(LivingEntity entity) {

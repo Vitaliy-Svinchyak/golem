@@ -1,6 +1,9 @@
 package com.e33.goal.move;
 
 import com.e33.E33;
+import com.e33.client.animation.animation.Animation;
+import com.e33.client.detail.AnimationState;
+import com.e33.client.listener.AnimationStateListener;
 import com.e33.event.MoveEvent;
 import com.e33.event.NoActionEvent;
 import com.google.common.collect.Lists;
@@ -186,6 +189,8 @@ public class PatrollingGoal extends RandomWalkingGoal {
     }
 
     private void stop() {
-        E33.internalEventBus.post(new NoActionEvent(this.creature));
+        if (AnimationStateListener.getAnimationState(this.creature) == AnimationState.MOVE) {
+            E33.internalEventBus.post(new NoActionEvent(this.creature));
+        }
     }
 }

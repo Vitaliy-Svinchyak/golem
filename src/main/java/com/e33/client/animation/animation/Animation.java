@@ -30,15 +30,26 @@ abstract public class Animation {
 
     protected final DynamicAnimationInterface model;
     protected final LivingEntity entity;
-    private Animation childAnimation;
+    protected Animation childAnimation;
 
-    private List<AnimationProgression> animations;
+    protected List<AnimationProgression> animations;
     private List<AnimationProgression> cachedNormalAnimations;
-    private List<AnimationProgression> cachedReversedAnimations;
+    protected List<AnimationProgression> cachedReversedAnimations;
 
     public Animation(DynamicAnimationInterface model, LivingEntity entity) {
         this.model = model;
         this.entity = entity;
+    }
+
+    public Animation finish() {
+        this.setEndless(false);
+        this.animations = Lists.newArrayList();
+
+        if (this.childAnimation != null) {
+            this.childAnimation.finish();
+        }
+
+        return this;
     }
 
     public Animation then(Animation childAnimation) {
@@ -221,12 +232,13 @@ abstract public class Animation {
         return this.reverse;
     }
 
-    private void createAnimation() {
-        if (this.cachedNormalAnimations == null) {
+    protected void createAnimation() {
+        if (this.cachedNormalAnimations == null && !this.isReversed()) {
             this.cachedNormalAnimations = this.createNormalAnimation();
         }
 
-        if (this.cachedReversedAnimations == null) {
+        if (this.cachedReversedAnimations == null && this.isReversed()) {
+            this.log("Creating cached animation");
             this.cachedReversedAnimations = this.createReversedAnimation();
         }
 

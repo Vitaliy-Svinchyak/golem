@@ -30,8 +30,8 @@ abstract public class Animator {
     abstract Animation createMoveAnimation(LivingEntity entity);
 
     public void animate(LivingEntity entity) {
-        this.log(" have " + this.getAnimationsFor(entity).size() + " animations");
         UniqueAnimationState animationState = AnimationStateListener.getUniqueAnimationState(entity);
+        this.log(" have " + this.getAnimationsFor(entity).size() + " animations " + animationState.state);
 
         if (this.isAnimationComplete(entity) && this.getLastAnimationState(entity).equals(animationState)) {
             this.renderCurrentPose(entity);
@@ -74,7 +74,7 @@ abstract public class Animator {
             boolean animationComplete = animation.animate();
 
             if (animationComplete) {
-                this.log("animation finished " + animation.getClass());
+//                this.log("animation finished " + animation.getClass());
                 animationsToRemove.add(i);
             }
         }
@@ -118,7 +118,17 @@ abstract public class Animator {
 
     void animateDefaultPose(LivingEntity entity) {
         this.log(" animateDefaultPose");
-        Animation animation = this.createAimingAnimation(entity).reset().setReverse(true).create();
+        Animation animation;
+
+        LOGGER.info("it was " + this.getLastAnimationState(entity).state);
+        if (this.getLastAnimationState(entity).state == AnimationState.AIM) {
+            animation = this.createAimingAnimation(entity).reset().setReverse(true).create();
+        } else {
+            animation = this.createMoveAnimation(entity)
+                    .reset()
+                    .setReverse(true)
+                    .create();
+        }
 
         this.addAnimation(entity, animation);
     }
