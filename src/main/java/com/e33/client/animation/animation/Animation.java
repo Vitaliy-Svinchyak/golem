@@ -238,7 +238,6 @@ abstract public class Animation {
         }
 
         if (this.cachedReversedAnimations == null && this.isReversed()) {
-            this.log("Creating cached animation");
             this.cachedReversedAnimations = this.createReversedAnimation();
         }
 
@@ -259,7 +258,7 @@ abstract public class Animation {
 
     void log(String message) {
         if (this.log) {
-//            LOGGER.info(message);
+            LOGGER.info(message);
         }
     }
 }

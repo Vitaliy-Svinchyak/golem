@@ -120,7 +120,6 @@ abstract public class Animator {
         this.log(" animateDefaultPose");
         Animation animation;
 
-        LOGGER.info("it was " + this.getLastAnimationState(entity).state);
         if (this.getLastAnimationState(entity).state == AnimationState.AIM) {
             animation = this.createAimingAnimation(entity).reset().setReverse(true).create();
         } else {

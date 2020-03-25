@@ -1,4 +1,4 @@
-const filename = 'moving_pose4'
+const filename = 'default_pose'
 const className = 'small_golem'
 const fs = require('fs')
 console.log(fs.readdirSync('./'))

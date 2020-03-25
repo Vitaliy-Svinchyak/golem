@@ -55,7 +55,7 @@ public class ShootyEntity extends AnimalEntity {
     @Override
     protected void registerGoals() {
         // TODO 2 custom priority queue
-        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
+//        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
         this.goalSelector.addGoal(2, new ShootBadGuysGoal(this));
         this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
         this.targetSelector.addGoal(5, new AttackZombieGoal(this));
@@ -114,7 +114,7 @@ public class ShootyEntity extends AnimalEntity {
     public ILivingEntityData onInitialSpawn(IWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
         spawnDataIn = super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
 
-        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(ItemRegistry.stickItem));
+//        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(ItemRegistry.stickItem));
         return spawnDataIn;
     }
 }

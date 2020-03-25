@@ -7,10 +7,12 @@ import net.minecraft.particles.IParticleData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 public class AnimationProgressionBuilder {
     public final static Logger LOGGER = LogManager.getLogger();
+    private final static DecimalFormat df = new DecimalFormat("#.#####");
 
     public static boolean angleDiffers(RendererModel from, RendererModel to) {
         return from.rotateAngleX != to.rotateAngleX || from.rotateAngleY != to.rotateAngleY || from.rotateAngleZ != to.rotateAngleZ;
@@ -72,13 +74,14 @@ public class AnimationProgressionBuilder {
 
     private static List<Float> createProgress(float from, float to, int ticks) {
         List<Float> progression = Lists.newArrayList();
-        float step = (to - from) / ticks;
+        float step = (to - from) / (ticks - 1);
 
         progression.add(from);
-        for (int i = 0; i < ticks; i++) {
+        for (int i = 0; i < ticks - 2; i++) {
             progression.add(progression.get(progression.size() - 1) + step);
         }
-        progression.remove(0);
+
+        progression.add(to);
 
         return progression;
     }

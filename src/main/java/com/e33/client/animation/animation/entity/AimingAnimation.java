@@ -33,6 +33,6 @@ public class AimingAnimation extends Animation {
         RendererModel toModel = to.getMainRendererModel();
         RendererModel entityModel = this.model.getMainRendererModel();
 
-        return this.getAnimatedChangesForEntity(fromModel, toModel, entityModel, 20);
+        return this.getAnimatedChangesForEntity(fromModel, toModel, entityModel, 10);
     }
 }

@@ -67,12 +67,11 @@ public class ShootBadGuysGoal extends Goal {
                 this.newTarget(attackTarget);
                 this.lastEvent = "aim";
             } else {
-                this.shot(attackTarget);
-//                this.noTarget();
-//                this.lastEvent = "no";
+//                this.shot(attackTarget);
+                this.noTarget();
+                this.lastEvent = "no";
             }
 
-            this.ticksToNextAttack = 20;
             return;
         }
 
@@ -154,7 +153,7 @@ public class ShootBadGuysGoal extends Goal {
         this.entity.getLookController().func_220679_a(attackTarget.posX, attackTarget.posY + (double) attackTarget.getEyeHeight(), attackTarget.posZ);
 
         E33.internalEventBus.post(new NewTargetEvent(this.entity, attackTarget));
-        this.ticksToNextAttack = 20;
+        this.ticksToNextAttack = 10;
     }
 
     private void noTarget() {
