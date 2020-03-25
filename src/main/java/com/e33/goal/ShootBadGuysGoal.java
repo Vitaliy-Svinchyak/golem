@@ -67,9 +67,10 @@ public class ShootBadGuysGoal extends Goal {
                 this.newTarget(attackTarget);
                 this.lastEvent = "aim";
             } else {
-//                this.shot(attackTarget);
-                this.noTarget();
-                this.lastEvent = "no";
+                this.shot(attackTarget);
+                this.ticksToNextAttack = 10;
+//                this.noTarget();
+//                this.lastEvent = "no";
             }
 
             return;

@@ -1,9 +1,9 @@
 package com.e33.client.animation.animator;
 
-import com.e33.client.animation.animation.EmptyAnimation;
 import com.e33.client.animation.animation.entity.AimingAnimation;
 import com.e33.client.animation.animation.Animation;
 import com.e33.client.animation.animation.entity.MoveAnimation;
+import com.e33.client.animation.animation.entity.ShootingAnimation;
 import com.e33.client.model.ShootyModel;
 import com.e33.entity.ShootyEntity;
 import net.minecraft.entity.LivingEntity;
@@ -22,11 +22,11 @@ public class ShootyAnimator<T extends ShootyEntity> extends Animator {
     Animation createShotAnimation(LivingEntity entity) {
         Map<Class, Animation> animationCache = this.getAnimationCacheFor(entity);
 
-        if (animationCache.get(EmptyAnimation.class) == null) {
-            animationCache.put(EmptyAnimation.class, new EmptyAnimation(this.model, entity));
+        if (animationCache.get(ShootingAnimation.class) == null) {
+            animationCache.put(ShootingAnimation.class, new ShootingAnimation(this.model, entity));
         }
 
-        return animationCache.get(EmptyAnimation.class);
+        return animationCache.get(ShootingAnimation.class);
     }
 
     @Override
