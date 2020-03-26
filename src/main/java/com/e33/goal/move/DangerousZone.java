@@ -63,7 +63,7 @@ public class DangerousZone {
         return centerBlocks;
     }
 
-    public List<BlockPos> getVioletBlocksPos() {
+    public List<BlockPos> getRedBlocksPos() {
         if (this.cachedVioletBocks == null) {
             this.cachedVioletBocks = this.createBlocksPos(this.violetRadius, this.getCenterBlocksPos(), this.getCenterBlocksPos());
         }
@@ -71,12 +71,12 @@ public class DangerousZone {
         return this.cachedVioletBocks;
     }
 
-    public List<BlockPos> getRedBlocksPos() {
+    public List<BlockPos> getOrangeBlocksPos() {
         if (this.cachedRedBocks == null) {
-            List<BlockPos> violetBlocks = this.getVioletBlocksPos();
-            List<BlockPos> whereToCheck = this.concatLists(this.getCenterBlocksPos(), violetBlocks);
+            List<BlockPos> redBlocks = this.getRedBlocksPos();
+            List<BlockPos> whereToCheck = this.concatLists(this.getCenterBlocksPos(), redBlocks);
 
-            this.cachedRedBocks = this.createBlocksPos(this.redRadius, violetBlocks, whereToCheck);
+            this.cachedRedBocks = this.createBlocksPos(this.redRadius, redBlocks, whereToCheck);
         }
 
         return this.cachedRedBocks;
@@ -84,11 +84,11 @@ public class DangerousZone {
 
     public List<BlockPos> getYellowBlocksPos() {
         if (this.cachedYellowBocks == null) {
-            List<BlockPos> redBlocks = this.getRedBlocksPos();
-            List<BlockPos> whereToCheck = this.concatLists(this.getCenterBlocksPos(), this.getVioletBlocksPos());
-            whereToCheck = this.concatLists(whereToCheck, redBlocks);
+            List<BlockPos> orangeBlocks = this.getOrangeBlocksPos();
+            List<BlockPos> whereToCheck = this.concatLists(this.getCenterBlocksPos(), this.getRedBlocksPos());
+            whereToCheck = this.concatLists(whereToCheck, orangeBlocks);
 
-            this.cachedYellowBocks = this.createBlocksPos(this.yellowRadius, redBlocks, whereToCheck);
+            this.cachedYellowBocks = this.createBlocksPos(this.yellowRadius, orangeBlocks, whereToCheck);
         }
 
         return this.cachedYellowBocks;

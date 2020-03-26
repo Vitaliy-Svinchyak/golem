@@ -1,10 +1,10 @@
 package com.e33.entity;
 
-import com.e33.E33;
 import com.e33.goal.attack.*;
 import com.e33.core.ModSounds;
 import com.e33.goal.ShootBadGuysGoal;
-import com.e33.goal.move.DangerousZone;
+import com.e33.goal.move.PatrollingGoal;
+import net.minecraft.block.CampfireBlock;
 import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.util.DamageSource;
@@ -51,6 +51,7 @@ public class EntityGolemShooter extends AnimalEntity {
         this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
         this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
         this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
+        this.targetSelector.addGoal(8, new PatrollingGoal(this, 0.5D));
     }
 
     // TODO 2 teams implementation (isOnSameTeam method)

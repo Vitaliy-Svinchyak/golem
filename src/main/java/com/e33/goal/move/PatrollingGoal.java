@@ -1,78 +1,87 @@
 package com.e33.goal.move;
 
+import com.e33.E33;
+import com.e33.debug.DangerousZoneDebugRenderer;
+import com.e33.entity.EntityGolemShooter;
 import com.google.common.collect.Lists;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.CreatureEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPredicate;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.RandomWalkingGoal;
+import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.util.Direction;
+import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class PatrollingGoal extends RandomWalkingGoal {
     private World world;
-    private List<Vec3d> patrolRoute = Lists.newArrayList();
-    private int patrolPoint = 0;
-    private Class<? extends Block> blockToPatrol;
-    private boolean firstLoad = true;
 
     private final static Logger LOGGER = LogManager.getLogger();
 
-    public PatrollingGoal(CreatureEntity creatureIn, double speedIn, Class<? extends Block> block) {
+    public PatrollingGoal(CreatureEntity creatureIn, double speedIn) {
         super(creatureIn, speedIn, 1);
 
         this.world = this.creature.getEntityWorld();
-        this.blockToPatrol = block;
     }
 
     public boolean shouldExecute() {
-        this.createPatrolRoute(this.blockToPatrol);
-
         return super.shouldExecute();
     }
 
-    private BlockPos findNearestBlockToPatrol(Class<? extends Block> block) {
-        BlockPos creaturePosition = this.creature.getPosition();
-        AxisAlignedBB creatureView = new AxisAlignedBB(creaturePosition.getX() - 30, creaturePosition.getY() - 1, creaturePosition.getZ() - 30, creaturePosition.getX() + 30, creaturePosition.getY() + 1, creaturePosition.getZ() + 30);
-        LOGGER.info(creatureView);
-        return this.findBlockPosInArea(creatureView, block);
-    }
-
     @Nullable
-    @OnlyIn(Dist.CLIENT)
-    private BlockPos findBlockPosInArea(AxisAlignedBB area, Class<? extends Block> blockIn) {
-        int i = MathHelper.floor(area.minX);
-        int j = MathHelper.ceil(area.maxX);
-        int k = MathHelper.floor(area.minY);
-        int l = MathHelper.ceil(area.maxY);
-        int i1 = MathHelper.floor(area.minZ);
-        int j1 = MathHelper.ceil(area.maxZ);
+    protected Vec3d getPosition() {
+        List<ZombieEntity> closestEnemies = this.world.getEntitiesWithinAABB(
+                ZombieEntity.class,
+                this.creature.getBoundingBox().grow(10D),
+                EntityPredicates.NOT_SPECTATING
+        );
 
-        // TODO fix deprecation
-        if (!this.world.isAreaLoaded(i, k, i1, j, l, j1)) {
-            return null;
-        }
 
-        try (BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain()) {
-            for (int k1 = i; k1 < j; ++k1) {
-                for (int l1 = k; l1 < l; ++l1) {
-                    for (int i2 = i1; i2 < j1; ++i2) {
-                        BlockState blockstate = this.world.getBlockState(blockpos$pooledmutableblockpos.setPos(k1, l1, i2));
-                        if (blockstate.getBlock().getClass().toString().equals(blockIn.toString())) {
-                            return new BlockPos(k1, l1, i2);
-                        }
+        for (ZombieEntity enemy : closestEnemies) {
+            enemy.setAttackTarget(this.creature);
+
+            Vec3d golemPos = this.creature.getPositionVec();
+            Vec3d enemyPos = enemy.getPositionVec();
+            LOGGER.info("Golem start pos: ");
+            LOGGER.info(golemPos.toString());
+            LOGGER.info("Zombie start pos: ");
+            LOGGER.info(enemyPos.toString());
+
+
+            if (//enemy.getAttackTarget() == this.creature
+                this.creature.func_213344_a(enemy, EntityPredicate.DEFAULT) //canTarget
+                //&& this.creature.getDistanceSq(enemy) < 3D
+            ) {
+                DangerousZone dangerousZone = new DangerousZone(enemy, 2, 2, 2);
+                E33.dangerousZoneDebugRenderer.addZone(dangerousZone);
+                for (BlockPos redBlock : dangerousZone.getRedBlocksPos()) {
+                    if (this.creature.getBoundingBox().contains(redBlock.getX(), redBlock.getY(), redBlock.getZ())) {
+                        return this.calculatePos(golemPos, enemyPos);
+                    }
+                }
+
+                for (BlockPos orangeBlock : dangerousZone.getOrangeBlocksPos()) {
+                    if (this.creature.getBoundingBox().contains(orangeBlock.getX(), orangeBlock.getY(), orangeBlock.getZ())) {
+                        return this.calculatePos(golemPos, enemyPos);
+                    }
+                }
+
+                for (BlockPos yellowBlock : dangerousZone.getYellowBlocksPos()) {
+                    if (this.creature.getBoundingBox().contains(yellowBlock.getX(), yellowBlock.getY(), yellowBlock.getZ())) {
+                        return this.calculatePos(golemPos, enemyPos);
                     }
                 }
             }
@@ -81,55 +90,115 @@ public class PatrollingGoal extends RandomWalkingGoal {
         return null;
     }
 
-    private void createPatrolRoute(Class<? extends Block> block) {
-        if (!this.patrolRoute.isEmpty()) {
-            return;
-        }
 
-        BlockPos blockToPatrol = this.findNearestBlockToPatrol(block);
-        if (blockToPatrol == null) {
-            return;
-        }
-
-        int x = blockToPatrol.getX();
-        int y = blockToPatrol.getY();
-        int z = blockToPatrol.getZ();
-
-        this.patrolRoute.add(new Vec3d(x - 10, y - 1, z - 10));
-        this.patrolRoute.add(new Vec3d(x - 10, y - 1, z + 10));
-        this.patrolRoute.add(new Vec3d(x + 10, y - 1, z + 10));
-        this.patrolRoute.add(new Vec3d(x + 10, y - 1, z - 10));
-    }
-
-    @Nullable
-    protected Vec3d getPosition() {
-        if (this.patrolRoute.isEmpty()) {
+    private Vec3d calculatePos(Vec3d golemPos, Vec3d enemyPos) {
+        if (0 != Double.compare(enemyPos.y, golemPos.y)) {
             return null;
         }
 
-        if (!this.isGoalAchieved() && !this.firstLoad) {
-            LOGGER.debug("Go again");
-            return this.getCurrentPatrolTask();
+        LOGGER.info("Calculate direction ");
+        Direction direction = Direction.getByVerticalAngle(golemPos, enemyPos);
+        if (Direction.SE == direction || Direction.NE == direction) {
+            LOGGER.info(direction.description + " x - 2D and z - 2D");
+            return new Vec3d(golemPos.x - 2D, golemPos.y, golemPos.z - 2D);
+        }
+        if (Direction.SW == direction || Direction.NW == direction) {
+            LOGGER.info(direction.description + " x + 2D and z + 2D");
+            return new Vec3d(golemPos.x + 2D, golemPos.y, golemPos.z + 2D);
         }
 
-        if (this.firstLoad) {
-            this.firstLoad = false;
-            return this.getNearestPatrolPoint();
+        if (Direction.N == direction || Direction.W == direction) {
+            LOGGER.info(direction.description + " z + 2D");
+            return new Vec3d(golemPos.x, golemPos.y, golemPos.z + 2D);
         }
 
-        this.patrolPoint++;
-        if (this.patrolPoint > this.patrolRoute.size() - 1) {
-            this.patrolPoint = 0;
+        if (Direction.S == direction || Direction.E == direction) {
+            LOGGER.info(direction.description + " z - 2D");
+            return new Vec3d(golemPos.x - 2D, golemPos.y, golemPos.z - 2D);
         }
 
-        Path path = this.creature.getNavigator().getPathToPos(new BlockPos(this.getCurrentPatrolTask().x, this.getCurrentPatrolTask().y, this.getCurrentPatrolTask().z), 1);
-        return this.patrolRoute.get(this.patrolPoint);
+        return null;
     }
 
-    private Vec3d getCurrentPatrolTask() {
-        return this.patrolRoute.get(this.patrolPoint);
-    }
+    protected enum Direction {
+        NE(337.5, 22.5, "North East"),
+        E(22.5, 67.5, "East"),
+        SE(67.5, 112.5, "South East"),
+        S(112.5, 157.5, "South"),
+        SW(157.5, 202.5, "South West"),
+        W(202.5, 247.5, "West"),
+        NW(247.5, 292.5, "North West"),
+        N(292.5, 337.5, "North");
 
+        private final double startDegree;
+        private final double endDegree;
+        private final String description;
+
+        public String getDescription() {
+            return this.description;
+        }
+
+        Direction(double startDegree, double endDegree, String description) {
+            this.startDegree = startDegree;
+            this.endDegree = endDegree;
+            this.description = description;
+        }
+
+        public static Direction getByVerticalAngle(Vec3d targetPos, Vec3d attackerPos) {
+            double verticalAngle = Direction.calcVerticalAngle(targetPos.x, targetPos.z, attackerPos.x, attackerPos.z);
+            LOGGER.debug("Vertical angle ");
+            LOGGER.debug(verticalAngle);
+
+            return Direction.getByAngle(verticalAngle);
+        }
+
+        private static double calcVerticalAngle(double ax, double ay, double bx, double by) {
+            double angle = Math.atan2(by - ay, bx - ax) * 180 / Math.PI;
+
+            if (angle < 0) {
+                angle += 360;
+            }
+
+            return angle;
+        }
+
+        public static Direction getByAngle(double angle) {
+
+            if ((angle > NE.startDegree && angle <= 360) || (angle >= 0 && angle <= NE.endDegree)) {
+                return NE;
+            }
+
+            if (angle > E.startDegree && angle <= E.endDegree) {
+                return E;
+            }
+
+            if (angle > SE.startDegree && angle <= SE.endDegree) {
+                return SE;
+            }
+
+            if (angle > S.startDegree && angle <= S.endDegree) {
+                return S;
+            }
+
+            if (angle > SW.startDegree && angle <= SW.endDegree) {
+                return SW;
+            }
+
+            if (angle > W.startDegree && angle <= W.endDegree) {
+                return W;
+            }
+
+            if (angle > NW.startDegree && angle <= NW.endDegree) {
+                return NW;
+            }
+
+            if (angle > N.startDegree && angle <= N.endDegree) {
+                return N;
+            }
+
+            return null;
+        }
+    }
     public boolean isPreemptible() {
         return false;
     }
@@ -138,31 +207,10 @@ public class PatrollingGoal extends RandomWalkingGoal {
      * Returns whether an in-progress EntityAIBase should continue executing
      */
     public boolean shouldContinueExecuting() {
-        return super.shouldContinueExecuting() && !this.isGoalAchieved();
+        return super.shouldContinueExecuting();
     }
 
     public void startExecuting() {
         super.startExecuting();
-    }
-
-    private boolean isGoalAchieved() {
-        Vec3d pointToAchieve = this.getCurrentPatrolTask();
-        double remainingDistance = this.creature.getPositionVector().distanceTo(pointToAchieve);
-
-        return remainingDistance <= 3.0D;
-    }
-
-    private Vec3d getNearestPatrolPoint() {
-        Vec3d nearestPoint = this.patrolRoute.get(0);
-
-        for (Vec3d patrolPoint : this.patrolRoute) {
-            double distanceToPoint = this.creature.getPositionVector().distanceTo(patrolPoint);
-
-            if (this.creature.getPositionVector().distanceTo(nearestPoint) > distanceToPoint) {
-                nearestPoint = patrolPoint;
-            }
-        }
-
-        return nearestPoint;
     }
 }

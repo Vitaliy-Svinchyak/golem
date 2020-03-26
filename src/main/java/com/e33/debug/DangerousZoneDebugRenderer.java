@@ -68,13 +68,13 @@ public class DangerousZoneDebugRenderer implements DebugRenderer.IDebugRenderer 
         double z = activeRenderInfo.getProjectedView().z;
 
         List<BlockPos> centerBlocks = zone.getCenterBlocksPos();
-        this.renderBlocksWithColor(centerBlocks, Color.DANGEROUS_ZONE_VIOLET, x, y, z);
+        this.renderBlocksWithColor(centerBlocks, Color.DANGEROUS_ZONE_RED, x, y, z);
 
-        List<BlockPos> violetBlocksPos = zone.getVioletBlocksPos();
-        this.renderBlocksWithColor(violetBlocksPos, Color.DANGEROUS_ZONE_VIOLET, x, y, z);
+        List<BlockPos> violetBlocksPos = zone.getRedBlocksPos();
+        this.renderBlocksWithColor(violetBlocksPos, Color.DANGEROUS_ZONE_RED, x, y, z);
 
-        List<BlockPos> redBlocksPos = zone.getRedBlocksPos();
-        this.renderBlocksWithColor(redBlocksPos, Color.DANGEROUS_ZONE_RED, x, y, z);
+        List<BlockPos> redBlocksPos = zone.getOrangeBlocksPos();
+        this.renderBlocksWithColor(redBlocksPos, Color.DANGEROUS_ZONE_ORANGE, x, y, z);
 
         List<BlockPos> yellowBlocksPos = zone.getYellowBlocksPos();
         this.renderBlocksWithColor(yellowBlocksPos, Color.DANGEROUS_ZONE_YELLOW, x, y, z);
