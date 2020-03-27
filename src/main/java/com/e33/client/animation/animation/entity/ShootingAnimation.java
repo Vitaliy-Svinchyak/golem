@@ -19,6 +19,11 @@ public class ShootingAnimation extends Animation {
         this.log = true;
     }
 
+    protected void createAnimation() {
+        super.createAnimation();
+        this.cachedNormalAnimations = null;
+    }
+
     protected List<AnimationProgression> createNormalAnimation() {
         List<AnimationProgression> animations = Lists.newArrayList();
         Vec3d smokePosition = this.getPositionForParticle(0.95F);

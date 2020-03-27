@@ -1,16 +1,15 @@
 package com.e33.entity;
 
+import com.e33.goal.LookAtTargetGoal;
 import com.e33.goal.attack.*;
-import com.e33.goal.move.PatrollingGoal;
-import com.e33.init.ItemRegistry;
+import com.e33.goal.move.AvoidingZombieGoal;
 import com.e33.init.SoundsRegistry;
 import com.e33.goal.ShootBadGuysGoal;
-import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
+import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
+import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
@@ -56,12 +55,16 @@ public class ShootyEntity extends AnimalEntity {
     protected void registerGoals() {
         // TODO 2 custom priority queue
 //        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
-        this.goalSelector.addGoal(2, new ShootBadGuysGoal(this));
-        this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
-        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
-        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
-        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
-        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
+        this.goalSelector.addGoal(1, new AvoidingZombieGoal(this, 0.5F));
+        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
+        this.goalSelector.addGoal(2, lookGoal);
+        this.goalSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class, true));
+        this.goalSelector.addGoal(3, new ShootBadGuysGoal(this, lookGoal));
+//        this.targetSelector.addGoal(4, new AttackSkeletonGoal(this));
+//        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
+//        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
+//        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
+//        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
     }
 
     // TODO 2 teams implementation (isOnSameTeam method)
@@ -116,5 +119,9 @@ public class ShootyEntity extends AnimalEntity {
 
 //        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(ItemRegistry.stickItem));
         return spawnDataIn;
+    }
+
+    public int getHorizontalFaceSpeed() {
+        return 150;
     }
 }

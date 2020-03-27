@@ -32,15 +32,19 @@ abstract public class Animator {
     public void animate(LivingEntity entity) {
         UniqueAnimationState animationState = AnimationStateListener.getUniqueAnimationState(entity);
         this.log(" have " + this.getAnimationsFor(entity).size() + " animations " + animationState.state);
+        boolean rendered = false;
+        UniqueAnimationState lastAnimationState = this.getLastAnimationState(entity);
 
-        if (this.isAnimationComplete(entity) && this.getLastAnimationState(entity).equals(animationState)) {
+        if (this.isAnimationComplete(entity) && lastAnimationState.equals(animationState)) {
             this.renderCurrentPose(entity);
-        } else if (animationState.state == AnimationState.SHOT) {
+            rendered = true;
+        } else if (animationState.state == AnimationState.SHOT || lastAnimationState.state == AnimationState.SHOT) {
             this.renderAimed(entity);
+            rendered = true;
         }
 
         // New animation requested
-        if (!this.getLastAnimationState(entity).equals(animationState)) {
+        if (!lastAnimationState.equals(animationState) && !rendered) {
             switch (animationState.state) {
                 case DEFAULT:
                     this.animateDefaultPose(entity);

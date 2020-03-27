@@ -31,6 +31,10 @@ public class AnimationStateListener {
     }
 
     private static void onNewTarget(NewTargetEvent event) {
+        if (getAnimationState(event.getCreature()) == AnimationState.AIM) {
+            return;
+        }
+
         animationMap.remove(event.getCreature().getUniqueID());
         animationMap.put(event.getCreature().getUniqueID(), new UniqueAnimationState(AnimationState.AIM));
         eventMap.put(event.getCreature().getUniqueID(), event);

@@ -44,7 +44,7 @@ public class AvoidPeacefulCreaturesHelper {
         }
     }
 
-    public boolean bulletPathIsClear(MobEntity target) {
+    public boolean bulletPathIsClear(LivingEntity target) {
         NavigationParameters targetNavParams = new NavigationParameters(this.goalOwner, target);
 
         for (NavigationParameters creatureNavParams : this.peacefulCreatures) {

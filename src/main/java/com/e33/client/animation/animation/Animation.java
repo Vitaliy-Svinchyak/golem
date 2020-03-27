@@ -33,7 +33,7 @@ abstract public class Animation {
     protected Animation childAnimation;
 
     protected List<AnimationProgression> animations;
-    private List<AnimationProgression> cachedNormalAnimations;
+    protected List<AnimationProgression> cachedNormalAnimations;
     protected List<AnimationProgression> cachedReversedAnimations;
 
     public Animation(DynamicAnimationInterface model, LivingEntity entity) {

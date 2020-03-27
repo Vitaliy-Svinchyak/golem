@@ -16,7 +16,7 @@ public class ShootyAnimator<T extends ShootyEntity> extends Animator {
 
     public ShootyAnimator(ShootyModel model) {
         this.model = model;
-        this.log = true;
+//        this.log = true;
     }
 
     Animation createShotAnimation(LivingEntity entity) {
