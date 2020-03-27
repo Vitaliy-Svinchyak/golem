@@ -14,7 +14,7 @@ public class ShootStatistic {
 
     public static void bulletHitTheTarget() {
         ShootStatistic.successBullets++;
-        ShootStatistic.logStatistic();
+//        ShootStatistic.logStatistic();
     }
 
     public static void clear() {

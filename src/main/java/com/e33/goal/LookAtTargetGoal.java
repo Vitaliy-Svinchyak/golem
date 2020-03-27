@@ -1,6 +1,8 @@
 package com.e33.goal;
 
 import com.e33.E33;
+import com.e33.client.detail.AnimationState;
+import com.e33.client.listener.AnimationStateListener;
 import com.e33.event.NewTargetEvent;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.Goal;
@@ -27,7 +29,6 @@ public class LookAtTargetGoal extends Goal {
     }
 
     public boolean shouldExecute() {
-        LOGGER.info("shouldExecute");
         if (this.entity.getAttackTarget() != null) {
             this.target = this.entity.getAttackTarget();
         }
@@ -43,11 +44,9 @@ public class LookAtTargetGoal extends Goal {
         }
 
         return !this.isAlreadyLookingOnTarget();
-//        return !this.isAlreadyLookingOnTarget();
     }
 
     public boolean shouldContinueExecuting() {
-        LOGGER.info("shouldContinueExecuting");
         if (this.isAlreadyLookingOnTarget()) {
             return false;
         }
@@ -62,8 +61,12 @@ public class LookAtTargetGoal extends Goal {
     }
 
     public void startExecuting() {
-        LOGGER.info("startExecuting");
-        this.ticksForAnimation = 20;
+        if (AnimationStateListener.getAnimationState(this.entity) == AnimationState.DEFAULT) {
+            this.ticksForAnimation = 10;
+        } else {
+            this.ticksForAnimation = 5;
+        }
+
         this.animationStarted = false;
     }
 
@@ -90,13 +93,10 @@ public class LookAtTargetGoal extends Goal {
             return false;
         }
 
-        LOGGER.info(this.ticksForAnimation);
-        LOGGER.info("tick " + this.entity.rotationYawHead + " " + this.entity.renderYawOffset);
         return this.ticksForAnimation == 0 && this.entity.rotationYawHead == this.entity.renderYawOffset;
     }
 
     private void newTarget() {
-        LOGGER.info("new target");
         E33.internalEventBus.post(new NewTargetEvent(this.entity, this.entity.getAttackTarget()));
     }
 }

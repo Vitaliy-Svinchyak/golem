@@ -25,7 +25,6 @@ public class ShootBadGuysGoal extends Goal {
 
     private final ShootyEntity entity;
     private final LookAtTargetGoal lookGoal;
-    private LivingEntity lastTarget = null;
     private static final Random random = new Random();
     private int attackStep;
     private int ticksToNextAttack;
@@ -44,14 +43,9 @@ public class ShootBadGuysGoal extends Goal {
         if (!this.lookGoal.isAlreadyLookingOnTarget()) {
             return false;
         }
-        LOGGER.info("shouldExecute");
+
         LivingEntity livingentity = this.entity.getAttackTarget();
         return livingentity != null && livingentity.isAlive() && this.entity.canAttack(livingentity);
-//        if (!shouldExecute) {
-//            this.noTarget();
-//        }
-//
-//        return shouldExecute;
     }
 
     /**
@@ -65,7 +59,6 @@ public class ShootBadGuysGoal extends Goal {
      * Keep ticking a continuous task that has already been started
      */
     public void tick() {
-        LOGGER.info("tick");
         this.ticksToNextAttack--;
         if (this.ticksToNextAttack > 0) {
             return;
@@ -73,9 +66,6 @@ public class ShootBadGuysGoal extends Goal {
 
         LivingEntity attackTarget = this.entity.getAttackTarget();
 
-//        if (this.lastTarget == null && attackTarget != null) {
-//            this.lastTarget = attackTarget;
-//        }
 
         if (attackTarget == null) {
             this.noTarget();
@@ -88,12 +78,6 @@ public class ShootBadGuysGoal extends Goal {
             return;
         }
 
-//        if (!this.lastTarget.equals(attackTarget)) {
-//            ShootExpectations.removeFromBusyList(this.lastTarget);
-//            this.lastTarget = attackTarget;
-//        }
-
-//        ShootExpectations.markAsBusy(attackTarget, this.entity);
         boolean mustBeDead = true;
         if (this.attackStep == 0 && this.ticksToNextAttack <= 0) {
             this.setBulletsToShoot(attackTarget);
@@ -127,10 +111,6 @@ public class ShootBadGuysGoal extends Goal {
         }
     }
 
-    private void lookAtTarget(LivingEntity attackTarget) {
-        this.entity.getLookController().func_220679_a(attackTarget.posX, attackTarget.posY + (double) attackTarget.getEyeHeight(), attackTarget.posZ);
-    }
-
     private void setBulletsToShoot(LivingEntity attackTarget) {
         float targetHealth = attackTarget.getHealth();
 
@@ -145,31 +125,28 @@ public class ShootBadGuysGoal extends Goal {
     private void makeShot(LivingEntity attackTarget) {
         Vec3d attackPoint = ShootingNavigator.getShootPoint(attackTarget, this.entity);
         BulletEntity bullet = new BulletEntity(this.entity.world, this.entity, attackPoint.x, attackPoint.y, attackPoint.z, attackTarget);
-        Vec3d position = this.getPositionForParticle(0.9F);
+        Vec3d position = this.getPositionForParticle();
         bullet.setPosition(position.x, position.y, position.z);
         this.entity.world.addEntity(bullet);
         this.shot(attackTarget);
     }
 
     private void noTarget() {
-        LOGGER.info("no target");
         E33.internalEventBus.post(new NoActionEvent(this.entity));
         this.ticksToNextAttack = 10;
     }
 
     private void shot(LivingEntity attackTarget) {
-        LOGGER.info("shot");
         E33.internalEventBus.post(new ShotEvent(this.entity, attackTarget));
         this.entity.world.playSound(null, this.entity.posX, this.entity.posY, this.entity.posZ, SoundsRegistry.SHOOTY_SHOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + 20.0F * 0.5F);
     }
 
-    private Vec3d getPositionForParticle(float radius) {
-        float angle = Math.abs(this.entity.rotationYaw);
+    private Vec3d getPositionForParticle() {
+        Vec3d lookVec = this.entity.getLook(0);
         Vec3d position = this.entity.getPositionVector();
-        float x = (float) (Math.sin(angle) * radius + position.getX());
-        float y = (float) position.getY() + 1.25F;
-        float z = (float) (Math.cos(angle) * radius + position.getZ());
 
-        return new Vec3d(x, y, z);
+        float y = (float) position.getY() + 1.25F;
+
+        return new Vec3d(position.getX() + lookVec.getX(), y, position.getZ() + lookVec.getZ());
     }
 }

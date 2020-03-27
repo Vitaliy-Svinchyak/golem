@@ -33,7 +33,8 @@ public class ShootingAnimation extends Animation {
         animations.add(AnimationProgressionBuilder.particle((float) smokePosition.x, (float) smokePosition.y, (float) smokePosition.z, (float) smokePosition.x, (float) smokePosition.y, (float) smokePosition.z, ParticleTypes.SMOKE, 2));
         animations.add(AnimationProgressionBuilder.particle((float) flamePosition.x, (float) flamePosition.y, (float) flamePosition.z, (float) flamePosition.x, (float) flamePosition.y, (float) flamePosition.z, ParticleTypes.FLAME, 1));
 
-        animations.add(AnimationProgressionBuilder.particle((float) sleevePosition.x, (float) sleevePosition.y, (float) sleevePosition.z, (float) sleevePosition.x, (float) sleevePosition.y, (float) sleevePosition.z, ParticleRegistry.SLEEVE, 1));
+        // TODO 2 return later
+//        animations.add(AnimationProgressionBuilder.particle((float) sleevePosition.x, (float) sleevePosition.y, (float) sleevePosition.z, (float) sleevePosition.x, (float) sleevePosition.y, (float) sleevePosition.z, ParticleRegistry.SLEEVE, 1));
 
         return animations;
     }
@@ -43,13 +44,11 @@ public class ShootingAnimation extends Animation {
     }
 
     private Vec3d getPositionForParticle(float radius) {
-        float angle = Math.abs(this.entity.rotationYaw);
-        angle -= 0.2;
+        Vec3d lookVec = this.entity.getLook(0);
         Vec3d position = this.entity.getPositionVector();
-        float x = (float) (Math.sin(angle) * radius + position.getX());
-        float y = (float) position.getY() + 1.25F;
-        float z = (float) (Math.cos(angle) * radius + position.getZ());
 
-        return new Vec3d(x, y, z);
+        float y = (float) position.getY() + 1.25F;
+
+        return new Vec3d(position.getX() + lookVec.getX() * radius, y, position.getZ() + lookVec.getZ() * radius);
     }
 }

@@ -38,9 +38,8 @@ abstract public class Animator {
         if (this.isAnimationComplete(entity) && lastAnimationState.equals(animationState)) {
             this.renderCurrentPose(entity);
             rendered = true;
-        } else if (animationState.state == AnimationState.SHOT || lastAnimationState.state == AnimationState.SHOT) {
+        } else if (this.isAnimationComplete(entity) && lastAnimationState.state == AnimationState.SHOT) {
             this.renderAimed(entity);
-            rendered = true;
         }
 
         // New animation requested

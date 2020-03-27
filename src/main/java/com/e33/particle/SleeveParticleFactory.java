@@ -14,7 +14,7 @@ public class SleeveParticleFactory implements IParticleFactory<BasicParticleType
     public SleeveParticleFactory() {
     }
 
-    public Particle makeParticle(BasicParticleType particleType, World world, double p_199234_3_, double p_199234_5_, double p_199234_7_, double p_199234_9_, double p_199234_11_, double p_199234_13_) {
-        return new FallingParticle(world, p_199234_3_, p_199234_5_, p_199234_7_, new ItemStack(Items.IRON_BLOCK));
+    public Particle makeParticle(BasicParticleType particleType, World world, double motionX, double motionY, double motionZ, double xSpeed, double ySpeed, double zSpeed) {
+        return new FallingParticle(world, motionX, motionY, motionZ, new ItemStack(Items.IRON_BLOCK));
     }
 }
