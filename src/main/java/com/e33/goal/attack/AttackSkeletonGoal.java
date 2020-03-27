@@ -16,6 +16,7 @@ public class AttackSkeletonGoal extends AbstractPriorityAttackGoal {
     }
 
     void findTargetToAttack() {
+        LOGGER.info("findTargetToAttack");
         AxisAlignedBB targetableArea = this.getTargetableArea(this.getTargetDistance());
         List<SkeletonEntity> skeletons = this.goalOwner.world.getEntitiesWithinAABB(SkeletonEntity.class, targetableArea, EntityPredicates.NOT_SPECTATING);
         PriorityQueue<SkeletonEntity> pQueue = new PriorityQueue<>(new SkeletonComparator(this.goalOwner));

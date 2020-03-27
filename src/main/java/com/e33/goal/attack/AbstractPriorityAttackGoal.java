@@ -24,6 +24,10 @@ abstract public class AbstractPriorityAttackGoal extends TargetGoal {
     }
 
     public boolean shouldExecute() {
+        if (this.goalOwner.getAttackTarget() != null) {
+            return false;
+        }
+
         this.findTargetToAttack();
         return this.targetToAttack != null;
     }

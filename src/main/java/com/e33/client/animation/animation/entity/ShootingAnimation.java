@@ -28,7 +28,7 @@ public class ShootingAnimation extends Animation {
         List<AnimationProgression> animations = Lists.newArrayList();
         Vec3d smokePosition = this.getPositionForParticle(0.95F);
         Vec3d flamePosition = this.getPositionForParticle(0.87F);
-        Vec3d sleevePosition = this.getPositionForParticle(0.5F);
+//        Vec3d sleevePosition = this.getPositionForParticle(0.5F);
 
         animations.add(AnimationProgressionBuilder.particle((float) smokePosition.x, (float) smokePosition.y, (float) smokePosition.z, (float) smokePosition.x, (float) smokePosition.y, (float) smokePosition.z, ParticleTypes.SMOKE, 2));
         animations.add(AnimationProgressionBuilder.particle((float) flamePosition.x, (float) flamePosition.y, (float) flamePosition.z, (float) flamePosition.x, (float) flamePosition.y, (float) flamePosition.z, ParticleTypes.FLAME, 1));

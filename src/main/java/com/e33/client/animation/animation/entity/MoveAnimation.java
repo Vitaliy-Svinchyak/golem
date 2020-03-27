@@ -52,7 +52,6 @@ public class MoveAnimation extends Animation {
 
     @Override
     protected List<AnimationProgression> createReversedAnimation() {
-        LOGGER.info("createReversedAnimation");
         DynamicAnimationInterface from = this.model;
         DynamicAnimationInterface to = new ShootyModel();
         RendererModel fromModel = from.getMainRendererModel();

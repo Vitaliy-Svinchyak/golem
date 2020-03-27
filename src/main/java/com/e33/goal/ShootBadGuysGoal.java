@@ -1,9 +1,10 @@
 package com.e33.goal;
 
 import com.e33.E33;
+import com.e33.client.detail.AnimationState;
+import com.e33.client.listener.AnimationStateListener;
 import com.e33.entity.BulletEntity;
 import com.e33.entity.ShootyEntity;
-import com.e33.event.NewTargetEvent;
 import com.e33.event.NoActionEvent;
 import com.e33.event.ShotEvent;
 import com.e33.fight.ShootExpectations;
@@ -29,6 +30,7 @@ public class ShootBadGuysGoal extends Goal {
     private int attackStep;
     private int ticksToNextAttack;
     private int bulletsToShoot = -1;
+    private boolean noTarget = false;
 
     public ShootBadGuysGoal(ShootyEntity entity, LookAtTargetGoal lookGoal) {
         this.entity = entity;
@@ -44,8 +46,22 @@ public class ShootBadGuysGoal extends Goal {
             return false;
         }
 
-        LivingEntity livingentity = this.entity.getAttackTarget();
-        return livingentity != null && livingentity.isAlive() && this.entity.canAttack(livingentity);
+        LivingEntity target = this.entity.getAttackTarget();
+        boolean shouldExecute = target != null && target.isAlive() && this.entity.canAttack(target);
+        LOGGER.info("null " + (target != null));
+
+        AnimationState currentState = AnimationStateListener.getAnimationState(this.entity);
+        if (!shouldExecute && (currentState == AnimationState.SHOT || currentState == AnimationState.AIM)) {
+            if (this.noTarget) {
+                this.noTarget();
+            }
+
+            this.noTarget = true;
+        } else {
+            this.noTarget = false;
+        }
+
+        return shouldExecute;
     }
 
     /**
@@ -66,22 +82,17 @@ public class ShootBadGuysGoal extends Goal {
 
         LivingEntity attackTarget = this.entity.getAttackTarget();
 
-
-        if (attackTarget == null) {
-            this.noTarget();
-
-            return;
-        }
-
         if (!this.entity.avoidPeacefulCreaturesGoal.bulletPathIsClear(attackTarget)) {
+            LOGGER.error("I can't!!!!!!");
             this.entity.setAttackTarget(null);
             return;
         }
 
         boolean mustBeDead = true;
         if (this.attackStep == 0 && this.ticksToNextAttack <= 0) {
-            this.setBulletsToShoot(attackTarget);
+            this.bulletsToShoot = this.getBulletsToShoot(attackTarget);
 
+            // TODO 2 more then 1 shot
             if (this.bulletsToShoot > 1) {
                 this.bulletsToShoot = 1;
                 mustBeDead = false;
@@ -90,10 +101,10 @@ public class ShootBadGuysGoal extends Goal {
 
         if (this.ticksToNextAttack <= 0) {
             this.attackStep++;
-            this.ticksToNextAttack = 10;
+            this.ticksToNextAttack = 20;
 
             if (this.attackStep > this.bulletsToShoot) {
-                this.ticksToNextAttack = 20;
+                this.ticksToNextAttack = 30;
                 this.attackStep = 0;
             }
 
@@ -111,7 +122,7 @@ public class ShootBadGuysGoal extends Goal {
         }
     }
 
-    private void setBulletsToShoot(LivingEntity attackTarget) {
+    private int getBulletsToShoot(LivingEntity attackTarget) {
         float targetHealth = attackTarget.getHealth();
 
         if (targetHealth > attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue()) {
@@ -119,7 +130,7 @@ public class ShootBadGuysGoal extends Goal {
             targetHealth = (float) attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue();
         }
 
-        this.bulletsToShoot = (int) Math.ceil(targetHealth / 5);
+        return (int) Math.ceil(targetHealth / 5);
     }
 
     private void makeShot(LivingEntity attackTarget) {
@@ -132,8 +143,9 @@ public class ShootBadGuysGoal extends Goal {
     }
 
     private void noTarget() {
+        LOGGER.info("no target");
         E33.internalEventBus.post(new NoActionEvent(this.entity));
-        this.ticksToNextAttack = 10;
+//        this.ticksToNextAttack = 10;
     }
 
     private void shot(LivingEntity attackTarget) {
