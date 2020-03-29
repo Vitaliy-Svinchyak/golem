@@ -1,7 +1,8 @@
 package com.e33.client.animation.animation.entity.move;
 
-import com.e33.client.animation.animated.model.moving.ShootyModelMove3;
-import com.e33.client.animation.animated.model.moving.ShootyModelMove4;
+import com.e33.client.animation.animated.model.move.ShootyMove2;
+import com.e33.client.animation.animated.model.move.ShootyMove3;
+import com.e33.client.animation.animated.model.move.ShootyMove4;
 import com.e33.client.animation.animation.Animation;
 import com.e33.client.animation.progression.AnimationProgression;
 import com.e33.client.model.DynamicAnimationInterface;
@@ -17,13 +18,13 @@ public class MoveAnimation4 extends Animation {
 
     @Override
     protected List<AnimationProgression> createNormalAnimation() {
-        DynamicAnimationInterface from = new ShootyModelMove3<>();
-        DynamicAnimationInterface to1 = new ShootyModelMove4<>();
+        DynamicAnimationInterface from = new ShootyMove3<>();
+        DynamicAnimationInterface to1 = new ShootyMove4<>();
         RendererModel fromModel = from.getMainRendererModel();
         RendererModel toModel = to1.getMainRendererModel();
         RendererModel entityModel = this.model.getMainRendererModel();
 
-        return this.getAnimatedChangesForEntity(fromModel, toModel, entityModel, 20);
+        return this.getAnimatedChangesForEntity(fromModel, toModel, entityModel, 10);
     }
 
     @Override

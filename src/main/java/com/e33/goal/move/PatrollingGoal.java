@@ -53,8 +53,7 @@ public class PatrollingGoal extends RandomWalkingGoal {
     }
 
     private BlockPos findNearestBlockToPatrol() {
-        BlockPos creaturePosition = this.creature.getPosition();
-        AxisAlignedBB creatureView = new AxisAlignedBB(creaturePosition.getX() - 30, creaturePosition.getY() - 1, creaturePosition.getZ() - 30, creaturePosition.getX() + 30, creaturePosition.getY() + 1, creaturePosition.getZ() + 30);
+        AxisAlignedBB creatureView = this.creature.getBoundingBox().grow(30);
 
         return this.findBlockPosInArea(creatureView);
     }
@@ -86,6 +85,8 @@ public class PatrollingGoal extends RandomWalkingGoal {
                 }
             }
         }
+
+        LOGGER.info("no block");
 
         return null;
     }

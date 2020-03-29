@@ -37,7 +37,6 @@ public class NearestAttackableTargetGoal<T extends LivingEntity> extends TargetG
     }
 
     protected void findNearestTarget() {
-        LOGGER.info("findNearestTarget");
         if (this.targetClass != PlayerEntity.class && this.targetClass != ServerPlayerEntity.class) {
             this.target = this.goalOwner.world.func_225318_b(this.targetClass, this.targetEntitySelector, this.goalOwner, this.goalOwner.posX, this.goalOwner.posY + (double) this.goalOwner.getEyeHeight(), this.goalOwner.posZ, this.getTargetableArea(this.getTargetDistance()));
         } else {

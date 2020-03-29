@@ -88,6 +88,7 @@ public class ShootBadGuysGoal extends Goal {
             return;
         }
 
+        // TODO 2 choose another target if selected is too close
         boolean mustBeDead = true;
         if (this.attackStep == 0 && this.ticksToNextAttack <= 0) {
             this.bulletsToShoot = this.getBulletsToShoot(attackTarget);

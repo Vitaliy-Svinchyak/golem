@@ -3,8 +3,10 @@ package com.e33.entity;
 import com.e33.goal.LookAtTargetGoal;
 import com.e33.goal.attack.*;
 import com.e33.goal.move.AvoidingZombieGoal;
+import com.e33.goal.move.PatrollingGoal;
 import com.e33.init.SoundsRegistry;
 import com.e33.goal.ShootBadGuysGoal;
+import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.item.ArmorStandEntity;
@@ -53,16 +55,16 @@ public class ShootyEntity extends AnimalEntity {
     @Override
     protected void registerGoals() {
         // TODO 2 custom priority queue
-//        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
-        this.goalSelector.addGoal(1, new AvoidingZombieGoal(this, 0.5F));
-        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
-        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
-        this.goalSelector.addGoal(2, lookGoal);
+        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
+//        this.goalSelector.addGoal(1, new AvoidingZombieGoal(this, 0.5F));
+//        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
+//        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
+//        this.goalSelector.addGoal(2, lookGoal);
 //        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
 //        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
 //        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
 //        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
-        this.goalSelector.addGoal(10, new ShootBadGuysGoal(this, lookGoal));
+//        this.goalSelector.addGoal(10, new ShootBadGuysGoal(this, lookGoal));
     }
 
     // TODO 2 teams implementation (isOnSameTeam method)

@@ -1,7 +1,6 @@
-const filename = 'default_pose'
+const filename = 'move8'
 const className = 'small_golem'
 const fs = require('fs')
-console.log(fs.readdirSync('./'))
 let content = fs.readFileSync(filename + '.java').toString()
 
 content = content.replace(`import org.lwjgl.opengl.GL11;

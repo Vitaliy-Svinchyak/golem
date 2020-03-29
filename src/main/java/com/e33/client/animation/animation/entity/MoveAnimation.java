@@ -19,12 +19,20 @@ public class MoveAnimation extends Animation {
         Animation a1_2 = new MoveAnimation2(model, entity);
         Animation a2_3 = new MoveAnimation3(model, entity);
         Animation a3_4 = new MoveAnimation4(model, entity);
-        Animation a4_1 = new MoveAnimation5(model, entity);
+        Animation a4_5 = new MoveAnimation5(model, entity);
+        Animation a5_6 = new MoveAnimation6(model, entity);
+        Animation a6_7 = new MoveAnimation7(model, entity);
+        Animation a7_8 = new MoveAnimation8(model, entity);
+        Animation a8_1 = new MoveAnimation9(model, entity);
 
         a0_1.then(a1_2);
         a1_2.then(a2_3);
         a2_3.then(a3_4);
-        a3_4.then(a4_1);
+        a3_4.then(a4_5);
+        a4_5.then(a5_6);
+        a5_6.then(a6_7);
+        a6_7.then(a7_8);
+        a7_8.then(a8_1);
 
         a0_1.setOneTime(true);
         this.then(a0_1);
