@@ -4,9 +4,14 @@ import com.e33.goal.attack.*;
 import com.e33.core.ModSounds;
 import com.e33.goal.ShootBadGuysGoal;
 import com.e33.goal.move.PatrollingGoal;
+import com.e33.pathfinding.DangerousZoneAvoidanceNavigator;
+import com.google.common.collect.Maps;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.entity.*;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.pathfinding.GroundPathNavigator;
+import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
@@ -14,9 +19,11 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 
 // TODO 2 implement IRangedAttackMob?
 public class EntityGolemShooter extends AnimalEntity {
+    private final Map<PathNodeType, Float> mapPathPriority = Maps.newEnumMap(PathNodeType.class);
 
     public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesHelper(this);
 
@@ -24,6 +31,22 @@ public class EntityGolemShooter extends AnimalEntity {
         super(golem, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
+    }
+
+    public float getPathPriority(PathNodeType nodeType) {
+        Float f = this.mapPathPriority.get(nodeType);
+        return f == null ? nodeType.getPriority() : f;
+    }
+
+    public void setPathPriority(PathNodeType nodeType, float priority) {
+        this.mapPathPriority.put(nodeType, priority);
+    }
+
+    /**
+     * Returns new PathNavigateGround instance
+     */
+    protected PathNavigator createNavigator(World worldIn) {
+        return new DangerousZoneAvoidanceNavigator(this, worldIn);
     }
 
     @Override
