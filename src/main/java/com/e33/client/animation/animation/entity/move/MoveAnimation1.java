@@ -1,7 +1,6 @@
 package com.e33.client.animation.animation.entity.move;
 
 import com.e33.client.animation.animated.model.move.ShootyMove1;
-import com.e33.client.animation.animated.model.moving.ShootyModelMove1;
 import com.e33.client.animation.animation.Animation;
 import com.e33.client.animation.progression.AnimationProgression;
 import com.e33.client.model.DynamicAnimationInterface;

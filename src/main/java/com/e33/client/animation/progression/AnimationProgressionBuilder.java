@@ -35,6 +35,7 @@ public class AnimationProgressionBuilder {
     }
 
     public static AnimationProgression point(RendererModel from, RendererModel to, int ticks, RendererModel model) {
+        LOGGER.error("POINT DIFFERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         List<Float> xProgression = createProgress(from.rotationPointX, to.rotationPointX, ticks);
         List<Float> yProgression = createProgress(from.rotationPointY, to.rotationPointY, ticks);
         List<Float> zProgression = createProgress(from.rotationPointZ, to.rotationPointZ, ticks);

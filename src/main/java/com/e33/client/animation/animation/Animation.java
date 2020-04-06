@@ -180,19 +180,19 @@ abstract public class Animation {
             animations.add(AnimationProgressionBuilder.point(fromModel, toModel, ticks, entityModel));
         }
 
-        List<ModelBox> fromCubes = fromModel.cubeList;
-        List<ModelBox> toCubes = toModel.cubeList;
+//        List<ModelBox> fromCubes = fromModel.cubeList;
+//        List<ModelBox> toCubes = toModel.cubeList;
 
-        for (int i = 0; i < fromCubes.size(); i++) {
-            ModelBoxWithParameters fromCube = (ModelBoxWithParameters) fromCubes.get(i);
-            ModelBoxWithParameters toCube = (ModelBoxWithParameters) toCubes.get(i);
-
-            if (AnimationProgressionBuilder.cubeDiffers(fromCube.parameters, toCube.parameters)) {
-                animations.add(
-                        AnimationProgressionBuilder.modelBox(ticks, entityModel, i, fromCube.parameters, toCube.parameters)
-                );
-            }
-        }
+//        for (int i = 0; i < fromCubes.size(); i++) {
+//            ModelBoxWithParameters fromCube = (ModelBoxWithParameters) fromCubes.get(i);
+//            ModelBoxWithParameters toCube = (ModelBoxWithParameters) toCubes.get(i);
+//
+//            if (AnimationProgressionBuilder.cubeDiffers(fromCube.parameters, toCube.parameters)) {
+//                animations.add(
+//                        AnimationProgressionBuilder.modelBox(ticks, entityModel, i, fromCube.parameters, toCube.parameters)
+//                );
+//            }
+//        }
 
         List<RendererModel> fromChildModels = fromModel.childModels;
         List<RendererModel> toChildModels = toModel.childModels;

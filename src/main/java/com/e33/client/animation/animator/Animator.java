@@ -99,6 +99,9 @@ abstract public class Animator {
             case AIM:
                 this.renderAimed(entity);
                 break;
+            case MOVE:
+                this.animateMove(entity);
+                break;
             default:
                 this.error("No position! " + AnimationStateListener.getAnimationState(entity));
                 break;

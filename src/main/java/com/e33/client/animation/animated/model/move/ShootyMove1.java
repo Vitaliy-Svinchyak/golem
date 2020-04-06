@@ -102,7 +102,7 @@ public class ShootyMove1<T extends ShootyEntity> extends ShootyModel<T> {
 
         press = new RendererModel(this);
         press.setRotationPoint(0.0F, -13.7667F, 1.2F);
-        setRotationAngle(press, 0.0873F, 0.0F, 0.0F);
+        setRotationAngle(press, 0.1745F, -0.0873F, 0.0F);
         body.addChild(press);
         press.cubeList.add(new ModelBoxWithParameters(press, 17, 23, -3.5F, -2.5333F, -1.5F, 7, 4, 3, 0.0F, false));
         press.cubeList.add(new ModelBoxWithParameters(press, 46, 22, -2.0F, -1.3333F, 1.0F, 4, 3, 1, 0.0F, false));
@@ -110,6 +110,7 @@ public class ShootyMove1<T extends ShootyEntity> extends ShootyModel<T> {
 
         chest = new RendererModel(this);
         chest.setRotationPoint(0.0F, -2.0333F, -0.6F);
+        setRotationAngle(chest, 0.0F, -0.0873F, 0.0F);
         press.addChild(chest);
         chest.cubeList.add(new ModelBoxWithParameters(chest, 11, 15, -3.5F, -4.5F, -1.9F, 7, 4, 4, 0.0F, false));
         chest.cubeList.add(new ModelBoxWithParameters(chest, 0, 51, -3.501F, -4.0F, -2.2F, 3, 3, 1, 0.0F, false));
