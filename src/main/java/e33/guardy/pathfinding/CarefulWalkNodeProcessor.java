@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 
+import e33.guardy.entity.ShootyEntity;
 import net.minecraft.block.AbstractRailBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -26,60 +27,66 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
+    final static Logger LOGGER = LogManager.getLogger();
+
     protected float avoidsWater;
     protected MobEntity currentEntity;
+    protected ShootyEntity shooty;
 
-    public void init(IWorldReader sourceIn, MobEntity mob) {
-        super.init(sourceIn, mob);
-        this.avoidsWater = mob.getPathPriority(PathNodeType.WATER);
+    public void init(ShootyEntity mob) {
+        this.shooty = mob;
+        LOGGER.info(this.shooty);
     }
 
     public void postProcess() {
-        this.entity.setPathPriority(PathNodeType.WATER, this.avoidsWater);
+        this.shooty.setPathPriority(PathNodeType.WATER, this.avoidsWater);
         super.postProcess();
     }
 
     public PathPoint getStart() {
+        this.init((ShootyEntity) this.entity);
+
         int currentY;
-        if (this.getCanSwim() && this.entity.isInWater()) {
-            currentY = MathHelper.floor(this.entity.getBoundingBox().minY);
-            BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos(this.entity.posX, (double) currentY, this.entity.posZ);
+        if (this.getCanSwim() && this.shooty.isInWater()) {
+            currentY = MathHelper.floor(this.shooty.getBoundingBox().minY);
+            BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos(this.shooty.posX, (double) currentY, this.shooty.posZ);
 
             for (BlockState blockstate = this.blockaccess.getBlockState(blockpos$mutableblockpos); blockstate.getBlock() == Blocks.WATER || blockstate.getFluidState() == Fluids.WATER.getStillFluidState(false); blockstate = this.blockaccess.getBlockState(blockpos$mutableblockpos)) {
                 ++currentY;
-                blockpos$mutableblockpos.setPos(this.entity.posX, (double) currentY, this.entity.posZ);
+                blockpos$mutableblockpos.setPos(this.shooty.posX, (double) currentY, this.shooty.posZ);
             }
 
             --currentY;
-        } else if (this.entity.onGround) {
-            currentY = MathHelper.floor(this.entity.getBoundingBox().minY + 0.5D);
+        } else if (this.shooty.onGround) {
+            currentY = MathHelper.floor(this.shooty.getBoundingBox().minY + 0.5D);
         } else {
             BlockPos blockpos;
-            for (blockpos = new BlockPos(this.entity); (this.blockaccess.getBlockState(blockpos).isAir() || this.blockaccess.getBlockState(blockpos).allowsMovement(this.blockaccess, blockpos, PathType.LAND)) && blockpos.getY() > 0; blockpos = blockpos.down()) {
+            for (blockpos = new BlockPos(this.shooty); (this.blockaccess.getBlockState(blockpos).isAir() || this.blockaccess.getBlockState(blockpos).allowsMovement(this.blockaccess, blockpos, PathType.LAND)) && blockpos.getY() > 0; blockpos = blockpos.down()) {
                 ;
             }
 
             currentY = blockpos.up().getY();
         }
 
-        BlockPos blockpos2 = new BlockPos(this.entity);
-        PathNodeType pathnodetype1 = this.getPathNodeType(this.entity, blockpos2.getX(), currentY, blockpos2.getZ());
+        BlockPos blockpos2 = new BlockPos(this.shooty);
+        PathNodeType pathnodetype1 = this.getPathNodeType(this.shooty, blockpos2.getX(), currentY, blockpos2.getZ());
         // if entity doesn't like his current position as start point - try all 4 around it
-        if (this.entity.getPathPriority(pathnodetype1) < 0.0F) {
+        if (this.shooty.getPathPriority(pathnodetype1, blockpos2) < 0.0F) {
             Set<BlockPos> set = Sets.newHashSet();
-            set.add(new BlockPos(this.entity.getBoundingBox().minX, (double) currentY, this.entity.getBoundingBox().minZ));
-            set.add(new BlockPos(this.entity.getBoundingBox().minX, (double) currentY, this.entity.getBoundingBox().maxZ));
-            set.add(new BlockPos(this.entity.getBoundingBox().maxX, (double) currentY, this.entity.getBoundingBox().minZ));
-            set.add(new BlockPos(this.entity.getBoundingBox().maxX, (double) currentY, this.entity.getBoundingBox().maxZ));
+            set.add(new BlockPos(this.shooty.getBoundingBox().minX, (double) currentY, this.shooty.getBoundingBox().minZ));
+            set.add(new BlockPos(this.shooty.getBoundingBox().minX, (double) currentY, this.shooty.getBoundingBox().maxZ));
+            set.add(new BlockPos(this.shooty.getBoundingBox().maxX, (double) currentY, this.shooty.getBoundingBox().minZ));
+            set.add(new BlockPos(this.shooty.getBoundingBox().maxX, (double) currentY, this.shooty.getBoundingBox().maxZ));
 
             for (BlockPos blockpos1 : set) {
-                PathNodeType pathnodetype = this.getPathNodeType(this.entity, blockpos1);
+                PathNodeType pathnodetype = this.getPathNodeType(this.shooty, blockpos1);
                 // don't try all points, just use first one
                 // TODO maybe fix it
-                if (this.entity.getPathPriority(pathnodetype) >= 0.0F) {
+                if (this.shooty.getPathPriority(pathnodetype, blockpos1) >= 0.0F) {
                     return this.openPoint(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ());
                 }
             }
@@ -88,16 +95,19 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
         return this.openPoint(blockpos2.getX(), currentY, blockpos2.getZ());
     }
 
-    public FlaggedPathPoint createFlaggedPathPoint(double x, double y, double z) {
+    // createFlaggedPathPoint
+    public FlaggedPathPoint func_224768_a(double x, double y, double z) {
         return new FlaggedPathPoint(this.openPoint(MathHelper.floor(x), MathHelper.floor(y), MathHelper.floor(z)));
     }
 
-    public int getNumberOfSafePoits(PathPoint[] pathOptions, PathPoint startPoint) {
+    // getNumberOfSafePoints
+    public int func_222859_a(PathPoint[] pathOptions, PathPoint startPoint) {
         int i = 0;
         int stepHeight = 0;
-        PathNodeType pathnodetype = this.getPathNodeType(this.entity, startPoint.x, startPoint.y + 1, startPoint.z);
-        if (this.entity.getPathPriority(pathnodetype) >= 0.0F) {
-            stepHeight = MathHelper.floor(Math.max(1.0F, this.entity.stepHeight));
+        BlockPos blockPos = new BlockPos(startPoint.x, startPoint.y + 1, startPoint.z);
+        PathNodeType pathnodetype = this.getPathNodeType(this.shooty, startPoint.x, startPoint.y + 1, startPoint.z);
+        if (this.shooty.getPathPriority(pathnodetype, blockPos) >= 0.0F) {
+            stepHeight = MathHelper.floor(Math.max(1.0F, this.shooty.stepHeight));
         }
 
         double groundY = getGroundY(this.blockaccess, new BlockPos(startPoint.x, startPoint.y, startPoint.z));
@@ -176,9 +186,9 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
             return null;
         }
 
-        PathNodeType pathnodetype = this.getPathNodeType(this.entity, x, y, z);
-        float pathPriority = this.entity.getPathPriority(pathnodetype);
-        double halfedEntityWidth = (double) this.entity.getWidth() / 2.0D;
+        PathNodeType pathnodetype = this.getPathNodeType(this.shooty, x, y, z);
+        float pathPriority = this.shooty.getPathPriority(pathnodetype, blockpos);
+        double halfedEntityWidth = (double) this.shooty.getWidth() / 2.0D;
         if (pathPriority >= 0.0F) {
             pathpoint = this.openPoint(x, y, z);
             pathpoint.nodeType = pathnodetype;
@@ -191,42 +201,42 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
 
         if ((pathpoint == null || pathpoint.costMalus < 0.0F) && stepHeight > 0 && pathnodetype != PathNodeType.FENCE && pathnodetype != PathNodeType.TRAPDOOR) {
             pathpoint = this.getSafePoint(x, y + 1, z, stepHeight - 1, groundYIn, facing);
-            if (pathpoint != null && (pathpoint.nodeType == PathNodeType.OPEN || pathpoint.nodeType == PathNodeType.WALKABLE) && this.entity.getWidth() < 1.0F) {
+            if (pathpoint != null && (pathpoint.nodeType == PathNodeType.OPEN || pathpoint.nodeType == PathNodeType.WALKABLE) && this.shooty.getWidth() < 1.0F) {
                 double d2 = (double) (x - facing.getXOffset()) + 0.5D;
                 double d3 = (double) (z - facing.getZOffset()) + 0.5D;
-                AxisAlignedBB axisalignedbb = new AxisAlignedBB(d2 - halfedEntityWidth, getGroundY(this.blockaccess, new BlockPos(d2, (double) (y + 1), d3)) + 0.001D, d3 - halfedEntityWidth, d2 + halfedEntityWidth, (double) this.entity.getHeight() + getGroundY(this.blockaccess, new BlockPos(pathpoint.x, pathpoint.y, pathpoint.z)) - 0.002D, d3 + halfedEntityWidth);
-                if (!this.blockaccess.isCollisionBoxesEmpty(this.entity, axisalignedbb)) {
+                AxisAlignedBB axisalignedbb = new AxisAlignedBB(d2 - halfedEntityWidth, getGroundY(this.blockaccess, new BlockPos(d2, (double) (y + 1), d3)) + 0.001D, d3 - halfedEntityWidth, d2 + halfedEntityWidth, (double) this.shooty.getHeight() + getGroundY(this.blockaccess, new BlockPos(pathpoint.x, pathpoint.y, pathpoint.z)) - 0.002D, d3 + halfedEntityWidth);
+                if (!this.blockaccess.isCollisionBoxesEmpty(this.shooty, axisalignedbb)) {
                     pathpoint = null;
                 }
             }
         }
 
         if (pathnodetype == PathNodeType.WATER && !this.getCanSwim()) {
-            if (this.getPathNodeType(this.entity, x, y - 1, z) != PathNodeType.WATER) {
+            if (this.getPathNodeType(this.shooty, x, y - 1, z) != PathNodeType.WATER) {
                 return pathpoint;
             }
 
             while (y > 0) {
                 --y;
-                pathnodetype = this.getPathNodeType(this.entity, x, y, z);
+                pathnodetype = this.getPathNodeType(this.shooty, x, y, z);
                 if (pathnodetype != PathNodeType.WATER) {
                     return pathpoint;
                 }
 
                 pathpoint = this.openPoint(x, y, z);
                 pathpoint.nodeType = pathnodetype;
-                pathpoint.costMalus = Math.max(pathpoint.costMalus, this.entity.getPathPriority(pathnodetype));
+                pathpoint.costMalus = Math.max(pathpoint.costMalus, this.shooty.getPathPriority(pathnodetype, new BlockPos(x, y, z)));
             }
         }
 
         if (pathnodetype == PathNodeType.OPEN) {
-            AxisAlignedBB axisalignedbb1 = new AxisAlignedBB((double) x - halfedEntityWidth + 0.5D, (double) y + 0.001D, (double) z - halfedEntityWidth + 0.5D, (double) x + halfedEntityWidth + 0.5D, (double) ((float) y + this.entity.getHeight()), (double) z + halfedEntityWidth + 0.5D);
-            if (!this.blockaccess.isCollisionBoxesEmpty(this.entity, axisalignedbb1)) {
+            AxisAlignedBB axisalignedbb1 = new AxisAlignedBB((double) x - halfedEntityWidth + 0.5D, (double) y + 0.001D, (double) z - halfedEntityWidth + 0.5D, (double) x + halfedEntityWidth + 0.5D, (double) ((float) y + this.shooty.getHeight()), (double) z + halfedEntityWidth + 0.5D);
+            if (!this.blockaccess.isCollisionBoxesEmpty(this.shooty, axisalignedbb1)) {
                 return null;
             }
 
-            if (this.entity.getWidth() >= 1.0F) {
-                PathNodeType pathnodetype1 = this.getPathNodeType(this.entity, x, y - 1, z);
+            if (this.shooty.getWidth() >= 1.0F) {
+                PathNodeType pathnodetype1 = this.getPathNodeType(this.shooty, x, y - 1, z);
                 if (pathnodetype1 == PathNodeType.BLOCKED) {
                     pathpoint = this.openPoint(x, y, z);
                     pathpoint.nodeType = PathNodeType.WALKABLE;
@@ -248,14 +258,14 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
                 }
 
                 PathPoint pathpoint1 = this.openPoint(x, y, z);
-                if (i++ >= this.entity.getMaxFallHeight()) {
+                if (i++ >= this.shooty.getMaxFallHeight()) {
                     pathpoint1.nodeType = PathNodeType.BLOCKED;
                     pathpoint1.costMalus = -1.0F;
                     return pathpoint1;
                 }
 
-                pathnodetype = this.getPathNodeType(this.entity, x, y, z);
-                pathPriority = this.entity.getPathPriority(pathnodetype);
+                pathnodetype = this.getPathNodeType(this.shooty, x, y, z);
+                pathPriority = this.shooty.getPathPriority(pathnodetype, new BlockPos(x, y, z));
                 if (pathnodetype != PathNodeType.OPEN && pathPriority >= 0.0F) {
                     pathpoint = pathpoint1;
                     pathpoint1.nodeType = pathnodetype;
@@ -277,7 +287,7 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
     }
 
     // first
-    public PathNodeType getPathNodeType(IBlockReader blockaccessIn, int x, int y, int z, MobEntity entitylivingIn, int xSize, int ySize, int zSize, boolean canBreakDoorsIn, boolean canEnterDoorsIn) {
+    public PathNodeType getPathNodeType2(IBlockReader blockaccessIn, int x, int y, int z, ShootyEntity entitylivingIn, int xSize, int ySize, int zSize, boolean canBreakDoorsIn, boolean canEnterDoorsIn) {
         EnumSet<PathNodeType> enumset = EnumSet.noneOf(PathNodeType.class);
         PathNodeType pathnodetype = PathNodeType.BLOCKED;
         double d0 = (double) entitylivingIn.getWidth() / 2.0D;
@@ -355,13 +365,13 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
     }
 
     // used in code
-    private PathNodeType getPathNodeType(MobEntity entitylivingIn, BlockPos pos) {
+    private PathNodeType getPathNodeType(ShootyEntity entitylivingIn, BlockPos pos) {
         return this.getPathNodeType(entitylivingIn, pos.getX(), pos.getY(), pos.getZ());
     }
 
     // used in code
-    private PathNodeType getPathNodeType(MobEntity entitylivingIn, int x, int y, int z) {
-        return this.getPathNodeType(this.blockaccess, x, y, z, entitylivingIn, this.entitySizeX, this.entitySizeY, this.entitySizeZ, this.getCanOpenDoors(), this.getCanEnterDoors());
+    private PathNodeType getPathNodeType(ShootyEntity entitylivingIn, int x, int y, int z) {
+        return this.getPathNodeType2(this.blockaccess, x, y, z, entitylivingIn, this.entitySizeX, this.entitySizeY, this.entitySizeZ, this.getCanOpenDoors(), this.getCanEnterDoors());
     }
 
     // third. checks block under the current

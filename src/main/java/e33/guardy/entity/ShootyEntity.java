@@ -8,6 +8,7 @@ import e33.guardy.goal.move.AvoidingDangerGoal;
 import e33.guardy.goal.move.PatrollingGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.DangerousZoneAvoidanceNavigator;
+import e33.guardy.pathfinding.PathPriorityByCoordinates;
 import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
@@ -30,7 +31,7 @@ import javax.annotation.Nullable;
 
 // TODO 2 implement IRangedAttackMob?
 // TODO don't drop weapon when die
-public class ShootyEntity extends AnimalEntity {
+public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordinates {
 
     public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesHelper(this);
 
@@ -129,14 +130,16 @@ public class ShootyEntity extends AnimalEntity {
         return 150;
     }
 
-    public float getPathPriority(PathNodeType nodeType) {
-        return super.getPathPriority(nodeType);
-    }
-
     /**
      * Returns new PathNavigateGround instance
      */
     protected PathNavigator createNavigator(World worldIn) {
         return new DangerousZoneAvoidanceNavigator(this, worldIn);
+    }
+
+    @Override
+    public float getPathPriority(PathNodeType nodeType, BlockPos position) {
+        LOGGER.info(position);
+        return super.getPathPriority(nodeType);
     }
 }
