@@ -4,14 +4,18 @@ import e33.guardy.goal.LookAtTargetGoal;
 import e33.guardy.goal.ShootBadGuysGoal;
 import e33.guardy.goal.attack.AvoidPeacefulCreaturesHelper;
 import e33.guardy.goal.attack.NearestAttackableTargetGoal;
+import e33.guardy.goal.move.AvoidingDangerGoal;
 import e33.guardy.goal.move.PatrollingGoal;
 import e33.guardy.init.SoundsRegistry;
+import e33.guardy.pathfinding.DangerousZoneAvoidanceNavigator;
 import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
@@ -56,15 +60,15 @@ public class ShootyEntity extends AnimalEntity {
     protected void registerGoals() {
         // TODO 2 custom priority queue
 //        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
-//        this.goalSelector.addGoal(1, new AvoidingZombieGoal(this, 0.5F));
-        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
-        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
-        this.goalSelector.addGoal(2, lookGoal);
+        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this, 0.5F));
+//        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
+//        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
+//        this.goalSelector.addGoal(2, lookGoal);
 //        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
 //        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
 //        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
 //        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
-        this.goalSelector.addGoal(10, new ShootBadGuysGoal(this, lookGoal));
+//        this.goalSelector.addGoal(10, new ShootBadGuysGoal(this, lookGoal));
     }
 
     // TODO 2 teams implementation (isOnSameTeam method)
@@ -123,5 +127,16 @@ public class ShootyEntity extends AnimalEntity {
 
     public int getHorizontalFaceSpeed() {
         return 150;
+    }
+
+    public float getPathPriority(PathNodeType nodeType) {
+        return super.getPathPriority(nodeType);
+    }
+
+    /**
+     * Returns new PathNavigateGround instance
+     */
+    protected PathNavigator createNavigator(World worldIn) {
+        return new DangerousZoneAvoidanceNavigator(this, worldIn);
     }
 }

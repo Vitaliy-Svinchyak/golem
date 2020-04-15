@@ -12,19 +12,19 @@ import java.util.UUID;
 public class DangerousZone {
 
     final private LivingEntity entity;
-    final private int violetRadius;
     final private int redRadius;
+    final private int orangeRadius;
     final private int yellowRadius;
 
     private List<BlockPos> cachedCenterBocks = null;
-    private List<BlockPos> cachedVioletBocks = null;
-    private List<BlockPos> cachedRedBocks = null;
+    private List<BlockPos> cachedRedBlocks = null;
+    private List<BlockPos> cachedOrangeBlocks = null;
     private List<BlockPos> cachedYellowBocks = null;
 
-    public DangerousZone(LivingEntity entity, int violetRadius, int redRadius, int yellowRadius) {
+    public DangerousZone(LivingEntity entity, int redRadius, int orangeRadius, int yellowRadius) {
         this.entity = entity;
-        this.violetRadius = violetRadius;
         this.redRadius = redRadius;
+        this.orangeRadius = orangeRadius;
         this.yellowRadius = yellowRadius;
     }
 
@@ -38,8 +38,8 @@ public class DangerousZone {
 
     public void clearCache() {
         this.cachedCenterBocks = null;
-        this.cachedVioletBocks = null;
-        this.cachedRedBocks = null;
+        this.cachedRedBlocks = null;
+        this.cachedOrangeBlocks = null;
         this.cachedYellowBocks = null;
     }
 
@@ -62,32 +62,32 @@ public class DangerousZone {
         return centerBlocks;
     }
 
-    public List<BlockPos> getVioletBlocksPos() {
-        if (this.cachedVioletBocks == null) {
-            this.cachedVioletBocks = this.createBlocksPos(this.violetRadius, this.getCenterBlocksPos(), this.getCenterBlocksPos());
+    public List<BlockPos> getRedBlocks() {
+        if (this.cachedRedBlocks == null) {
+            this.cachedRedBlocks = this.createBlocksPos(this.redRadius, this.getCenterBlocksPos(), this.getCenterBlocksPos());
         }
 
-        return this.cachedVioletBocks;
+        return this.cachedRedBlocks;
     }
 
-    public List<BlockPos> getRedBlocksPos() {
-        if (this.cachedRedBocks == null) {
-            List<BlockPos> violetBlocks = this.getVioletBlocksPos();
-            List<BlockPos> whereToCheck = Helper.concatLists(this.getCenterBlocksPos(), violetBlocks);
+    public List<BlockPos> getOrangeBlocks() {
+        if (this.cachedOrangeBlocks == null) {
+            List<BlockPos> redBlocks = this.getRedBlocks();
+            List<BlockPos> whereToCheck = Helper.concatLists(this.getCenterBlocksPos(), redBlocks);
 
-            this.cachedRedBocks = this.createBlocksPos(this.redRadius, violetBlocks, whereToCheck);
+            this.cachedOrangeBlocks = this.createBlocksPos(this.orangeRadius, redBlocks, whereToCheck);
         }
 
-        return this.cachedRedBocks;
+        return this.cachedOrangeBlocks;
     }
 
     public List<BlockPos> getYellowBlocksPos() {
         if (this.cachedYellowBocks == null) {
-            List<BlockPos> redBlocks = this.getRedBlocksPos();
-            List<BlockPos> whereToCheck = Helper.concatLists(this.getCenterBlocksPos(), this.getVioletBlocksPos());
-            whereToCheck = Helper.concatLists(whereToCheck, redBlocks);
+            List<BlockPos> orangeBlocks = this.getOrangeBlocks();
+            List<BlockPos> whereToCheck = Helper.concatLists(this.getCenterBlocksPos(), this.getRedBlocks());
+            whereToCheck = Helper.concatLists(whereToCheck, orangeBlocks);
 
-            this.cachedYellowBocks = this.createBlocksPos(this.yellowRadius, redBlocks, whereToCheck);
+            this.cachedYellowBocks = this.createBlocksPos(this.yellowRadius, orangeBlocks, whereToCheck);
         }
 
         return this.cachedYellowBocks;

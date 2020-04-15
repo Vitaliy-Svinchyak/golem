@@ -19,12 +19,12 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class AvoidingZombieGoal extends RandomWalkingGoal {
+public class AvoidingDangerGoal extends RandomWalkingGoal {
     private World world;
 
     private final static Logger LOGGER = LogManager.getLogger();
 
-    public AvoidingZombieGoal(CreatureEntity creatureIn, double speedIn) {
+    public AvoidingDangerGoal(CreatureEntity creatureIn, double speedIn) {
         super(creatureIn, speedIn, 1);
 
         this.world = this.creature.getEntityWorld();
@@ -56,13 +56,13 @@ public class AvoidingZombieGoal extends RandomWalkingGoal {
             ) {
                 DangerousZone dangerousZone = new DangerousZone(enemy, 2, 2, 2);
                 E33.dangerousZoneDebugRenderer.addZone(dangerousZone);
-                for (BlockPos redBlock : dangerousZone.getVioletBlocksPos()) {
+                for (BlockPos redBlock : dangerousZone.getRedBlocks()) {
                     if (this.creature.getBoundingBox().contains(redBlock.getX(), redBlock.getY(), redBlock.getZ())) {
                         return this.calculatePos(golemPos, enemyPos);
                     }
                 }
 
-                for (BlockPos orangeBlock : dangerousZone.getRedBlocksPos()) {
+                for (BlockPos orangeBlock : dangerousZone.getOrangeBlocks()) {
                     if (this.creature.getBoundingBox().contains(orangeBlock.getX(), orangeBlock.getY(), orangeBlock.getZ())) {
                         return this.calculatePos(golemPos, enemyPos);
                     }
