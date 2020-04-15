@@ -2,23 +2,36 @@ package e33.guardy.entity;
 
 import e33.guardy.fight.ShootExpectations;
 import e33.guardy.fight.ShootStatistic;
+import e33.guardy.init.EntityRegistry;
+import e33.guardy.net.BulletSSpawnObjectPacket;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.IRendersAsItem;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.DamagingProjectileEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.play.server.SSpawnObjectPacket;
+import net.minecraft.particles.IParticleData;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 
-public class BulletEntity extends DamagingProjectileEntity {
+public class BulletEntity extends DamagingProjectileEntity implements IRendersAsItem {
 
     private LivingEntity target = null;
 
     public BulletEntity(@Nonnull World world, @Nonnull LivingEntity shooter, double accelX, double accelY, double accelZ, LivingEntity target) {
         super(EntityType.SMALL_FIREBALL, world);
+//        this(EntityRegistry.BULLET, world);
         this.target = target;
         this.shootingEntity = shooter;
         this.setLocationAndAngles(shooter.posX, shooter.posY, shooter.posZ, shooter.rotationYaw, shooter.rotationPitch);
@@ -44,19 +57,28 @@ public class BulletEntity extends DamagingProjectileEntity {
         return new BulletEntity(entityType, world);
     }
 
+    @OnlyIn(Dist.CLIENT)
+    public ItemStack getItem() {
+        LOGGER.info("getItem");
+        return new ItemStack(Items.FIRE_CHARGE);
+    }
+
     public void baseTick() {
+        super.baseTick();
+        if (this.shootingEntity == null) {
+            return;
+        }
+
         if (World.isYOutOfBounds((int) this.posY) || this.getDistance(this.shootingEntity) > 64) {
             ShootExpectations.removeFromDeadList(this.target);
         }
-
-        super.baseTick();
     }
 
     /**
      * Called when this BulletEntity hits a block or entity.
      */
     protected void onImpact(@Nonnull RayTraceResult result) {
-        if (this.world.isRemote) {
+        if (this.world.isRemote || this.target == null) {
             return;
         }
 
@@ -83,13 +105,21 @@ public class BulletEntity extends DamagingProjectileEntity {
     }
 
     public void remove() {
-        ShootExpectations.removeFromDeadList(this.target);
+        if (this.target != null) {
+            ShootExpectations.removeFromDeadList(this.target);
+        }
         super.remove();
     }
 
     public void remove(boolean keepData) {
-        ShootExpectations.removeFromDeadList(this.target);
+        if (this.target != null) {
+            ShootExpectations.removeFromDeadList(this.target);
+        }
         super.remove(keepData);
+    }
+
+    protected IParticleData getParticle() {
+        return ParticleTypes.SQUID_INK;
     }
 
     /**
@@ -116,4 +146,13 @@ public class BulletEntity extends DamagingProjectileEntity {
     protected boolean isFireballFiery() {
         return false;
     }
+
+//    public IPacket<?> createSpawnPacket() {
+//        if (this.world instanceof ServerWorld) {
+//            return super.createSpawnPacket();
+//        }
+//
+//        int i = this.shootingEntity == null ? 0 : this.shootingEntity.getEntityId();
+//        return new BulletSSpawnObjectPacket(this.getEntityId(), this.getUniqueID(), this.posX, this.posY, this.posZ, this.rotationPitch, this.rotationYaw, this.getType(), i, new Vec3d(this.accelerationX, this.accelerationY, this.accelerationZ));
+//    }
 }

@@ -16,6 +16,7 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.IForgeRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,9 +25,8 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class EntityRegistry {
     private final static Logger LOGGER = LogManager.getLogger();
-    private static List<EntityType> entities = Lists.newArrayList();
-    public static final EntityType<ShootyEntity> SHOOTY = createShooty();
-    public static final EntityType<BulletEntity> BULLET = createBulletEntity();
+    public static EntityType<ShootyEntity> SHOOTY;
+    public static EntityType<BulletEntity> BULLET;
 
     private static <T extends AnimalEntity> EntityType<ShootyEntity> createShooty() {
         ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(ShootyEntity.class));
@@ -35,8 +35,6 @@ public class EntityRegistry {
                 .setTrackingRange(128)
                 .build(location.toString());
         entity.setRegistryName(location);
-
-        entities.add(entity);
 
         return entity;
     }
@@ -47,10 +45,9 @@ public class EntityRegistry {
                 .create(BulletEntity::build, EntityClassification.MISC)
                 .size(1F, 1F)
                 .setTrackingRange(128)
+                .setUpdateInterval(10)
                 .build(location.toString());
         entity.setRegistryName(location);
-
-        entities.add(entity);
 
         return entity;
     }
@@ -66,10 +63,13 @@ public class EntityRegistry {
 
     @SubscribeEvent
     public static void onRegisterEntities(RegistryEvent.Register<EntityType<?>> event) {
-        for (EntityType entity : entities) {
-            Preconditions.checkNotNull(entity.getRegistryName(), "registryName");
-            event.getRegistry().register(entity);
-            EntitySpawnPlacementRegistry.register(entity, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, ShootyEntity::func_223316_b);
-        }
+        IForgeRegistry registry = event.getRegistry();
+
+        SHOOTY = createShooty();
+        registry.register(SHOOTY);
+        EntitySpawnPlacementRegistry.register(SHOOTY, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, ShootyEntity::func_223316_b);
+
+        BULLET = createBulletEntity();
+        registry.register(BULLET);
     }
 }

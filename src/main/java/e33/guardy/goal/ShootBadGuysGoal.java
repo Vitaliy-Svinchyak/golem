@@ -10,6 +10,8 @@ import e33.guardy.event.ShotEvent;
 import e33.guardy.fight.ShootExpectations;
 import e33.guardy.fight.ShootingNavigator;
 import e33.guardy.init.SoundsRegistry;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.goal.Goal;
@@ -48,7 +50,6 @@ public class ShootBadGuysGoal extends Goal {
 
         LivingEntity target = this.entity.getAttackTarget();
         boolean shouldExecute = target != null && target.isAlive() && this.entity.canAttack(target);
-        LOGGER.info("null " + (target != null));
 
         AnimationState currentState = AnimationStateListener.getAnimationState(this.entity);
         if (!shouldExecute && (currentState == AnimationState.SHOT || currentState == AnimationState.AIM)) {
@@ -146,7 +147,7 @@ public class ShootBadGuysGoal extends Goal {
     private void noTarget() {
         LOGGER.info("no target");
         E33.internalEventBus.post(new NoActionEvent(this.entity));
-//        this.ticksToNextAttack = 10;
+        this.ticksToNextAttack = 10;
     }
 
     private void shot(LivingEntity attackTarget) {

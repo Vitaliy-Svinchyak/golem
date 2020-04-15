@@ -7,10 +7,13 @@ import e33.guardy.E33;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.util.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 
 public class ShootyRenderer extends MobRenderer<ShootyEntity, ShootyModel<ShootyEntity>> {
+    private final static Logger LOGGER = LogManager.getLogger();
 
     public ShootyRenderer(EntityRendererManager renderManager) {
         // 3 param - shadow size
