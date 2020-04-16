@@ -1,6 +1,7 @@
 package e33.guardy.debug;
 
 public enum Color {
+    UNWALKABLE_BLACK(0F, 0F, 0F, 1F),
     DANGEROUS_ZONE_RED(0.81F, 0.09F, 0.21F, 0.33F),
     DANGEROUS_ZONE_ORANGE(0.80F, 0.50F, 0.15F, 0.33F),
     DANGEROUS_ZONE_YELLOW(0.89F, 0.89F, 0.07F, 0.33F);

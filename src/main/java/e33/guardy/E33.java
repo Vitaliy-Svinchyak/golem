@@ -5,6 +5,7 @@ import e33.guardy.client.renderer.entity.BulletRenderer;
 import e33.guardy.client.renderer.entity.ShootyRenderer;
 import e33.guardy.client.listener.AnimationStateListener;
 import e33.guardy.debug.DangerousZoneDebugRenderer;
+import e33.guardy.debug.UnwalkableBlocksDebugRenderer;
 import e33.guardy.entity.BulletEntity;
 import e33.guardy.entity.ShootyEntity;
 import e33.guardy.net.BulletSSpawnObjectPacket;
@@ -37,6 +38,7 @@ public class E33 {
     public static final String MOD_ID = "e33";
     public static final IEventBus internalEventBus = BusBuilder.builder().setTrackPhases(false).build();
     public static final DangerousZoneDebugRenderer dangerousZoneDebugRenderer = new DangerousZoneDebugRenderer(Minecraft.getInstance());
+    public static final UnwalkableBlocksDebugRenderer unwalkableBlocksDebugRenderer = new UnwalkableBlocksDebugRenderer(Minecraft.getInstance());
     private static DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
     private final static Logger LOGGER = LogManager.getLogger();
 
@@ -60,5 +62,6 @@ public class E33 {
         // TODO prevent HashMap null exception
 //        E33.renderer.pathfinding.render(50);
         E33.dangerousZoneDebugRenderer.render(50);
+        E33.unwalkableBlocksDebugRenderer.render(50);
     }
 }

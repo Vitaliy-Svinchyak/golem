@@ -44,7 +44,7 @@ public class AvoidingDangerGoal extends RandomWalkingGoal {
 
 
         for (ZombieEntity enemy : closestEnemies) {
-            enemy.setAttackTarget(this.creature);
+//            enemy.setAttackTarget(this.creature);
 
             Vec3d golemPos = this.creature.getPositionVec();
             Vec3d enemyPos = enemy.getPositionVec();

@@ -9,6 +9,7 @@ import e33.guardy.goal.move.PatrollingGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.DangerousZoneAvoidanceNavigator;
 import e33.guardy.pathfinding.PathPriorityByCoordinates;
+import e33.guardy.pathfinding.UnwalkableMarker;
 import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
@@ -44,6 +45,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     @Override
     public void tick() {
         this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
+        UnwalkableMarker.mark(this.world, this, this.getBoundingBox().grow(16));
         super.tick();
     }
 
