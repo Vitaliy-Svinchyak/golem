@@ -141,7 +141,6 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
 
     @Override
     public float getPathPriority(PathNodeType nodeType, BlockPos position) {
-        LOGGER.info(position);
         return super.getPathPriority(nodeType);
     }
 }

@@ -2,10 +2,16 @@ package e33.guardy.pathfinding;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.minecraft.entity.MobEntity;
+import e33.guardy.E33;
+import e33.guardy.entity.ShootyEntity;
+import net.minecraft.block.SnowBlock;
+import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
+import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,17 +21,50 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class UnwalkableMarker {
     final static Logger LOGGER = LogManager.getLogger();
 
-    protected static Map<UUID, BlockPos> lastPos = Maps.newHashMap();
-    protected static Map<UUID, List<BlockPos>> unwalkableBlocks = Maps.newHashMap();
+    private static Map<UUID, BlockPos> lastPos = Maps.newHashMap();
+    private static Map<UUID, List<BlockPos>> unwalkableBlocks = Maps.newHashMap();
+    private static List<List<BlockPos>> checkingRoutes = Lists.newArrayList();
+    private static ShootyEntity entity;
+    private static boolean worldChanged;
 
-    public static void mark(IWorldReader world, MobEntity me, AxisAlignedBB zone) {
-        if (lastPos.get(me.getUniqueID()) != null && lastPos.get(me.getUniqueID()).equals(me.getPosition())) {
+    @SubscribeEvent
+    public static void onBlockChangeEvent(BlockEvent.BreakEvent event) {
+        // TODO filter by chunks
+        UnwalkableMarker.worldChanged = true;
+    }
+
+    @SubscribeEvent
+    public static void onBlockChangeEvent(BlockEvent.EntityPlaceEvent event) {
+        UnwalkableMarker.worldChanged = true;
+    }
+
+    public static Map<UUID, List<BlockPos>> getUnwalkableBlocks() {
+        return unwalkableBlocks;
+    }
+
+    public static List<List<BlockPos>> getCheckingRoutes() {
+        return checkingRoutes;
+    }
+
+    //BlockEvent.EntityPlaceEvent, BlockEvent.BreakEvent
+    public static void mark(IWorldReader world, ShootyEntity me, AxisAlignedBB zone) {
+        if (lastPos.get(me.getUniqueID()) != null && lastPos.get(me.getUniqueID()).equals(me.getPosition()) && !UnwalkableMarker.worldChanged) {
             return;
         }
 
+        if (!me.onGround) {
+            return;
+        }
+
+        UnwalkableMarker.worldChanged = false;
+        UnwalkableMarker.entity = me;
+        UnwalkableMarker.entity = me;
+
+        List<List<BlockPos>> localCheckingRoutes = Lists.newArrayList();
         BlockPos myPos = me.getPosition();
         lastPos.put(me.getUniqueID(), myPos);
         Map<String, Boolean> usedCoors = Maps.newHashMap();
@@ -45,9 +84,13 @@ public class UnwalkableMarker {
                 }
             }
 
+            if (E33.DEBUG) {
+                localCheckingRoutes.add(tempPoints);
+            }
+
             iteration++;
             if (iteration >= 16 * 16) {
-                LOGGER.error("FUCK");
+                LOGGER.error("Too many iterations!!!");
                 break;
             }
             points = tempPoints;
@@ -70,7 +113,9 @@ public class UnwalkableMarker {
             }
         }
 
+        checkingRoutes = localCheckingRoutes;
         unwalkableBlocks.put(me.getUniqueID(), notOkPositions);
+        UnwalkableMarker.entity = null;
     }
 
     static List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo) {
@@ -88,7 +133,7 @@ public class UnwalkableMarker {
         return variants.stream()
                 .filter(variant -> {
                     if (usedCoors.get(variant.toString()) == null && variant.getX() >= zone.minX - 1 && variant.getX() <= zone.maxX && variant.getZ() >= zone.minZ - 1 && variant.getZ() <= zone.maxZ) {
-                        if (Math.abs(variant.getY() - start.getY()) <= 1) {
+                        if (canWalkFromTo(world, start, variant)) {
                             // check walls between
                             if (variant.getX() != start.getX() && variant.getZ() != start.getZ()) {
                                 BlockPos toCheckWall = getTopPosition(world, new BlockPos(variant.getX(), start.getY(), start.getZ()));
@@ -101,34 +146,73 @@ public class UnwalkableMarker {
                                     return false;
                                 }
                             }
+
                             return true;
-                        } else {
-                            cantGo.add(variant);
-                            return false;
                         }
+
+                        cantGo.add(variant);
+                        return false;
                     }
                     return false;
                 })
                 .collect(Collectors.toList());
     }
 
-    public static Map<UUID, List<BlockPos>> getUnwalkableBlocks() {
-        return unwalkableBlocks;
-    }
-
     static BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position) {
-        while (world.getBlockState(position).isSolid() || world.getBlockState(position.up()).isSolid()) {
+        if (isSolid(world, position) || isSolid(world, position.up())) {
+            while (isSolid(world, position) || isSolid(world, position.up())) {
+                position = position.up();
+            }
+        } else {
+            while (!isSolid(world, position)) {
+                position = position.down();
+            }
             position = position.up();
         }
 
-        if (!world.getBlockState(position).isSolid() && world.getBlockState(position.down()).isSolid()) {
-            return position;
+        return position;
+    }
+
+    static boolean canWalkFromTo(IWorldReader world, BlockPos start, BlockPos end) {
+        PathNodeType endType = getPathNodeType(world, end);
+        if ((endType == PathNodeType.WATER && getPathNodeType(world, end.up()) == PathNodeType.WATER) || endType == PathNodeType.LAVA || endType == PathNodeType.DAMAGE_FIRE) {
+            return false;
         }
 
-        while (!world.getBlockState(position).isSolid()) {
-            position = position.down();
+        float startY = start.getY();
+        float endY = end.getY();
+
+        if (world.getBlockState(start.down()).getBlock() instanceof SnowBlock) {
+            startY -= 1;
+            startY += world.getBlockState(start.down()).get(SnowBlock.LAYERS) * (1F / 7F);
         }
-        return position.up();
+        if (getPathNodeType(world, start.down()) == PathNodeType.FENCE) {
+            startY += 0.5F;
+        }
+
+        if (getPathNodeType(world, end.down()) == PathNodeType.FENCE) {
+            endY += 0.5F;
+        }
+
+        float diff = startY - endY;
+
+        if (start.getY() > end.getY()) {
+            return diff <= entity.getMaxFallHeight();
+        }
+
+        return Math.abs(diff) <= 1;
+    }
+
+    static boolean isSolid(IWorldReader world, @Nonnull BlockPos position) {
+        if (getPathNodeType(world, position) == PathNodeType.LEAVES) {
+            return true;
+        }
+
+        return world.getBlockState(position).isSolid();
+    }
+
+    static PathNodeType getPathNodeType(IWorldReader world, BlockPos blockPos) {
+        return UnwalkableMarker.entity.getNavigator().getNodeProcessor().getPathNodeType(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
     }
 
 }

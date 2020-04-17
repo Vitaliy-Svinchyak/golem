@@ -32,10 +32,26 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         GlStateManager.lineWidth(6.0F);
 
         this.renderBlocks();
+        this.renderRoutes();
 
         GlStateManager.enableTexture();
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
+    }
+
+    private void renderRoutes() {
+        List<List<BlockPos>> routes = UnwalkableMarker.getCheckingRoutes();
+        ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
+        double x = activeRenderInfo.getProjectedView().x;
+        double y = activeRenderInfo.getProjectedView().y;
+        double z = activeRenderInfo.getProjectedView().z;
+
+        int iteration = 0;
+        float alphaStep = 0.75F / routes.size();
+        for (List<BlockPos> check : routes) {
+            this.renderBlocksWithColorAndNumber(check, Color.ROUTE_VIOLET, iteration, 0.25F + alphaStep * iteration, x, y, z);
+            iteration++;
+        }
     }
 
     private void renderBlocks() {
@@ -46,8 +62,36 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         double z = activeRenderInfo.getProjectedView().z;
 
         for (List<BlockPos> list : blocksPerEntity.values()) {
-//            LOGGER.info(list);
             this.renderBlocksWithColor(list, Color.UNWALKABLE_BLACK, x, y, z);
+        }
+    }
+
+    private void renderBlocksWithColorAndNumber(List<BlockPos> blocks, Color color, int number, float alpha, double x, double y, double z) {
+        for (BlockPos block : blocks) {
+            DebugRenderer.func_217732_a(
+                    Integer.toString(number) + ".", // to fix the bug with number 6
+                    (double) block.getX() + 0.5D,
+                    (double) block.getY() + 0.25D,
+                    (double) block.getZ() + 0.5D,
+                    -1
+            );
+            DebugRenderer.func_217730_a(
+                    (
+                            new AxisAlignedBB(
+                                    block.getX() - 0.01,
+                                    block.getY() - 1.01,
+                                    block.getZ() - 0.01,
+                                    block.getX() + 1.01,
+                                    block.getY() + 0.01,
+                                    block.getZ() + 1.01
+                            )
+                    ).offset(-x, -y, -z),
+                    color.red,
+                    color.green,
+                    color.blue,
+                    alpha
+            );
+
         }
     }
 
@@ -57,12 +101,12 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
             DebugRenderer.func_217730_a(
                     (
                             new AxisAlignedBB(
-                                    block.getX() - 0.1,
-                                    block.getY() - 1.1,
-                                    block.getZ() - 0.1,
-                                    block.getX() + 1.1,
-                                    block.getY() + 0.1,
-                                    block.getZ() + 1.1
+                                    block.getX() - 0.01,
+                                    block.getY() - 1.01,
+                                    block.getZ() - 0.01,
+                                    block.getX() + 1.01,
+                                    block.getY() + 0.01,
+                                    block.getZ() + 1.01
                             )
                     ).offset(-x, -y, -z),
                     color.red,

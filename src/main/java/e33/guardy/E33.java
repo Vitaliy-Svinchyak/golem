@@ -36,6 +36,7 @@ import java.util.Map;
 @Mod(E33.MOD_ID)
 public class E33 {
     public static final String MOD_ID = "e33";
+    public static final boolean DEBUG = true;
     public static final IEventBus internalEventBus = BusBuilder.builder().setTrackPhases(false).build();
     public static final DangerousZoneDebugRenderer dangerousZoneDebugRenderer = new DangerousZoneDebugRenderer(Minecraft.getInstance());
     public static final UnwalkableBlocksDebugRenderer unwalkableBlocksDebugRenderer = new UnwalkableBlocksDebugRenderer(Minecraft.getInstance());
@@ -60,8 +61,10 @@ public class E33 {
     @SubscribeEvent
     public void renderWorldLastEvent(RenderWorldLastEvent event) {
         // TODO prevent HashMap null exception
-//        E33.renderer.pathfinding.render(50);
-        E33.dangerousZoneDebugRenderer.render(50);
-        E33.unwalkableBlocksDebugRenderer.render(50);
+        if (DEBUG) {
+            //        E33.renderer.pathfinding.render(50);
+            E33.dangerousZoneDebugRenderer.render(50);
+            E33.unwalkableBlocksDebugRenderer.render(50);
+        }
     }
 }
