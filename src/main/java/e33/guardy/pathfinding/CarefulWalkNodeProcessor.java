@@ -39,7 +39,7 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
 
     public void init(ShootyEntity mob) {
         this.shooty = mob;
-        UnwalkableMarker.mark(this.blockaccess, mob, mob.getBoundingBox().grow(16D));
+        UnwalkableMarker.mark(this.blockaccess, mob, mob.getBoundingBox().grow(24D));
     }
 
     public void postProcess() {

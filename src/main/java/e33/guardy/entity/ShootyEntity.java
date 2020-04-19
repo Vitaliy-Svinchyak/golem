@@ -45,7 +45,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     @Override
     public void tick() {
         this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
-        UnwalkableMarker.mark(this.world, this, this.getBoundingBox().grow(16));
+        UnwalkableMarker.mark(this.world, this, this.getBoundingBox().grow(24));
         super.tick();
     }
 

@@ -5,7 +5,9 @@ import com.google.common.collect.Maps;
 import e33.guardy.E33;
 import e33.guardy.entity.ShootyEntity;
 import net.minecraft.block.SnowBlock;
+import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.PathNodeType;
+import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
@@ -18,18 +20,19 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class UnwalkableMarker {
     final static Logger LOGGER = LogManager.getLogger();
 
-    private static Map<UUID, BlockPos> lastPos = Maps.newHashMap();
-    private static Map<UUID, List<BlockPos>> unwalkableBlocks = Maps.newHashMap();
+    private static BlockPos lastPos = null;
+    private static List<BlockPos> unwalkableBlocks = Lists.newArrayList();
     private static List<List<BlockPos>> checkingRoutes = Lists.newArrayList();
     private static ShootyEntity entity;
+    private static NodeProcessor nodeProcessor = new WalkNodeProcessor();
     private static boolean worldChanged;
+    private static int burningTicks = -1;
 
     @SubscribeEvent
     public static void onBlockChangeEvent(BlockEvent.BreakEvent event) {
@@ -38,11 +41,18 @@ public class UnwalkableMarker {
     }
 
     @SubscribeEvent
-    public static void onBlockChangeEvent(BlockEvent.EntityPlaceEvent event) {
+    public static void onBlockChangeEvent(BlockEvent.FluidPlaceBlockEvent event) {
+        // TODO filter by chunks
         UnwalkableMarker.worldChanged = true;
     }
 
-    public static Map<UUID, List<BlockPos>> getUnwalkableBlocks() {
+    @SubscribeEvent
+    public static void onBlockChangeEvent(BlockEvent.EntityPlaceEvent event) {
+        // TODO filter by chunks
+        UnwalkableMarker.worldChanged = true;
+    }
+
+    public static List<BlockPos> getUnwalkableBlocks() {
         return unwalkableBlocks;
     }
 
@@ -50,9 +60,12 @@ public class UnwalkableMarker {
         return checkingRoutes;
     }
 
-    //BlockEvent.EntityPlaceEvent, BlockEvent.BreakEvent
     public static void mark(IWorldReader world, ShootyEntity me, AxisAlignedBB zone) {
-        if (lastPos.get(me.getUniqueID()) != null && lastPos.get(me.getUniqueID()).equals(me.getPosition()) && !UnwalkableMarker.worldChanged) {
+        if (burningTicks >= 0) {
+            burningTicks--;
+        }
+
+        if (lastPos != null && lastPos.equals(me.getPosition()) && !UnwalkableMarker.worldChanged && burningTicks != 0) {
             return;
         }
 
@@ -62,11 +75,10 @@ public class UnwalkableMarker {
 
         UnwalkableMarker.worldChanged = false;
         UnwalkableMarker.entity = me;
-        UnwalkableMarker.entity = me;
 
         List<List<BlockPos>> localCheckingRoutes = Lists.newArrayList();
         BlockPos myPos = me.getPosition();
-        lastPos.put(me.getUniqueID(), myPos);
+        lastPos = myPos;
         Map<String, Boolean> usedCoors = Maps.newHashMap();
         usedCoors.put(myPos.toString(), true);
         List<BlockPos> points = Lists.newArrayList(myPos);
@@ -114,8 +126,7 @@ public class UnwalkableMarker {
         }
 
         checkingRoutes = localCheckingRoutes;
-        unwalkableBlocks.put(me.getUniqueID(), notOkPositions);
-        UnwalkableMarker.entity = null;
+        unwalkableBlocks = notOkPositions;
     }
 
     static List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo) {
@@ -132,7 +143,11 @@ public class UnwalkableMarker {
 
         return variants.stream()
                 .filter(variant -> {
-                    if (usedCoors.get(variant.toString()) == null && variant.getX() >= zone.minX - 1 && variant.getX() <= zone.maxX && variant.getZ() >= zone.minZ - 1 && variant.getZ() <= zone.maxZ) {
+                    if (usedCoors.get(variant.toString()) == null
+                            && variant.getX() >= zone.minX - 1 && variant.getX() <= zone.maxX
+                            && variant.getZ() >= zone.minZ - 1 && variant.getZ() <= zone.maxZ
+                            && variant.getY() >= zone.minY / 1.5 && variant.getY() <= zone.maxY * 1.5
+                    ) {
                         if (canWalkFromTo(world, start, variant)) {
                             // check walls between
                             if (variant.getX() != start.getX() && variant.getZ() != start.getZ()) {
@@ -176,6 +191,9 @@ public class UnwalkableMarker {
     static boolean canWalkFromTo(IWorldReader world, BlockPos start, BlockPos end) {
         PathNodeType endType = getPathNodeType(world, end);
         if ((endType == PathNodeType.WATER && getPathNodeType(world, end.up()) == PathNodeType.WATER) || endType == PathNodeType.LAVA || endType == PathNodeType.DAMAGE_FIRE) {
+            if (endType == PathNodeType.DAMAGE_FIRE) {
+                burningTicks = 60;
+            }
             return false;
         }
 
@@ -198,9 +216,15 @@ public class UnwalkableMarker {
 
         if (start.getY() > end.getY()) {
             return diff <= entity.getMaxFallHeight();
+        } else if (start.getY() < end.getY()) {
+            if (getPathNodeType(world, start.up(2)) != PathNodeType.OPEN) {
+                return false;
+            }
+
+            return Math.abs(diff) <= 1;
         }
 
-        return Math.abs(diff) <= 1;
+        return true;
     }
 
     static boolean isSolid(IWorldReader world, @Nonnull BlockPos position) {
@@ -212,7 +236,7 @@ public class UnwalkableMarker {
     }
 
     static PathNodeType getPathNodeType(IWorldReader world, BlockPos blockPos) {
-        return UnwalkableMarker.entity.getNavigator().getNodeProcessor().getPathNodeType(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        return nodeProcessor.getPathNodeType(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
     }
 
 }

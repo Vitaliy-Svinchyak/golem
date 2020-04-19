@@ -11,8 +11,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRenderer {
     final static Logger LOGGER = LogManager.getLogger();
@@ -55,15 +53,13 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
     }
 
     private void renderBlocks() {
-        Map<UUID, List<BlockPos>> blocksPerEntity = UnwalkableMarker.getUnwalkableBlocks();
+        List<BlockPos> blocks = UnwalkableMarker.getUnwalkableBlocks();
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double x = activeRenderInfo.getProjectedView().x;
         double y = activeRenderInfo.getProjectedView().y;
         double z = activeRenderInfo.getProjectedView().z;
 
-        for (List<BlockPos> list : blocksPerEntity.values()) {
-            this.renderBlocksWithColor(list, Color.UNWALKABLE_BLACK, x, y, z);
-        }
+        this.renderBlocksWithColor(blocks, Color.UNWALKABLE_BLACK, x, y, z);
     }
 
     private void renderBlocksWithColorAndNumber(List<BlockPos> blocks, Color color, int number, float alpha, double x, double y, double z) {
