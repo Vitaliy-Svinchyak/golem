@@ -1,6 +1,11 @@
 package e33.guardy.debug;
 
+import com.google.common.collect.Lists;
+
+import java.util.List;
+
 public enum Color {
+    SHOOTY(0.02F, 0.49F, 0.63F, 0.75F),
     UNWALKABLE_BLACK(0F, 0F, 0F, 0.75F),
     ROUTE_VIOLET(0.53F, 0.01F, 0.94F, 0.33F),
     DANGEROUS_ZONE_RED(0.81F, 0.09F, 0.21F, 0.33F),
@@ -17,5 +22,13 @@ public enum Color {
         this.green = green;
         this.blue = blue;
         this.alpha = alpha;
+    }
+
+    static List<Float> RANDOM() {
+        return Lists.newArrayList((float) Math.random(), (float) Math.random(), (float) Math.random(), 0.5F);
+    }
+
+    public List<Float> toArray() {
+        return Lists.newArrayList(this.red, this.green, this.blue, this.alpha);
     }
 }

@@ -1,5 +1,6 @@
 package e33.guardy.entity;
 
+import e33.guardy.debug.UnwalkableBlocksDebugRenderer;
 import e33.guardy.goal.LookAtTargetGoal;
 import e33.guardy.goal.ShootBadGuysGoal;
 import e33.guardy.goal.attack.AvoidPeacefulCreaturesHelper;
@@ -8,17 +9,21 @@ import e33.guardy.goal.move.AvoidingDangerGoal;
 import e33.guardy.goal.move.PatrollingGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.DangerousZoneAvoidanceNavigator;
+import e33.guardy.pathfinding.PathBuilder;
 import e33.guardy.pathfinding.PathPriorityByCoordinates;
 import e33.guardy.pathfinding.UnwalkableMarker;
 import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.item.ArmorStandEntity;
+import net.minecraft.entity.monster.SlimeEntity;
+import net.minecraft.entity.monster.SpiderEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -34,18 +39,22 @@ import javax.annotation.Nullable;
 // TODO don't drop weapon when die
 public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordinates {
 
+    public final PathBuilder pathBuilder;
     public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesHelper(this);
 
     public ShootyEntity(EntityType<? extends ShootyEntity> shooty, World world) {
         super(shooty, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
+        this.pathBuilder = new PathBuilder(this);
+        UnwalkableBlocksDebugRenderer.addEntity(this);
     }
 
     @Override
     public void tick() {
         this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
-        UnwalkableMarker.mark(this.world, this, this.getBoundingBox().grow(24));
+        this.pathBuilder.getPath(this.world.getEntitiesWithinAABB(SpiderEntity.class, this.getBoundingBox().grow(24), EntityPredicates.NOT_SPECTATING));
+//        UnwalkableMarker.mark(this.world, this, this.getBoundingBox().grow(24));
         super.tick();
     }
 
@@ -126,6 +135,12 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
 
 //        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(ItemRegistry.stickItem));
         return spawnDataIn;
+    }
+
+    @Override
+    public void onDeath(DamageSource damageSource) {
+        super.onDeath(damageSource);
+        UnwalkableBlocksDebugRenderer.removeEntity(this);
     }
 
     public int getHorizontalFaceSpeed() {
