@@ -12,13 +12,13 @@ import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRenderer {
     final static Logger LOGGER = LogManager.getLogger();
     private final static List<ShootyEntity> entities = Lists.newArrayList();
+    private static List<ShootyEntity> entitiesToAdd = Lists.newArrayList();
     private final static Map<UUID, List<Float>> colors = Maps.newHashMap();
     private final Minecraft minecraft;
 
@@ -27,18 +27,25 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
     }
 
     public static void addEntity(ShootyEntity entity) {
-        entities.add(entity);
+        entitiesToAdd.add(entity);
     }
 
-    public static void removeEntity(ShootyEntity entity) {
-        entities.remove(entity);
+    private static void removeEntities(List<ShootyEntity> entitiesToRemove) {
+        entities.removeAll(entitiesToRemove);
+    }
+
+    private static void addNewEntities() {
+        entities.addAll(entitiesToAdd);
+        entitiesToAdd = Lists.newArrayList();
     }
 
     @Override
     public void render(long l) {
         if (entities.size() == 0) {
+            addNewEntities();
             return;
         }
+
         GlStateManager.pushMatrix();
         GlStateManager.enableBlend();
         GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
@@ -46,12 +53,18 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         GlStateManager.disableTexture();
         GlStateManager.lineWidth(6.0F);
 
+        List<ShootyEntity> entitiesToRemove = Lists.newArrayList();
         for (ShootyEntity entity : entities) {
             if (entity.isAlive()) {
                 this.renderBlocks(entity.pathBuilder.unwalkableBlocks);
                 this.renderRoutes(entity.pathBuilder.routes, entity.getUniqueID());
+            } else {
+                entitiesToRemove.add(entity);
             }
         }
+
+        removeEntities(entitiesToRemove);
+        addNewEntities();
 
         GlStateManager.enableTexture();
         GlStateManager.disableBlend();
@@ -64,17 +77,38 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         double y = activeRenderInfo.getProjectedView().y;
         double z = activeRenderInfo.getProjectedView().z;
 
+        Map<Integer, List<BlockPos>> diffInSteps = Maps.newHashMap();
+        for (BlockPos point : routes.keySet()) {
+            Map<UUID, Integer> steps = routes.get(point);
+            if (steps.get(shooty) != null) {
+                int fastestEnemy = Integer.MAX_VALUE;
+                for (UUID enemy : steps.keySet()) {
+                    if (!enemy.equals(shooty) && steps.get(enemy) < fastestEnemy) {
+                        fastestEnemy = steps.get(enemy);
+                    }
+                }
+                diffInSteps.computeIfAbsent(fastestEnemy, k -> Lists.newArrayList());
+                diffInSteps.get(fastestEnemy).add(point);
+
+            }
+        }
+
+        List<BlockPos> safestPoints = Lists.newArrayList();
+        List<Integer> sortedDiffs = diffInSteps.keySet().stream().sorted().collect(Collectors.toList());
+        if (sortedDiffs.size() > 0) {
+            int maxDiff = sortedDiffs.get(sortedDiffs.size() - 1);
+            safestPoints = diffInSteps.get(maxDiff);
+        }
+
         for (BlockPos point : routes.keySet()) {
             Color color = Color.SHOOTY;
             Map<UUID, Integer> steps = routes.get(point);
             String text = "";
             if (steps.get(shooty) != null) {
                 text += steps.get(shooty).toString();
-            } else {
-                LOGGER.info(point);
             }
 
-            if (steps.size() > 1) {
+            if (steps.size() > 1 || steps.get(shooty) == null) {
                 int fastestEnemy = Integer.MAX_VALUE;
                 for (UUID enemy : steps.keySet()) {
                     if (!enemy.equals(shooty) && steps.get(enemy) < fastestEnemy) {
@@ -98,7 +132,11 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
                 color = Color.ROUTE_VIOLET;
             }
 
-            this.renderBlockWithColorAndNumber(point, color, text, 0.75F, x, y, z);
+            if (safestPoints.contains(point)) {
+                color = Color.SAFE_GREEN;
+            }
+
+            this.renderBlockWithColorAndNumber(point, color, text, 1F, x, y, z);
         }
     }
 

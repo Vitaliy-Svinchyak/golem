@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import e33.guardy.entity.ShootyEntity;
 import net.minecraft.block.SnowBlock;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -47,7 +48,7 @@ public class PathBuilder {
         }
 
         IWorldReader world = this.shooty.getEntityWorld();
-        AxisAlignedBB zone = this.shooty.getBoundingBox().grow(16);
+        AxisAlignedBB zone = this.shooty.getBoundingBox().grow(Math.round(this.shooty.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue() / 2));
         BlockPos myPos = shooty.getPosition();
         Map<BlockPos, Map<UUID, Integer>> localRoutes = Maps.newHashMap();
         this.lastPos = myPos;
@@ -87,17 +88,7 @@ public class PathBuilder {
 
         }
 
-        double y = myPos.getY();
         List<BlockPos> notOkPositions = Lists.newArrayList();
-        for (double x = zone.minX; x <= zone.maxX; x++) {
-            for (double z = zone.minZ; z <= zone.maxZ; z++) {
-                BlockPos pos = getTopPosition(world, new BlockPos(x, y, z));
-                if (usedCoors.get(pos.toString()) == null) {
-                    notOkPositions.add(pos);
-                }
-            }
-        }
-
         for (BlockPos unwalkableBlock : cantGo) {
             if (usedCoors.get(unwalkableBlock.toString()) == null && !notOkPositions.contains(unwalkableBlock)) {
                 notOkPositions.add(unwalkableBlock);

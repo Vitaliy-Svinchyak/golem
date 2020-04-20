@@ -54,7 +54,6 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     public void tick() {
         this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
         this.pathBuilder.getPath(this.world.getEntitiesWithinAABB(SpiderEntity.class, this.getBoundingBox().grow(24), EntityPredicates.NOT_SPECTATING));
-//        UnwalkableMarker.mark(this.world, this, this.getBoundingBox().grow(24));
         super.tick();
     }
 
@@ -140,7 +139,6 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     @Override
     public void onDeath(DamageSource damageSource) {
         super.onDeath(damageSource);
-        UnwalkableBlocksDebugRenderer.removeEntity(this);
     }
 
     public int getHorizontalFaceSpeed() {

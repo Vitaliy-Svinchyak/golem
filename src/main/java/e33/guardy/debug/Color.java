@@ -5,12 +5,13 @@ import com.google.common.collect.Lists;
 import java.util.List;
 
 public enum Color {
-    SHOOTY(0.02F, 0.49F, 0.63F, 0.75F),
-    UNWALKABLE_BLACK(0F, 0F, 0F, 0.75F),
-    ROUTE_VIOLET(0.53F, 0.01F, 0.94F, 0.33F),
-    DANGEROUS_ZONE_RED(0.81F, 0.09F, 0.21F, 0.33F),
-    DANGEROUS_ZONE_ORANGE(0.80F, 0.50F, 0.15F, 0.33F),
-    DANGEROUS_ZONE_YELLOW(0.89F, 0.89F, 0.07F, 0.33F);
+    SHOOTY(0.02F, 0.49F, 0.63F, 1F),
+    UNWALKABLE_BLACK(0F, 0F, 0F, 1F),
+    SAFE_GREEN(0F, 0.45F, 0.35F, 1F),
+    ROUTE_VIOLET(0.53F, 0.01F, 0.94F, 1F),
+    DANGEROUS_ZONE_RED(0.81F, 0.09F, 0.21F, 1F),
+    DANGEROUS_ZONE_ORANGE(0.80F, 0.50F, 0.15F, 1F),
+    DANGEROUS_ZONE_YELLOW(0.89F, 0.89F, 0.07F, 1F);
 
     public final float red;
     public final float green;
