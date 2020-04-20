@@ -7,13 +7,16 @@ import e33.guardy.entity.ShootyEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.debug.DebugRenderer;
+import net.minecraft.pathfinding.Path;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRenderer {
     final static Logger LOGGER = LogManager.getLogger();
@@ -57,7 +60,7 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         for (ShootyEntity entity : entities) {
             if (entity.isAlive()) {
                 this.renderBlocks(entity.pathBuilder.unwalkableBlocks);
-                this.renderRoutes(entity.pathBuilder.routes, entity.pathBuilder.safePoints, entity.getUniqueID());
+                this.renderRoutes(entity.pathBuilder.routes, entity.pathBuilder.safePoints, entity.pathBuilder.currentPath, entity.getUniqueID());
             } else {
                 entitiesToRemove.add(entity);
             }
@@ -71,7 +74,9 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         GlStateManager.popMatrix();
     }
 
-    private void renderRoutes(Map<BlockPos, Map<UUID, Integer>> routes, List<BlockPos> safePoints, UUID shooty) {
+    private void renderRoutes(Map<BlockPos, Map<UUID, Integer>> routes, List<BlockPos> safePoints, Path path, UUID shooty) {
+        List<BlockPos> pathBlocks = UnwalkableBlocksDebugRenderer.turnToBlocks(path);
+//        LOGGER.info(pathBlocks);
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double x = activeRenderInfo.getProjectedView().x;
         double y = activeRenderInfo.getProjectedView().y;
@@ -111,6 +116,10 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
 
             if (safePoints.contains(point)) {
                 color = Color.SAFE_GREEN;
+            }
+
+            if (pathBlocks.contains(point)) {
+                color = Color.PATH_GREEN;
             }
 
             this.renderBlockWithColorAndNumber(point, color, text, 1F, x, y, z);
@@ -203,6 +212,21 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
 
     private ActiveRenderInfo getActiveRenderInfo() {
         return this.minecraft.gameRenderer.getActiveRenderInfo();
+    }
+
+    @Nonnull
+    private static List<BlockPos> turnToBlocks(@Nullable Path path) {
+        List<BlockPos> accuratePath = Lists.newArrayList();
+        if (path == null) {
+            return accuratePath;
+        }
+
+        for (int pathIndex = 0; pathIndex < path.getCurrentPathLength(); ++pathIndex) {
+            PathPoint pathPoint = path.getPathPointFromIndex(pathIndex);
+            accuratePath.add(new BlockPos(pathPoint.x, pathPoint.y, pathPoint.z));
+        }
+
+        return accuratePath;
     }
 
 }

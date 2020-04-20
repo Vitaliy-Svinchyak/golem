@@ -7,7 +7,9 @@ import net.minecraft.block.SnowBlock;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.NodeProcessor;
+import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNodeType;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
@@ -28,9 +30,11 @@ public class PathBuilder {
     private BlockPos lastPos;
     private final NodeProcessor nodeProcessor;
     public List<BlockPos> unwalkableBlocks = Lists.newArrayList();
-    public List<List<BlockPos>> checkingRoutes = Lists.newArrayList();
+    private List<List<BlockPos>> checkingRoutes = Lists.newArrayList();
     public Map<BlockPos, Map<UUID, Integer>> routes = Maps.newHashMap();
     public List<BlockPos> safePoints = Lists.newArrayList();
+    public Map<Integer, List<BlockPos>> fastestPoints = Maps.newHashMap();
+    public Path currentPath;
 
     public PathBuilder(ShootyEntity shooty) {
         this.shooty = shooty;
@@ -99,6 +103,104 @@ public class PathBuilder {
         this.unwalkableBlocks = notOkPositions;
         this.routes = localRoutes;
         this.safePoints = this.findSafePoints(localRoutes);
+        this.fastestPoints = this.createFastestPoints();
+        this.currentPath = this.buildPath();
+    }
+
+    private Map<Integer, List<BlockPos>> createFastestPoints() {
+        Map<Integer, List<BlockPos>> fastestPoints = Maps.newHashMap();
+        UUID shootyUid = this.shooty.getUniqueID();
+
+        for (BlockPos point : routes.keySet()) {
+            Map<UUID, Integer> steps = routes.get(point);
+
+            if (steps.get(shootyUid) != null) {
+                int stepNumber = steps.get(shootyUid);
+                int fastestEnemy = Integer.MAX_VALUE;
+                for (UUID enemy : steps.keySet()) {
+                    if (!enemy.equals(shootyUid) && steps.get(enemy) < fastestEnemy) {
+                        fastestEnemy = steps.get(enemy);
+                    }
+                }
+
+                if (fastestEnemy > stepNumber) {
+                    if (fastestPoints.get(stepNumber) == null) {
+                        fastestPoints.put(stepNumber, Lists.newArrayList());
+                    }
+                    fastestPoints.get(stepNumber).add(point);
+                }
+            }
+        }
+
+        return fastestPoints;
+    }
+
+    private Path buildPath() {
+        // First check if reachable through fastest points
+        List<TreeLeaf> leafs = this.fastestPoints.get(0).stream().map(TreeLeaf::new).collect(Collectors.toList());
+        LOGGER.info(this.fastestPoints);
+        int i = 0;
+        while (leafs.size() > 0) {
+            i++;
+            LOGGER.info(i);
+            List<TreeLeaf> tempLeafs = Lists.newArrayList();
+            for (TreeLeaf leaf : leafs) {
+                if (this.fastestPoints.get(i) == null) {
+                    LOGGER.error("Didn't reach :(");
+                    return null;
+                }
+
+                List<BlockPos> tempPoints = this.getNextStepFromSafePoints(leaf.getBlockPos(), this.fastestPoints.get(i));
+                LOGGER.info(leaf);
+                LOGGER.info(tempPoints);
+                if (tempPoints.size() == 0) {
+                    leaf.die();
+                } else {
+                    for (BlockPos point : tempPoints) {
+                        TreeLeaf child = new TreeLeaf(point);
+                        leaf.addChild(child);
+                        tempLeafs.add(child);
+                        if (safePoints.contains(point)) {
+                            return this.createPathFromTree(child);
+                        }
+                    }
+                }
+            }
+
+            leafs = tempLeafs;
+        }
+
+        LOGGER.error("No path :(");
+        return null;
+    }
+
+    private Path createPathFromTree(TreeLeaf leaf) {
+        LOGGER.info("Yeah boy, that's Path!");
+        List<PathPoint> pathPoints = Lists.newArrayList();
+        BlockPos target = leaf.getBlockPos();
+
+        while (leaf != null) {
+            BlockPos block = leaf.getBlockPos();
+            pathPoints.add(new PathPoint(block.getX(), block.getY(), block.getZ()));
+            leaf = leaf.getParent();
+        }
+
+        return new Path(pathPoints, target, true);
+    }
+
+    private List<BlockPos> getNextStepFromSafePoints(BlockPos point, List<BlockPos> nextStepPoints) {
+        List<BlockPos> nextPoints = Lists.newArrayList();
+        for (BlockPos nextPoint : nextStepPoints) {
+            int xDiff = Math.abs(nextPoint.getX() - point.getX());
+            int zDiff = Math.abs(nextPoint.getZ() - point.getZ());
+            int yDiff = nextPoint.getY() - point.getY();
+
+            if (xDiff <= 1 && zDiff <= 1 && yDiff <= this.shooty.stepHeight && yDiff >= -this.shooty.getMaxFallHeight()) {
+                nextPoints.add(nextPoint);
+            }
+        }
+
+        return nextPoints;
     }
 
     private AxisAlignedBB getSearchZone() {
