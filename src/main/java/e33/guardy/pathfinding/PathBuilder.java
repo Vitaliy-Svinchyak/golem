@@ -25,17 +25,17 @@ public class PathBuilder {
     final static Logger LOGGER = LogManager.getLogger();
 
     private final ShootyEntity shooty;
+    private BlockPos lastPos;
     private final NodeProcessor nodeProcessor;
     public List<BlockPos> unwalkableBlocks = Lists.newArrayList();
     public List<List<BlockPos>> checkingRoutes = Lists.newArrayList();
     public Map<BlockPos, Map<UUID, Integer>> routes = Maps.newHashMap();
-    private BlockPos lastPos;
+    public List<BlockPos> safePoints = Lists.newArrayList();
 
     public PathBuilder(ShootyEntity shooty) {
         this.shooty = shooty;
         this.nodeProcessor = shooty.getNavigator().getNodeProcessor();
     }
-
 
     public void getPath(List<MobEntity> enemies) {
         if (this.lastPos != null && this.lastPos.equals(this.shooty.getPosition()) && !UnwalkableMarker.worldChanged) {
@@ -48,7 +48,7 @@ public class PathBuilder {
         }
 
         IWorldReader world = this.shooty.getEntityWorld();
-        AxisAlignedBB zone = this.shooty.getBoundingBox().grow(Math.round(this.shooty.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue() / 2));
+        AxisAlignedBB zone = this.getSearchZone();
         BlockPos myPos = shooty.getPosition();
         Map<BlockPos, Map<UUID, Integer>> localRoutes = Maps.newHashMap();
         this.lastPos = myPos;
@@ -98,6 +98,47 @@ public class PathBuilder {
         this.checkingRoutes = localCheckingRoutes;
         this.unwalkableBlocks = notOkPositions;
         this.routes = localRoutes;
+        this.safePoints = this.findSafePoints(localRoutes);
+    }
+
+    private AxisAlignedBB getSearchZone() {
+        AxisAlignedBB zone = this.shooty.getBoundingBox().grow(Math.round(this.shooty.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue() / 2));
+        // Rounding to chunk borders
+        double minX = zone.minX - (15 - Math.abs(zone.minX % 16));
+        double minZ = zone.minZ - (15 - Math.abs(zone.minZ % 16));
+        double maxX = zone.maxX + Math.abs(zone.maxX % 16) - 1;
+        double maxZ = zone.maxZ + Math.abs(zone.maxZ % 16) - 1;
+
+        return new AxisAlignedBB(minX, zone.minY, minZ, maxX, zone.maxY, maxZ);
+    }
+
+    private List<BlockPos> findSafePoints(Map<BlockPos, Map<UUID, Integer>> routes) {
+        Map<Integer, List<BlockPos>> diffInSteps = Maps.newHashMap();
+        UUID shooty = this.shooty.getUniqueID();
+
+        for (BlockPos point : routes.keySet()) {
+            Map<UUID, Integer> steps = routes.get(point);
+
+            if (steps.get(shooty) != null) {
+                int fastestEnemy = Integer.MAX_VALUE;
+                for (UUID enemy : steps.keySet()) {
+                    if (!enemy.equals(shooty) && steps.get(enemy) < fastestEnemy) {
+                        fastestEnemy = steps.get(enemy);
+                    }
+                }
+                diffInSteps.computeIfAbsent(fastestEnemy, k -> Lists.newArrayList());
+                diffInSteps.get(fastestEnemy).add(point);
+
+            }
+        }
+
+        List<BlockPos> safestPoints = Lists.newArrayList();
+        List<Integer> sortedDiffs = diffInSteps.keySet().stream().sorted().collect(Collectors.toList());
+        if (sortedDiffs.size() > 0) {
+            int maxDiff = sortedDiffs.get(sortedDiffs.size() - 1);
+            safestPoints = diffInSteps.get(maxDiff);
+        }
+        return safestPoints;
     }
 
     protected void setRoutes(UUID uid, List<BlockPos> points, int iteration, Map<BlockPos, Map<UUID, Integer>> routes) {

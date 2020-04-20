@@ -57,7 +57,7 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         for (ShootyEntity entity : entities) {
             if (entity.isAlive()) {
                 this.renderBlocks(entity.pathBuilder.unwalkableBlocks);
-                this.renderRoutes(entity.pathBuilder.routes, entity.getUniqueID());
+                this.renderRoutes(entity.pathBuilder.routes, entity.pathBuilder.safePoints, entity.getUniqueID());
             } else {
                 entitiesToRemove.add(entity);
             }
@@ -71,34 +71,11 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         GlStateManager.popMatrix();
     }
 
-    private void renderRoutes(Map<BlockPos, Map<UUID, Integer>> routes, UUID shooty) {
+    private void renderRoutes(Map<BlockPos, Map<UUID, Integer>> routes, List<BlockPos> safePoints, UUID shooty) {
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double x = activeRenderInfo.getProjectedView().x;
         double y = activeRenderInfo.getProjectedView().y;
         double z = activeRenderInfo.getProjectedView().z;
-
-        Map<Integer, List<BlockPos>> diffInSteps = Maps.newHashMap();
-        for (BlockPos point : routes.keySet()) {
-            Map<UUID, Integer> steps = routes.get(point);
-            if (steps.get(shooty) != null) {
-                int fastestEnemy = Integer.MAX_VALUE;
-                for (UUID enemy : steps.keySet()) {
-                    if (!enemy.equals(shooty) && steps.get(enemy) < fastestEnemy) {
-                        fastestEnemy = steps.get(enemy);
-                    }
-                }
-                diffInSteps.computeIfAbsent(fastestEnemy, k -> Lists.newArrayList());
-                diffInSteps.get(fastestEnemy).add(point);
-
-            }
-        }
-
-        List<BlockPos> safestPoints = Lists.newArrayList();
-        List<Integer> sortedDiffs = diffInSteps.keySet().stream().sorted().collect(Collectors.toList());
-        if (sortedDiffs.size() > 0) {
-            int maxDiff = sortedDiffs.get(sortedDiffs.size() - 1);
-            safestPoints = diffInSteps.get(maxDiff);
-        }
 
         for (BlockPos point : routes.keySet()) {
             Color color = Color.SHOOTY;
@@ -132,7 +109,7 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
                 color = Color.ROUTE_VIOLET;
             }
 
-            if (safestPoints.contains(point)) {
+            if (safePoints.contains(point)) {
                 color = Color.SAFE_GREEN;
             }
 
