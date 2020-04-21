@@ -155,7 +155,7 @@ public class PathBuilder {
     }
 
     private Path buildDangerousPathWithMaxReach(int maxReach) {
-        List<TreeLeaf> leafs = this.checkingRoutes.get(0).stream().map((BlockPos blockPos) -> new TreeLeaf(blockPos, 0)).collect(Collectors.toList());
+        List<TreeLeaf> leafs = this.checkingRoutes.get(0).stream().map((BlockPos blockPos) -> new TreeLeaf(blockPos, 0, 0)).collect(Collectors.toList());
         int i = 0;
         List<BlockPos> usedPoints = Lists.newArrayList();
         List<TreeLeaf> finalLeafs = Lists.newArrayList();
@@ -188,13 +188,6 @@ public class PathBuilder {
                         }
                     }
                 }
-
-
-                if (tempPoints.size() == 0) {
-                    LOGGER.error("what the shit");
-                    LOGGER.info(leaf);
-                    LOGGER.info(this.getNextStepFromList(leaf.getBlockPos(), this.checkingRoutes.get(i)));
-                }
             }
 
             leafs = tempLeafs;
@@ -203,7 +196,11 @@ public class PathBuilder {
             TreeLeaf safestLeaf = finalLeafs.get(0);
             for (TreeLeaf leaf : finalLeafs) {
                 // TODO compare length
+                // TODO try to find another way between dangerous parts (with lower maxEnemies)
                 if (leaf.enemiesCount < safestLeaf.enemiesCount) {
+                    safestLeaf = leaf;
+                }
+                if (leaf.enemiesCount == safestLeaf.enemiesCount && leaf.totalEnemySpeed > safestLeaf.totalEnemySpeed) {
                     safestLeaf = leaf;
                 }
             }
@@ -221,14 +218,18 @@ public class PathBuilder {
             int enemiesOnPoint = 0;
             Map<UUID, Integer> entitiesOnPoint = this.routes.get(point);
             int shootySpeed = entitiesOnPoint.get(this.shooty.getUniqueID());
+            int fastestEnemySpeed = Integer.MAX_VALUE;
             for (UUID entity : entitiesOnPoint.keySet()) {
                 if (!entity.equals(this.shooty.getUniqueID()) && entitiesOnPoint.get(entity) <= shootySpeed) {
+                    if (entitiesOnPoint.get(entity) < fastestEnemySpeed) {
+                        fastestEnemySpeed = entitiesOnPoint.get(entity);
+                    }
                     enemiesOnPoint++;
                 }
             }
 
             if (enemiesOnPoint <= maxEnemiesOnPoint) {
-                filteredPoints.add(new TreeLeaf(point, parent.enemiesCount + enemiesOnPoint));
+                filteredPoints.add(new TreeLeaf(point, parent.enemiesCount + enemiesOnPoint, parent.totalEnemySpeed + fastestEnemySpeed));
             }
         }
 

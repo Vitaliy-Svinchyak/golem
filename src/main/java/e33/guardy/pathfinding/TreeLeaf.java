@@ -8,13 +8,15 @@ import java.util.List;
 public class TreeLeaf {
     private final BlockPos blockPos;
     public final int enemiesCount;
+    public final int totalEnemySpeed;
     private TreeLeaf parent;
     private List<TreeLeaf> children = Lists.newArrayList();
     private boolean alive = true;
 
-    public TreeLeaf(BlockPos blockPos, int enemiesCount) {
+    public TreeLeaf(BlockPos blockPos, int enemiesCount, int totalSpeed) {
         this.blockPos = blockPos;
         this.enemiesCount = enemiesCount;
+        this.totalEnemySpeed = totalSpeed;
     }
 
     public TreeLeaf getParent() {

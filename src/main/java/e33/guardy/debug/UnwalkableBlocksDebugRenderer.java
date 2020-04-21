@@ -92,9 +92,13 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
 
             if (steps.size() > 1 || steps.get(shooty) == null) {
                 int fastestEnemy = Integer.MAX_VALUE;
+                int totalEnemySpeed = 0;
                 for (UUID enemy : steps.keySet()) {
                     if (!enemy.equals(shooty) && steps.get(enemy) < fastestEnemy) {
                         fastestEnemy = steps.get(enemy);
+                    }
+                    if (!enemy.equals(shooty)) {
+                        totalEnemySpeed += steps.get(enemy);
                     }
                 }
                 if (steps.get(shooty) != null && fastestEnemy > steps.get(shooty)) {
@@ -109,7 +113,7 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
                 if (fastestEnemy == 2) {
                     color = Color.DANGEROUS_ZONE_YELLOW;
                 }
-                text += " (" + fastestEnemy + ")";
+                text += " (" + fastestEnemy + "/" + totalEnemySpeed + ")";
             } else {
                 color = Color.ROUTE_VIOLET;
             }
