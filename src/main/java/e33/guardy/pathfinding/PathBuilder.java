@@ -136,42 +136,103 @@ public class PathBuilder {
     }
 
     private Path buildPath() {
-        // First check if reachable through fastest points
-        List<TreeLeaf> leafs = this.fastestPoints.get(0).stream().map(TreeLeaf::new).collect(Collectors.toList());
-        LOGGER.info(this.fastestPoints);
+        LOGGER.info("It will be dangerous...");
+
+        int maxReach = 0;
+        while (maxReach < 10) {
+            LOGGER.info(maxReach);
+            Path path = this.buildDangerousPathWithMaxReach(maxReach);
+
+            if (path != null) {
+                return path;
+            }
+
+            maxReach++;
+        }
+
+        LOGGER.error("No path :(");
+        return null;
+    }
+
+    private Path buildDangerousPathWithMaxReach(int maxReach) {
+        List<TreeLeaf> leafs = this.checkingRoutes.get(0).stream().map((BlockPos blockPos) -> new TreeLeaf(blockPos, 0)).collect(Collectors.toList());
         int i = 0;
-        while (leafs.size() > 0) {
+        List<BlockPos> usedPoints = Lists.newArrayList();
+        List<TreeLeaf> finalLeafs = Lists.newArrayList();
+
+        while (leafs.size() > 0 && i < this.checkingRoutes.size()) {
             i++;
-            LOGGER.info(i);
+            LOGGER.info("Step " + i);
             List<TreeLeaf> tempLeafs = Lists.newArrayList();
             for (TreeLeaf leaf : leafs) {
-                if (this.fastestPoints.get(i) == null) {
-                    LOGGER.error("Didn't reach :(");
-                    return null;
-                }
-
-                List<BlockPos> tempPoints = this.getNextStepFromSafePoints(leaf.getBlockPos(), this.fastestPoints.get(i));
-                LOGGER.info(leaf);
-                LOGGER.info(tempPoints);
-                if (tempPoints.size() == 0) {
+                List<BlockPos> stepsFromHere = this.getNextStepFromList(
+                        leaf.getBlockPos(),
+                        this.checkingRoutes.get(i).stream().filter(point -> !usedPoints.contains(point)).collect(Collectors.toList())
+                );
+                if (stepsFromHere.size() == 0) {
                     leaf.die();
-                } else {
-                    for (BlockPos point : tempPoints) {
-                        TreeLeaf child = new TreeLeaf(point);
+                    usedPoints.add(leaf.getBlockPos());
+                    continue;
+                }
+                List<TreeLeaf> tempPoints = this.getLeafsWithReach(stepsFromHere, maxReach, leaf);
+
+                if (tempPoints.size() != 0) {
+                    for (TreeLeaf child : tempPoints) {
                         leaf.addChild(child);
-                        tempLeafs.add(child);
-                        if (safePoints.contains(point)) {
-                            return this.createPathFromTree(child);
+
+                        if (safePoints.contains(child.getBlockPos())) {
+                            finalLeafs.add(child);
+                        } else {
+                            usedPoints.add(child.getBlockPos());
+                            tempLeafs.add(child);
                         }
                     }
+                }
+
+
+                if (tempPoints.size() == 0) {
+                    LOGGER.error("what the shit");
+                    LOGGER.info(leaf);
+                    LOGGER.info(this.getNextStepFromList(leaf.getBlockPos(), this.checkingRoutes.get(i)));
                 }
             }
 
             leafs = tempLeafs;
         }
+        if (finalLeafs.size() > 0) {
+            TreeLeaf safestLeaf = finalLeafs.get(0);
+            for (TreeLeaf leaf : finalLeafs) {
+                // TODO compare length
+                if (leaf.enemiesCount < safestLeaf.enemiesCount) {
+                    safestLeaf = leaf;
+                }
+            }
 
-        LOGGER.error("No path :(");
+            return this.createPathFromTree(safestLeaf);
+        }
+
         return null;
+    }
+
+    private List<TreeLeaf> getLeafsWithReach(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
+        List<TreeLeaf> filteredPoints = Lists.newArrayList();
+
+        for (BlockPos point : points) {
+            int enemiesOnPoint = 0;
+            Map<UUID, Integer> entitiesOnPoint = this.routes.get(point);
+            int shootySpeed = entitiesOnPoint.get(this.shooty.getUniqueID());
+            for (UUID entity : entitiesOnPoint.keySet()) {
+                if (!entity.equals(this.shooty.getUniqueID()) && entitiesOnPoint.get(entity) <= shootySpeed) {
+                    enemiesOnPoint++;
+                }
+            }
+
+            if (enemiesOnPoint <= maxEnemiesOnPoint) {
+                filteredPoints.add(new TreeLeaf(point, parent.enemiesCount + enemiesOnPoint));
+            }
+        }
+
+        return filteredPoints;
     }
 
     private Path createPathFromTree(TreeLeaf leaf) {
@@ -188,7 +249,7 @@ public class PathBuilder {
         return new Path(pathPoints, target, true);
     }
 
-    private List<BlockPos> getNextStepFromSafePoints(BlockPos point, List<BlockPos> nextStepPoints) {
+    private List<BlockPos> getNextStepFromList(BlockPos point, List<BlockPos> nextStepPoints) {
         List<BlockPos> nextPoints = Lists.newArrayList();
         for (BlockPos nextPoint : nextStepPoints) {
             int xDiff = Math.abs(nextPoint.getX() - point.getX());

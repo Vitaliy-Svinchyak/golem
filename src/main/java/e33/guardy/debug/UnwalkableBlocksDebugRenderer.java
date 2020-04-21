@@ -220,6 +220,7 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         if (path == null) {
             return accuratePath;
         }
+        accuratePath.add(path.func_224770_k());
 
         for (int pathIndex = 0; pathIndex < path.getCurrentPathLength(); ++pathIndex) {
             PathPoint pathPoint = path.getPathPointFromIndex(pathIndex);

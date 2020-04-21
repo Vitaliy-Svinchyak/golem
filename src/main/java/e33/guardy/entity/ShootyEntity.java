@@ -34,6 +34,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 // TODO 2 implement IRangedAttackMob?
 // TODO don't drop weapon when die
@@ -53,7 +54,10 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     @Override
     public void tick() {
         this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
-        this.pathBuilder.getPath(this.world.getEntitiesWithinAABB(SpiderEntity.class, this.getBoundingBox().grow(24), EntityPredicates.NOT_SPECTATING));
+        this.pathBuilder.getPath(
+                this.world.getEntitiesWithinAABB(SpiderEntity.class, this.getBoundingBox().grow(24), EntityPredicates.NOT_SPECTATING)
+                        .stream().filter(LivingEntity::isAlive).collect(Collectors.toList())
+        );
         super.tick();
     }
 
