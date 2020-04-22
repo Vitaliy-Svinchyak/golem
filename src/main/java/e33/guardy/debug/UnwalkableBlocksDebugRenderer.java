@@ -76,7 +76,6 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
 
     private void renderRoutes(Map<BlockPos, Map<UUID, Integer>> routes, List<BlockPos> safePoints, Path path, UUID shooty) {
         List<BlockPos> pathBlocks = UnwalkableBlocksDebugRenderer.turnToBlocks(path);
-//        LOGGER.info(pathBlocks);
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double x = activeRenderInfo.getProjectedView().x;
         double y = activeRenderInfo.getProjectedView().y;

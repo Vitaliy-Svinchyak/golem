@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import e33.guardy.entity.ShootyEntity;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowBlock;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.NodeProcessor;
@@ -67,20 +68,22 @@ public class PathBuilder {
 
         Map<UUID, List<BlockPos>> enemyPoints = this.createEnemyPoints(world, enemies);
         Map<UUID, Map<String, Boolean>> enemyUsedCoors = this.createEnemyUsedCoors(enemies);
+        Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
         for (MobEntity enemy : enemies) {
             this.setRoutes(enemy.getUniqueID(), enemyPoints.get(enemy.getUniqueID()), 0, localRoutes);
         }
 
         int iteration = 0;
+        MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
         while (points.size() > 0) {
-            List<BlockPos> tempPoints = this.getNewWave(points, world, zone, usedCoors, cantGo);
+            List<BlockPos> tempPoints = this.getNewWave(points, world, zone, usedCoors, cantGo, shootyLimitations);
             localCheckingRoutes.add(tempPoints);
             points = tempPoints;
             this.setRoutes(this.shooty.getUniqueID(), tempPoints, iteration, localRoutes);
 
             for (MobEntity enemy : enemies) {
                 UUID uid = enemy.getUniqueID();
-                List<BlockPos> tempPointsForEnemy = this.getNewWave(enemyPoints.get(uid), world, zone, enemyUsedCoors.get(uid), null);
+                List<BlockPos> tempPointsForEnemy = this.getNewWave(enemyPoints.get(uid), world, zone, enemyUsedCoors.get(uid), null, enemyLimitations.get(uid));
                 enemyPoints.put(uid, tempPointsForEnemy);
                 this.setRoutes(uid, tempPointsForEnemy, iteration, localRoutes);
             }
@@ -105,7 +108,17 @@ public class PathBuilder {
         this.routes = localRoutes;
         this.safePoints = this.findSafePoints(localRoutes);
         this.fastestPoints = this.createFastestPoints();
-        this.currentPath = this.buildPath();
+        this.currentPath = this.buildPath(shootyLimitations);
+    }
+
+    private Map<UUID, MovementLimitations> createEnemyLimitations(List<MobEntity> enemies) {
+        Map<UUID, MovementLimitations> limitations = Maps.newHashMap();
+
+        for (MobEntity enemy : enemies) {
+            limitations.put(enemy.getUniqueID(), this.createLimitations(enemy));
+        }
+
+        return limitations;
     }
 
     private Map<Integer, List<BlockPos>> createFastestPoints() {
@@ -136,13 +149,13 @@ public class PathBuilder {
         return fastestPoints;
     }
 
-    private Path buildPath() {
+    private Path buildPath(MovementLimitations limitations) {
         LOGGER.info("It will be dangerous...");
 
         int maxReach = 0;
         while (maxReach < 10) {
             LOGGER.info(maxReach);
-            Path path = this.buildDangerousPathWithMaxReach(maxReach);
+            Path path = this.buildDangerousPathWithMaxReach(maxReach, limitations);
 
             if (path != null) {
                 return path;
@@ -155,7 +168,7 @@ public class PathBuilder {
         return null;
     }
 
-    private Path buildDangerousPathWithMaxReach(int maxReach) {
+    private Path buildDangerousPathWithMaxReach(int maxReach, MovementLimitations limitations) {
         if (this.safePoints.contains(shooty.getPosition())) {
             LOGGER.error("Already on safe point!");
             return null;
@@ -173,7 +186,9 @@ public class PathBuilder {
                 List<BlockPos> stepsFromHere = this.getNextStepFromList(
                         leaf.getBlockPos(),
                         this.checkingRoutes.get(i).stream()
-                                .filter(point -> !usedPoints.contains(point)).collect(Collectors.toList()) // TODO allow intersections, but optimize leafs on intersections(select safer etc)
+                                // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
+                                .filter(point -> !usedPoints.contains(point)).collect(Collectors.toList()),
+                        limitations
                 );
                 if (stepsFromHere.size() == 0) {
                     leaf.die();
@@ -273,14 +288,14 @@ public class PathBuilder {
         return new Path(pathPoints, target, true);
     }
 
-    private List<BlockPos> getNextStepFromList(BlockPos point, List<BlockPos> nextStepPoints) {
+    private List<BlockPos> getNextStepFromList(BlockPos point, List<BlockPos> nextStepPoints, MovementLimitations limitations) {
         List<BlockPos> nextPoints = Lists.newArrayList();
         for (BlockPos nextPoint : nextStepPoints) {
             int xDiff = Math.abs(nextPoint.getX() - point.getX());
             int zDiff = Math.abs(nextPoint.getZ() - point.getZ());
             int yDiff = nextPoint.getY() - point.getY();
 
-            if (xDiff <= 1 && zDiff <= 1 && yDiff <= this.shooty.stepHeight && yDiff >= -this.shooty.getMaxFallHeight()) {
+            if (xDiff <= 1 && zDiff <= 1 && yDiff <= limitations.jumHeight && yDiff >= -limitations.maxFallHeight) {
                 nextPoints.add(nextPoint);
             }
         }
@@ -335,10 +350,10 @@ public class PathBuilder {
         }
     }
 
-    protected List<BlockPos> getNewWave(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo) {
+    protected List<BlockPos> getNewWave(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
         List<BlockPos> tempPoints = Lists.newArrayList();
         for (BlockPos point : points) {
-            List<BlockPos> vars = getVariants(world, point, zone, usedCoors, cantGo);
+            List<BlockPos> vars = getVariants(world, point, zone, usedCoors, cantGo, limitations);
 
             for (BlockPos var : vars) {
                 usedCoors.put(var.toString(), true);
@@ -369,7 +384,7 @@ public class PathBuilder {
         return enemyPoints;
     }
 
-    protected List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, @Nullable List<BlockPos> cantGo) {
+    protected List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, @Nullable List<BlockPos> cantGo, MovementLimitations limitations) {
         List<BlockPos> variants = Lists.newArrayList(
                 getTopPosition(world, start.east()),
                 getTopPosition(world, start.north()),
@@ -388,13 +403,13 @@ public class PathBuilder {
                             && variant.getZ() >= zone.minZ - 1 && variant.getZ() <= zone.maxZ
                             && variant.getY() >= zone.minY / 1.5 && variant.getY() <= zone.maxY * 1.5
                     ) {
-                        if (canWalkFromTo(world, start, variant)) {
+                        if (canWalkFromTo(world, start, variant, limitations)) {
                             // check walls between
                             if (variant.getX() != start.getX() && variant.getZ() != start.getZ()) {
                                 BlockPos toCheckWall = getTopPosition(world, new BlockPos(variant.getX(), start.getY(), start.getZ()));
                                 BlockPos toCheckWall2 = getTopPosition(world, new BlockPos(start.getX(), start.getY(), variant.getZ()));
 
-                                if (toCheckWall.getY() - start.getY() <= this.shooty.stepHeight && toCheckWall2.getY() - start.getY() <= this.shooty.stepHeight) {
+                                if (toCheckWall.getY() - start.getY() <= limitations.jumHeight && toCheckWall2.getY() - start.getY() <= limitations.jumHeight) {
                                     return true;
                                 } else {
                                     if (cantGo != null) {
@@ -441,7 +456,7 @@ public class PathBuilder {
         return position;
     }
 
-    protected boolean canWalkFromTo(IWorldReader world, BlockPos start, BlockPos end) {
+    protected boolean canWalkFromTo(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
         PathNodeType endType = getPathNodeType(world, end);
         if ((endType == PathNodeType.WATER && getPathNodeType(world, end.up()) == PathNodeType.WATER) || endType == PathNodeType.LAVA || endType == PathNodeType.DAMAGE_FIRE) {
             if (endType == PathNodeType.DAMAGE_FIRE) {
@@ -468,13 +483,13 @@ public class PathBuilder {
         float diff = startY - endY;
 
         if (start.getY() > end.getY()) {
-            return diff <= this.shooty.getMaxFallHeight();
+            return diff <= limitations.maxFallHeight;
         } else if (start.getY() < end.getY()) {
             if (getPathNodeType(world, start.up(2)) != PathNodeType.OPEN) {
                 return false;
             }
 
-            return Math.abs(diff) <= this.shooty.stepHeight;
+            return Math.abs(diff) <= limitations.jumHeight;
         }
 
         return true;
@@ -490,5 +505,9 @@ public class PathBuilder {
 
     protected PathNodeType getPathNodeType(IWorldReader world, BlockPos blockPos) {
         return nodeProcessor.getPathNodeType(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
+    }
+
+    protected MovementLimitations createLimitations(LivingEntity entity) {
+        return new MovementLimitations(1F, entity.getMaxFallHeight(), entity.getHeight());
     }
 }
