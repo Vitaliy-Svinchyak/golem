@@ -3,6 +3,7 @@ package e33.guardy.pathfinding;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.entity.ShootyEntity;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowBlock;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -155,7 +156,11 @@ public class PathBuilder {
     }
 
     private Path buildDangerousPathWithMaxReach(int maxReach) {
-        List<TreeLeaf> leafs = this.checkingRoutes.get(0).stream().map((BlockPos blockPos) -> new TreeLeaf(blockPos, 0, 0)).collect(Collectors.toList());
+        if (this.safePoints.contains(shooty.getPosition())) {
+            LOGGER.error("Already on safe point!");
+            return null;
+        }
+        List<TreeLeaf> leafs = this.checkingRoutes.get(0).stream().map(this::calculateTreeLeaf).collect(Collectors.toList());
         int i = 0;
         List<BlockPos> usedPoints = Lists.newArrayList();
         List<TreeLeaf> finalLeafs = Lists.newArrayList();
@@ -167,7 +172,8 @@ public class PathBuilder {
             for (TreeLeaf leaf : leafs) {
                 List<BlockPos> stepsFromHere = this.getNextStepFromList(
                         leaf.getBlockPos(),
-                        this.checkingRoutes.get(i).stream().filter(point -> !usedPoints.contains(point)).collect(Collectors.toList())
+                        this.checkingRoutes.get(i).stream()
+                                .filter(point -> !usedPoints.contains(point)).collect(Collectors.toList()) // TODO allow intersections, but optimize leafs on intersections(select safer etc)
                 );
                 if (stepsFromHere.size() == 0) {
                     leaf.die();
@@ -234,6 +240,23 @@ public class PathBuilder {
         }
 
         return filteredPoints;
+    }
+
+    private TreeLeaf calculateTreeLeaf(BlockPos point) {
+        int enemiesOnPoint = 0;
+        Map<UUID, Integer> entitiesOnPoint = this.routes.get(point);
+        int shootySpeed = entitiesOnPoint.get(this.shooty.getUniqueID());
+        int fastestEnemySpeed = Integer.MAX_VALUE;
+        for (UUID entity : entitiesOnPoint.keySet()) {
+            if (!entity.equals(this.shooty.getUniqueID()) && entitiesOnPoint.get(entity) <= shootySpeed) {
+                if (entitiesOnPoint.get(entity) < fastestEnemySpeed) {
+                    fastestEnemySpeed = entitiesOnPoint.get(entity);
+                }
+                enemiesOnPoint++;
+            }
+        }
+
+        return new TreeLeaf(point, enemiesOnPoint, fastestEnemySpeed);
     }
 
     private Path createPathFromTree(TreeLeaf leaf) {
@@ -458,7 +481,7 @@ public class PathBuilder {
     }
 
     protected boolean isSolid(IWorldReader world, @Nonnull BlockPos position) {
-        if (getPathNodeType(world, position) == PathNodeType.LEAVES) {
+        if (getPathNodeType(world, position) == PathNodeType.LEAVES || world.getBlockState(position).getBlock() == Blocks.LILY_PAD) {
             return true;
         }
 

@@ -169,12 +169,12 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         DebugRenderer.func_217730_a(
                 (
                         new AxisAlignedBB(
-                                block.getX() - 0.01,
+                                block.getX() + 0.01,
                                 block.getY() - 1.01,
-                                block.getZ() - 0.01,
-                                block.getX() + 1.01,
+                                block.getZ() + 0.01,
+                                block.getX() + 0.99,
                                 block.getY() + 0.01,
-                                block.getZ() + 1.01
+                                block.getZ() + 0.99
                         )
                 ).offset(-x, -y, -z),
                 color.red,

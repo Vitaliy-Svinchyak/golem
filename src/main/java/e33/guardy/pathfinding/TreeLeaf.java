@@ -13,10 +13,10 @@ public class TreeLeaf {
     private List<TreeLeaf> children = Lists.newArrayList();
     private boolean alive = true;
 
-    public TreeLeaf(BlockPos blockPos, int enemiesCount, int totalSpeed) {
+    public TreeLeaf(BlockPos blockPos, int enemiesCount, int totalEnemySpeed) {
         this.blockPos = blockPos;
         this.enemiesCount = enemiesCount;
-        this.totalEnemySpeed = totalSpeed;
+        this.totalEnemySpeed = totalEnemySpeed;
     }
 
     public TreeLeaf getParent() {
