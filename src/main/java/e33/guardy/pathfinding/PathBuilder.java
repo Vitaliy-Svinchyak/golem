@@ -12,6 +12,7 @@ import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.Direction8;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
@@ -20,9 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PathBuilder {
@@ -69,8 +68,10 @@ public class PathBuilder {
         Map<UUID, List<BlockPos>> enemyPoints = this.createEnemyPoints(world, enemies);
         Map<UUID, Map<String, Boolean>> enemyUsedCoors = this.createEnemyUsedCoors(enemies);
         Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
+
         for (MobEntity enemy : enemies) {
             this.setRoutes(enemy.getUniqueID(), enemyPoints.get(enemy.getUniqueID()), 0, localRoutes);
+            enemy.getNavigator().getNodeProcessor().init(world, enemy);
         }
 
         int iteration = 0;
@@ -350,6 +351,30 @@ public class PathBuilder {
         }
     }
 
+    protected List<BlockPos> getNewWaveForEnemy(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, MobEntity entity) {
+        List<BlockPos> wave = Lists.newArrayList();
+
+        for (BlockPos point : points) {
+            PathPoint[] vars = new PathPoint[32];
+            entity.getNavigator().getNodeProcessor().func_222859_a(vars, new PathPoint(point.getX(), point.getY(), point.getZ()));
+            List<PathPoint> varsBlocks = Arrays.stream(vars).filter(Objects::nonNull).collect(Collectors.toList());
+
+            for (PathPoint var : varsBlocks) {
+                BlockPos varBlock = new BlockPos(var.x, var.y, var.z);
+                if (usedCoors.get(varBlock.toString()) == null
+                        && var.x >= zone.minX - 1 && var.x <= zone.maxX
+                        && var.z >= zone.minZ - 1 && var.z <= zone.maxZ
+                        && var.y >= zone.minY / 1.5 && var.y <= zone.maxY * 1.5
+                ) {
+                    usedCoors.put(var.toString(), true);
+                    wave.add(varBlock);
+                }
+            }
+        }
+
+        return wave;
+    }
+
     protected List<BlockPos> getNewWave(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
         List<BlockPos> tempPoints = Lists.newArrayList();
         for (BlockPos point : points) {
@@ -367,7 +392,7 @@ public class PathBuilder {
     protected Map<UUID, List<BlockPos>> createEnemyPoints(IWorldReader world, List<MobEntity> enemies) {
         Map<UUID, List<BlockPos>> enemyPoints = Maps.newHashMap();
         for (MobEntity enemy : enemies) {
-            enemyPoints.put(enemy.getUniqueID(), Lists.newArrayList(getTopPosition(world, enemy.getPosition(), true)));
+            enemyPoints.put(enemy.getUniqueID(), Lists.newArrayList(getTopPosition(world, enemy.getPosition())));
         }
 
         return enemyPoints;
@@ -386,14 +411,14 @@ public class PathBuilder {
 
     protected List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, @Nullable List<BlockPos> cantGo, MovementLimitations limitations) {
         List<BlockPos> variants = Lists.newArrayList(
-                getTopPosition(world, start.east()),
-                getTopPosition(world, start.north()),
-                getTopPosition(world, start.south()),
-                getTopPosition(world, start.west()),
-                getTopPosition(world, start.north().east()),
-                getTopPosition(world, start.north().west()),
-                getTopPosition(world, start.south().east()),
-                getTopPosition(world, start.south().west())
+                getTopPosition(world, start.east(), limitations),
+                getTopPosition(world, start.north(), limitations),
+                getTopPosition(world, start.south(), limitations),
+                getTopPosition(world, start.west(), limitations),
+                getTopPosition(world, start.north().east(), limitations),
+                getTopPosition(world, start.north().west(), limitations),
+                getTopPosition(world, start.south().east(), limitations),
+                getTopPosition(world, start.south().west(), limitations)
         );
 
         return variants.stream()
@@ -406,8 +431,8 @@ public class PathBuilder {
                         if (canWalkFromTo(world, start, variant, limitations)) {
                             // check walls between
                             if (variant.getX() != start.getX() && variant.getZ() != start.getZ()) {
-                                BlockPos toCheckWall = getTopPosition(world, new BlockPos(variant.getX(), start.getY(), start.getZ()));
-                                BlockPos toCheckWall2 = getTopPosition(world, new BlockPos(start.getX(), start.getY(), variant.getZ()));
+                                BlockPos toCheckWall = getTopPosition(world, new BlockPos(variant.getX(), start.getY(), start.getZ()), limitations);
+                                BlockPos toCheckWall2 = getTopPosition(world, new BlockPos(start.getX(), start.getY(), variant.getZ()), limitations);
 
                                 if (toCheckWall.getY() - start.getY() <= limitations.jumHeight && toCheckWall2.getY() - start.getY() <= limitations.jumHeight) {
                                     return true;
@@ -432,7 +457,7 @@ public class PathBuilder {
                 .collect(Collectors.toList());
     }
 
-    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, boolean onlyDown) {
+    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position) {
         while (!isSolid(world, position)) {
             position = position.down();
         }
@@ -441,9 +466,9 @@ public class PathBuilder {
         return position;
     }
 
-    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position) {
-        if (isSolid(world, position) || isSolid(world, position.up())) {
-            while (isSolid(world, position) || isSolid(world, position.up())) {
+    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
+        if (isSolid(world, position)) {
+            while (isSolid(world, position)) {
                 position = position.up();
             }
         } else {
@@ -457,6 +482,10 @@ public class PathBuilder {
     }
 
     protected boolean canWalkFromTo(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
+        if (!this.fitsIn(world, start, end, limitations)) {
+            return false;
+        }
+
         PathNodeType endType = getPathNodeType(world, end);
         if ((endType == PathNodeType.WATER && getPathNodeType(world, end.up()) == PathNodeType.WATER) || endType == PathNodeType.LAVA || endType == PathNodeType.DAMAGE_FIRE) {
             if (endType == PathNodeType.DAMAGE_FIRE) {
@@ -483,16 +512,139 @@ public class PathBuilder {
         float diff = startY - endY;
 
         if (start.getY() > end.getY()) {
-            return diff <= limitations.maxFallHeight;
+            return diff <= limitations.maxFallHeight && this.fitsIn(world, start, new BlockPos(end.getX(), start.getY(), end.getZ()), limitations);
         } else if (start.getY() < end.getY()) {
-            if (getPathNodeType(world, start.up(2)) != PathNodeType.OPEN) {
-                return false;
-            }
-
-            return Math.abs(diff) <= limitations.jumHeight;
+            return Math.abs(diff) <= limitations.jumHeight && this.fitsIn(world, start, new BlockPos(start.getX(), end.getY(), start.getZ()), limitations);
         }
 
         return true;
+    }
+
+    protected boolean fitsIn(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
+        float x = end.getX() + 0.5F;
+        int y = end.getY();
+        float z = end.getZ() + 0.5F;
+        float width = limitations.modelWidth > 1 ? 1 : limitations.modelWidth;
+
+        AxisAlignedBB axisalignedbb1 = new AxisAlignedBB(
+                (double) x - (width / 2),
+                (double) y + 0.001D,
+                (double) z - (width / 2),
+                (double) x + (width / 2),
+                ((float) y + limitations.modelHeight),
+                (double) z + (width / 2)
+        );
+        boolean isCollisionBoxesEmpty = world.isCollisionBoxesEmpty(limitations.entity, axisalignedbb1);
+
+        if (isCollisionBoxesEmpty && limitations.modelWidth > 1) {
+            List<List<BlockPos>> blocksToCheck = this.mapAllBlocksBetweenTwoPoints(limitations, x, y, z);
+            if (!this.samePatternOfBlocks(world, blocksToCheck, limitations)) {
+                return false;
+            }
+        }
+
+        return isCollisionBoxesEmpty;
+    }
+
+    private boolean samePatternOfBlocks(IWorldReader world, List<List<BlockPos>> blocksToCheck, MovementLimitations limitations) {
+        if (blocksToCheck.size() == 0) {
+            return false;
+        }
+
+        List<List<Boolean>> checked = Lists.newArrayList();
+        int startY = blocksToCheck.get(0).get(0).getY();
+
+        for (List<BlockPos> xBlockToCheck : blocksToCheck) {
+            List<Boolean> xChecked = Lists.newArrayList();
+
+            for (BlockPos blockToCheck : xBlockToCheck) {
+                boolean checkResult = true;
+                for (int y = startY; y <= Math.ceil(startY + limitations.modelHeight); y++) {
+                    if (this.isSolid(world, blockToCheck)) {
+                        checkResult = false;
+                        break;
+                    }
+                }
+
+                xChecked.add(checkResult);
+            }
+            checked.add(xChecked);
+        }
+
+        int roundedWidth = (int) Math.ceil(limitations.modelWidth);
+        for (int x = 0; x < checked.size(); x++) {
+            for (int z = 0; z < checked.size(); z++) {
+                if (this.squareIsAllTrue(checked, x, z, roundedWidth)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean squareIsAllTrue(List<List<Boolean>> checked, int startX, int startZ, int width) {
+        for (int x = startX; x < startX + width; x++) {
+            for (int z = startZ; z < startZ + width; z++) {
+                if (checked.size() <= x || checked.get(x).size() <= z || checked.get(x).get(z) == false) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private List<List<BlockPos>> mapAllBlocksBetweenTwoPoints(MovementLimitations limitations, float stepX, int stepY, float stepZ) {
+        double startX = stepX - Math.ceil(limitations.modelWidth / 2);
+        double endX = stepX + Math.ceil(limitations.modelWidth / 2);
+        double startZ = stepZ - Math.ceil(limitations.modelWidth / 2);
+        double endZ = stepZ + Math.ceil(limitations.modelWidth / 2);
+
+        List<List<BlockPos>> downBlocks = Lists.newArrayList();
+        for (double x = startX; x <= endX; x++) {
+            List<BlockPos> downBlocksForX = Lists.newArrayList();
+            for (double z = startZ; z <= endZ; z++) {
+                downBlocksForX.add(new BlockPos(x, stepY, z));
+            }
+            downBlocks.add(downBlocksForX);
+        }
+
+        return downBlocks;
+    }
+
+    @Nullable
+    private Direction8 getMoveDirection(BlockPos start, BlockPos end) {
+        int xDiff = start.getX() - end.getX();
+        int zDiff = start.getZ() - end.getZ();
+
+        if (zDiff < 0 && xDiff == 0) {
+            return Direction8.NORTH;
+        }
+        if (zDiff > 0 && xDiff == 0) {
+            return Direction8.SOUTH;
+        }
+        if (xDiff > 0 && zDiff == 0) {
+            return Direction8.EAST;
+        }
+        if (xDiff < 0 && zDiff == 0) {
+            return Direction8.WEST;
+        }
+
+        if (zDiff < 0 && xDiff < 0) {
+            return Direction8.NORTH_WEST;
+        }
+        if (zDiff > 0 && xDiff > 0) {
+            return Direction8.SOUTH_EAST;
+        }
+        if (zDiff > 0 && xDiff < 0) {
+            return Direction8.SOUTH_WEST;
+        }
+        if (zDiff < 0 && xDiff > 0) {
+            return Direction8.NORTH_EAST;
+        }
+
+        return null;
     }
 
     protected boolean isSolid(IWorldReader world, @Nonnull BlockPos position) {
@@ -508,6 +660,6 @@ public class PathBuilder {
     }
 
     protected MovementLimitations createLimitations(LivingEntity entity) {
-        return new MovementLimitations(1F, entity.getMaxFallHeight(), entity.getHeight());
+        return new MovementLimitations(1F, entity.getMaxFallHeight(), entity.getHeight(), entity.getWidth(), entity);
     }
 }

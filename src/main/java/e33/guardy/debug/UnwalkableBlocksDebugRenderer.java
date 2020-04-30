@@ -59,7 +59,6 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
         List<ShootyEntity> entitiesToRemove = Lists.newArrayList();
         for (ShootyEntity entity : entities) {
             if (entity.isAlive()) {
-                this.renderBlocks(entity.pathBuilder.unwalkableBlocks);
                 this.renderRoutes(entity.pathBuilder.routes, entity.pathBuilder.safePoints, entity.pathBuilder.currentPath, entity.getUniqueID());
             } else {
                 entitiesToRemove.add(entity);

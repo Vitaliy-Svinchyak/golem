@@ -108,6 +108,10 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     }
 
     protected SoundEvent getHurtSound(DamageSource damageSourceIn) {
+//        if (damageSourceIn.isProjectile()) {
+//            return SoundsRegistry.SHOOTY_HURT_ARROW;
+//        }
+
         return SoundsRegistry.SHOOTY_HURT;
     }
 

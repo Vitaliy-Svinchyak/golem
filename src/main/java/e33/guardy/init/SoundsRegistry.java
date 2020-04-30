@@ -9,6 +9,7 @@ import net.minecraftforge.registries.ObjectHolder;
 @ObjectHolder(E33.MOD_ID)
 public class SoundsRegistry {
     public static SoundEvent SHOOTY_HURT = null;
+    public static SoundEvent SHOOTY_HURT_ARROW = null;
     public static SoundEvent SHOOTY_SHOT = null;
     public static SoundEvent SHOOTY_DEATH = null;
     public static SoundEvent SHOOTY_STEP = null;
@@ -16,6 +17,9 @@ public class SoundsRegistry {
     static void registerSounds(IForgeRegistry<SoundEvent> registry) {
         SHOOTY_HURT = create("entity_shooty_hurt");
         registry.register(SHOOTY_HURT);
+
+//        SHOOTY_HURT_ARROW = create("entity_shooty_hurt_arrow");
+//        registry.register(SHOOTY_HURT_ARROW);
 
         SHOOTY_SHOT = create("entity_shooty_shot");
         registry.register(SHOOTY_SHOT);
