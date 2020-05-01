@@ -75,7 +75,6 @@ public class PathBuilder {
 
         int iteration = 0;
         MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
-        LOGGER.info(shootyLimitations);
 
         while (points.size() > 0) {
             List<BlockPos> tempPoints = this.getNewWave(points, world, zone, usedCoors, cantGo, shootyLimitations);
@@ -85,9 +84,15 @@ public class PathBuilder {
 
             for (MobEntity enemy : enemies) {
                 UUID uid = enemy.getUniqueID();
-                List<BlockPos> tempPointsForEnemy = this.getNewWave(enemyPoints.get(uid), world, zone, enemyUsedCoors.get(uid), null, enemyLimitations.get(uid));
+                List<BlockPos> cantGoForEnemy = Lists.newArrayList();
+                List<BlockPos> tempPointsForEnemy = this.getNewWave(enemyPoints.get(uid), world, zone, enemyUsedCoors.get(uid), cantGoForEnemy, enemyLimitations.get(uid));
                 enemyPoints.put(uid, tempPointsForEnemy);
                 this.setRoutes(uid, tempPointsForEnemy, iteration, localRoutes);
+
+                if (cantGoForEnemy.size() > 0) {
+                    List<BlockPos> attackablePointsForEnemy = this.getAttackablePoints(tempPointsForEnemy, cantGoForEnemy);
+                    this.setRoutes(uid, attackablePointsForEnemy, iteration, localRoutes);
+                }
             }
 
             iteration++;
@@ -390,6 +395,25 @@ public class PathBuilder {
         return tempPoints;
     }
 
+    // Used for spiders. If there is a tunnel with height and width both of 1, then he can attack from nearest point but can be inside tunnel
+    protected List<BlockPos> getAttackablePoints(List<BlockPos> wave, List<BlockPos> cantGo) {
+        List<BlockPos> unBlocked = Lists.newArrayList();
+
+        for (BlockPos blockedPoint : cantGo) {
+            for (BlockPos waveNeighbor : wave) {
+                int xDiff = Math.abs(blockedPoint.getX() - waveNeighbor.getX());
+                int zDiff = Math.abs(blockedPoint.getZ() - waveNeighbor.getZ());
+                int yDiff = Math.abs(blockedPoint.getY() - waveNeighbor.getY());
+                if (xDiff <= 1 && zDiff <= 1 && yDiff <= 1) {
+                    unBlocked.add(blockedPoint);
+                    break;
+                }
+            }
+        }
+
+        return unBlocked;
+    }
+
     protected Map<UUID, List<BlockPos>> createEnemyPoints(IWorldReader world, List<MobEntity> enemies, Map<UUID, MovementLimitations> enemyLimitations) {
         Map<UUID, List<BlockPos>> enemyPoints = Maps.newHashMap();
         for (MobEntity enemy : enemies) {
@@ -438,9 +462,8 @@ public class PathBuilder {
                                 if (toCheckWall.getY() - start.getY() <= limitations.jumHeight && toCheckWall2.getY() - start.getY() <= limitations.jumHeight) {
                                     return true;
                                 } else {
-                                    if (cantGo != null) {
-                                        cantGo.add(variant);
-                                    }
+                                    cantGo.add(variant);
+
                                     return false;
                                 }
                             }
@@ -448,9 +471,7 @@ public class PathBuilder {
                             return true;
                         }
 
-                        if (cantGo != null) {
-                            cantGo.add(variant);
-                        }
+                        cantGo.add(variant);
                         return false;
                     }
                     return false;
