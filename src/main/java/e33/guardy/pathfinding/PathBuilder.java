@@ -5,14 +5,12 @@ import com.google.common.collect.Maps;
 import e33.guardy.entity.ShootyEntity;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowBlock;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.Direction8;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
@@ -65,9 +63,10 @@ public class PathBuilder {
         List<BlockPos> cantGo = Lists.newArrayList();
         this.setRoutes(this.shooty.getUniqueID(), points, 0, localRoutes);
 
-        Map<UUID, List<BlockPos>> enemyPoints = this.createEnemyPoints(world, enemies);
-        Map<UUID, Map<String, Boolean>> enemyUsedCoors = this.createEnemyUsedCoors(enemies);
         Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
+        Map<UUID, List<BlockPos>> enemyPoints = this.createEnemyPoints(world, enemies, enemyLimitations);
+        Map<UUID, Map<String, Boolean>> enemyUsedCoors = this.createEnemyUsedCoors(enemies);
+        LOGGER.info(enemyLimitations);
 
         for (MobEntity enemy : enemies) {
             this.setRoutes(enemy.getUniqueID(), enemyPoints.get(enemy.getUniqueID()), 0, localRoutes);
@@ -76,6 +75,8 @@ public class PathBuilder {
 
         int iteration = 0;
         MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
+        LOGGER.info(shootyLimitations);
+
         while (points.size() > 0) {
             List<BlockPos> tempPoints = this.getNewWave(points, world, zone, usedCoors, cantGo, shootyLimitations);
             localCheckingRoutes.add(tempPoints);
@@ -389,10 +390,10 @@ public class PathBuilder {
         return tempPoints;
     }
 
-    protected Map<UUID, List<BlockPos>> createEnemyPoints(IWorldReader world, List<MobEntity> enemies) {
+    protected Map<UUID, List<BlockPos>> createEnemyPoints(IWorldReader world, List<MobEntity> enemies, Map<UUID, MovementLimitations> enemyLimitations) {
         Map<UUID, List<BlockPos>> enemyPoints = Maps.newHashMap();
         for (MobEntity enemy : enemies) {
-            enemyPoints.put(enemy.getUniqueID(), Lists.newArrayList(getTopPosition(world, enemy.getPosition())));
+            enemyPoints.put(enemy.getUniqueID(), Lists.newArrayList(getEnemyStandPosition(world, enemy.getPosition(), enemyLimitations.get(enemy.getUniqueID()))));
         }
 
         return enemyPoints;
@@ -457,8 +458,8 @@ public class PathBuilder {
                 .collect(Collectors.toList());
     }
 
-    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position) {
-        while (!isSolid(world, position)) {
+    protected BlockPos getEnemyStandPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
+        while (!isSolid(world, position, limitations)) {
             position = position.down();
         }
         position = position.up();
@@ -467,12 +468,12 @@ public class PathBuilder {
     }
 
     protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
-        if (isSolid(world, position)) {
-            while (isSolid(world, position)) {
+        if (isSolid(world, position, limitations)) {
+            while (isSolid(world, position, limitations)) {
                 position = position.up();
             }
         } else {
-            while (!isSolid(world, position)) {
+            while (!isSolid(world, position, limitations)) {
                 position = position.down();
             }
             position = position.up();
@@ -487,7 +488,7 @@ public class PathBuilder {
         }
 
         PathNodeType endType = getPathNodeType(world, end);
-        if ((endType == PathNodeType.WATER && getPathNodeType(world, end.up()) == PathNodeType.WATER) || endType == PathNodeType.LAVA || endType == PathNodeType.DAMAGE_FIRE) {
+        if ((endType == PathNodeType.WATER && getPathNodeType(world, end.up()) == PathNodeType.WATER && !limitations.canSwim) || endType == PathNodeType.LAVA || endType == PathNodeType.DAMAGE_FIRE) {
             if (endType == PathNodeType.DAMAGE_FIRE) {
 //                burningTicks = 60;
             }
@@ -560,7 +561,7 @@ public class PathBuilder {
             for (BlockPos blockToCheck : xBlockToCheck) {
                 boolean checkResult = true;
                 for (int y = startY; y <= Math.ceil(startY + limitations.modelHeight); y++) {
-                    if (this.isSolid(world, blockToCheck)) {
+                    if (this.isSolid(world, blockToCheck, limitations)) {
                         checkResult = false;
                         break;
                     }
@@ -613,42 +614,12 @@ public class PathBuilder {
         return downBlocks;
     }
 
-    @Nullable
-    private Direction8 getMoveDirection(BlockPos start, BlockPos end) {
-        int xDiff = start.getX() - end.getX();
-        int zDiff = start.getZ() - end.getZ();
-
-        if (zDiff < 0 && xDiff == 0) {
-            return Direction8.NORTH;
-        }
-        if (zDiff > 0 && xDiff == 0) {
-            return Direction8.SOUTH;
-        }
-        if (xDiff > 0 && zDiff == 0) {
-            return Direction8.EAST;
-        }
-        if (xDiff < 0 && zDiff == 0) {
-            return Direction8.WEST;
-        }
-
-        if (zDiff < 0 && xDiff < 0) {
-            return Direction8.NORTH_WEST;
-        }
-        if (zDiff > 0 && xDiff > 0) {
-            return Direction8.SOUTH_EAST;
-        }
-        if (zDiff > 0 && xDiff < 0) {
-            return Direction8.SOUTH_WEST;
-        }
-        if (zDiff < 0 && xDiff > 0) {
-            return Direction8.NORTH_EAST;
-        }
-
-        return null;
-    }
-
-    protected boolean isSolid(IWorldReader world, @Nonnull BlockPos position) {
+    protected boolean isSolid(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
         if (getPathNodeType(world, position) == PathNodeType.LEAVES || world.getBlockState(position).getBlock() == Blocks.LILY_PAD) {
+            return true;
+        }
+
+        if (limitations.canSwim && getPathNodeType(world, position) == PathNodeType.WATER) {
             return true;
         }
 
@@ -659,7 +630,8 @@ public class PathBuilder {
         return nodeProcessor.getPathNodeType(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
     }
 
-    protected MovementLimitations createLimitations(LivingEntity entity) {
-        return new MovementLimitations(1F, entity.getMaxFallHeight(), entity.getHeight(), entity.getWidth(), entity);
+    protected MovementLimitations createLimitations(MobEntity entity) {
+        LOGGER.info(entity.getPathPriority(PathNodeType.WATER));
+        return new MovementLimitations(1F, entity.getMaxFallHeight(), entity.getHeight(), entity.getWidth(), entity.getPathPriority(PathNodeType.WATER) >= 0F, entity);
     }
 }

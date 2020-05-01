@@ -49,6 +49,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
         this.stepHeight = 1.0F;
         this.pathBuilder = new PathBuilder(this);
         UnwalkableBlocksDebugRenderer.addEntity(this);
+        this.setPathPriority(PathNodeType.WATER, -1.0F);
     }
 
     @Override
