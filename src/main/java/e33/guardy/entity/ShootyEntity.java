@@ -1,22 +1,14 @@
 package e33.guardy.entity;
 
-import e33.guardy.debug.UnwalkableBlocksDebugRenderer;
-import e33.guardy.goal.LookAtTargetGoal;
-import e33.guardy.goal.ShootBadGuysGoal;
+import e33.guardy.debug.PathFindingDebugRenderer;
 import e33.guardy.goal.attack.AvoidPeacefulCreaturesHelper;
-import e33.guardy.goal.attack.NearestAttackableTargetGoal;
 import e33.guardy.goal.move.AvoidingDangerGoal;
-import e33.guardy.goal.move.PatrollingGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.DangerousZoneAvoidanceNavigator;
 import e33.guardy.pathfinding.PathBuilder;
 import e33.guardy.pathfinding.PathPriorityByCoordinates;
-import e33.guardy.pathfinding.UnwalkableMarker;
-import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
-import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.entity.monster.SpiderEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -47,18 +39,15 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
         super(shooty, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
+
         this.pathBuilder = new PathBuilder(this);
-        UnwalkableBlocksDebugRenderer.addEntity(this);
+        PathFindingDebugRenderer.addEntity(this);
         this.setPathPriority(PathNodeType.WATER, -1.0F);
     }
 
     @Override
     public void tick() {
         this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
-        this.pathBuilder.getPath(
-                this.world.getEntitiesWithinAABB(SpiderEntity.class, this.getBoundingBox().grow(24), EntityPredicates.NOT_SPECTATING)
-                        .stream().filter(LivingEntity::isAlive).collect(Collectors.toList())
-        );
         super.tick();
     }
 

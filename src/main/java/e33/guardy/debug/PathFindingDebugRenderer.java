@@ -18,14 +18,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRenderer {
+public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
     final static Logger LOGGER = LogManager.getLogger();
     private final static List<ShootyEntity> entities = Lists.newArrayList();
     private static List<ShootyEntity> entitiesToAdd = Lists.newArrayList();
     private final static Map<UUID, List<Float>> colors = Maps.newHashMap();
     private final Minecraft minecraft;
 
-    public UnwalkableBlocksDebugRenderer(Minecraft minecraft) {
+    public PathFindingDebugRenderer(Minecraft minecraft) {
         this.minecraft = minecraft;
     }
 
@@ -74,7 +74,7 @@ public class UnwalkableBlocksDebugRenderer implements DebugRenderer.IDebugRender
     }
 
     private void renderRoutes(Map<BlockPos, Map<UUID, Integer>> routes, List<BlockPos> safePoints, Path path, UUID shooty) {
-        List<BlockPos> pathBlocks = UnwalkableBlocksDebugRenderer.turnToBlocks(path);
+        List<BlockPos> pathBlocks = PathFindingDebugRenderer.turnToBlocks(path);
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double x = activeRenderInfo.getProjectedView().x;
         double y = activeRenderInfo.getProjectedView().y;

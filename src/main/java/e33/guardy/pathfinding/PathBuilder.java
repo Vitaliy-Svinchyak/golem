@@ -40,14 +40,14 @@ public class PathBuilder {
         this.nodeProcessor = shooty.getNavigator().getNodeProcessor();
     }
 
-    public void getPath(List<MobEntity> enemies) {
+    public Path getPath(List<MobEntity> enemies) {
         if (this.lastPos != null && this.lastPos.equals(this.shooty.getPosition()) && !UnwalkableMarker.worldChanged) {
-            return;
+            return null;
         }
         UnwalkableMarker.reset();
 
         if (!this.shooty.onGround) {
-            return;
+            return null;
         }
 
         IWorldReader world = this.shooty.getEntityWorld();
@@ -116,6 +116,8 @@ public class PathBuilder {
         this.safePoints = this.findSafePoints(localRoutes);
         this.fastestPoints = this.createFastestPoints();
         this.currentPath = this.buildPath(shootyLimitations);
+
+        return this.currentPath;
     }
 
     private Map<UUID, MovementLimitations> createEnemyLimitations(List<MobEntity> enemies) {
@@ -180,6 +182,7 @@ public class PathBuilder {
             LOGGER.error("Already on safe point!");
             return null;
         }
+
         List<TreeLeaf> leafs = this.checkingRoutes.get(0).stream().map(this::calculateTreeLeaf).collect(Collectors.toList());
         int i = 0;
         List<BlockPos> usedPoints = Lists.newArrayList();
@@ -292,6 +295,7 @@ public class PathBuilder {
             leaf = leaf.getParent();
         }
 
+        Collections.reverse(pathPoints);
         return new Path(pathPoints, target, true);
     }
 
