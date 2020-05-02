@@ -41,8 +41,6 @@ public class PathBuilder {
     }
 
     public Path getPath(List<MobEntity> enemies) {
-        UnwalkableMarker.reset();
-
         if (!this.shooty.onGround) {
             return null;
         }

@@ -16,6 +16,8 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,7 +71,10 @@ public class AvoidingDangerGoal extends RandomWalkingGoal {
     }
 
     protected void createPath() {
+        Instant start = Instant.now();
         this.creature.getNavigator().setPath(this.pathBuilder.getPath(this.getNearestEnemies(25)), this.speed);
+        Instant end = Instant.now();
+        LOGGER.info("createPath time: " + Duration.between(start, end));
     }
 
     public void startExecuting() {
