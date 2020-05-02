@@ -13,6 +13,7 @@ import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorldReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +27,6 @@ public class PathBuilder {
     final static Logger LOGGER = LogManager.getLogger();
 
     private final ShootyEntity shooty;
-    private BlockPos lastPos;
     private final NodeProcessor nodeProcessor;
     public List<BlockPos> unwalkableBlocks = Lists.newArrayList();
     private List<List<BlockPos>> checkingRoutes = Lists.newArrayList();
@@ -41,20 +41,18 @@ public class PathBuilder {
     }
 
     public Path getPath(List<MobEntity> enemies) {
-        if (this.lastPos != null && this.lastPos.equals(this.shooty.getPosition()) && !UnwalkableMarker.worldChanged) {
-            return null;
-        }
         UnwalkableMarker.reset();
 
         if (!this.shooty.onGround) {
             return null;
         }
 
+        MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
         IWorldReader world = this.shooty.getEntityWorld();
         AxisAlignedBB zone = this.getSearchZone();
-        BlockPos myPos = shooty.getPosition();
+        BlockPos myPos = this.getEntityPos(shooty, shootyLimitations);
+        LOGGER.info("myPos: " + myPos);
         Map<BlockPos, Map<UUID, Integer>> localRoutes = Maps.newHashMap();
-        this.lastPos = myPos;
 
         List<List<BlockPos>> localCheckingRoutes = Lists.newArrayList();
         List<BlockPos> points = Lists.newArrayList(myPos);
@@ -66,7 +64,6 @@ public class PathBuilder {
         Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
         Map<UUID, List<BlockPos>> enemyPoints = this.createEnemyPoints(world, enemies, enemyLimitations);
         Map<UUID, Map<String, Boolean>> enemyUsedCoors = this.createEnemyUsedCoors(enemies);
-        LOGGER.info(enemyLimitations);
 
         for (MobEntity enemy : enemies) {
             this.setRoutes(enemy.getUniqueID(), enemyPoints.get(enemy.getUniqueID()), 0, localRoutes);
@@ -74,7 +71,6 @@ public class PathBuilder {
         }
 
         int iteration = 0;
-        MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
 
         while (points.size() > 0) {
             List<BlockPos> tempPoints = this.getNewWave(points, world, zone, usedCoors, cantGo, shootyLimitations);
@@ -118,6 +114,16 @@ public class PathBuilder {
         this.currentPath = this.buildPath(shootyLimitations);
 
         return this.currentPath;
+    }
+
+    private BlockPos getEntityPos(ShootyEntity entity, MovementLimitations limitations) {
+        BlockPos position = entity.getPosition();
+
+        if (!this.getTopPosition(entity.world, position, limitations).equals(position)) {
+            return new BlockPos(Math.round(entity.posX), MathHelper.floor(entity.posY), Math.round(entity.posZ));
+        }
+
+        return position;
     }
 
     private Map<UUID, MovementLimitations> createEnemyLimitations(List<MobEntity> enemies) {
@@ -190,7 +196,6 @@ public class PathBuilder {
 
         while (leafs.size() > 0 && i < this.checkingRoutes.size()) {
             i++;
-            LOGGER.info("Step " + i);
             List<TreeLeaf> tempLeafs = Lists.newArrayList();
             for (TreeLeaf leaf : leafs) {
                 List<BlockPos> stepsFromHere = this.getNextStepFromList(
