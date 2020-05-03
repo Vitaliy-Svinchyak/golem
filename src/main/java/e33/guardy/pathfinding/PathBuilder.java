@@ -97,23 +97,13 @@ public class PathBuilder {
             }
         }
 
-//        List<BlockPos> notOkPositions = Lists.newArrayList();
-//        for (BlockPos unwalkableBlock : cantGo) {
-//            if (usedCoors.get(unwalkableBlock.toString()) == null && !notOkPositions.contains(unwalkableBlock)) {
-//                notOkPositions.add(unwalkableBlock);
-//            }
-//        }
-
         this.checkingRoutes = localCheckingRoutes;
-//        this.unwalkableBlocks = notOkPositions;
         this.routes = localRoutes;
         this.safePoints = this.findSafePoints(localRoutes);
 
         this.fastestPoints = this.createFastestPoints();
 
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "buildPath");
         this.currentPath = this.buildPath(shootyLimitations);
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "buildPath");
 
         return this.currentPath;
     }
@@ -193,7 +183,7 @@ public class PathBuilder {
 
         List<TreeLeaf> leafs = this.checkingRoutes.get(0).stream().map(this::calculateTreeLeaf).collect(Collectors.toList());
         int i = 0;
-        List<BlockPos> usedPoints = Lists.newArrayList();
+        Map<String, Boolean> usedCoors = Maps.newHashMap();
         List<TreeLeaf> finalLeafs = Lists.newArrayList();
 
         while (leafs.size() > 0 && i < this.checkingRoutes.size()) {
@@ -204,12 +194,13 @@ public class PathBuilder {
                         leaf.getBlockPos(),
                         this.checkingRoutes.get(i).stream()
                                 // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
-                                .filter(point -> !usedPoints.contains(point)).collect(Collectors.toList()),
+                                .filter(point -> usedCoors.get(point.toString()) == null).collect(Collectors.toList()),
                         limitations
                 );
+
                 if (stepsFromHere.size() == 0) {
                     leaf.die();
-                    usedPoints.add(leaf.getBlockPos());
+                    usedCoors.put(leaf.getBlockPos().toString(), true);
                     continue;
                 }
                 List<TreeLeaf> tempPoints = this.getLeafsWithReach(stepsFromHere, maxReach, leaf);
@@ -221,7 +212,7 @@ public class PathBuilder {
                         if (safePoints.contains(child.getBlockPos())) {
                             finalLeafs.add(child);
                         } else {
-                            usedPoints.add(child.getBlockPos());
+                            usedCoors.put(child.getBlockPos().toString(), true);
                             tempLeafs.add(child);
                         }
                     }
@@ -230,6 +221,7 @@ public class PathBuilder {
 
             leafs = tempLeafs;
         }
+
         if (finalLeafs.size() > 0) {
             TreeLeaf safestLeaf = finalLeafs.get(0);
             for (TreeLeaf leaf : finalLeafs) {
