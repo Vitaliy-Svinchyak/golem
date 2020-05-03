@@ -2,6 +2,7 @@ package e33.guardy.pathfinding;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowBlock;
@@ -85,6 +86,7 @@ public class PathBuilder {
 
                 if (cantGoForEnemy.size() > 0) {
                     List<BlockPos> attackablePointsForEnemy = this.getAttackablePoints(tempPointsForEnemy, cantGoForEnemy);
+
                     this.setRoutes(uid, attackablePointsForEnemy, iteration, localRoutes);
                 }
             }
@@ -94,22 +96,25 @@ public class PathBuilder {
                 LOGGER.error("Too many iterations!!!");
                 break;
             }
-
         }
 
-        List<BlockPos> notOkPositions = Lists.newArrayList();
-        for (BlockPos unwalkableBlock : cantGo) {
-            if (usedCoors.get(unwalkableBlock.toString()) == null && !notOkPositions.contains(unwalkableBlock)) {
-                notOkPositions.add(unwalkableBlock);
-            }
-        }
+//        List<BlockPos> notOkPositions = Lists.newArrayList();
+//        for (BlockPos unwalkableBlock : cantGo) {
+//            if (usedCoors.get(unwalkableBlock.toString()) == null && !notOkPositions.contains(unwalkableBlock)) {
+//                notOkPositions.add(unwalkableBlock);
+//            }
+//        }
 
         this.checkingRoutes = localCheckingRoutes;
-        this.unwalkableBlocks = notOkPositions;
+//        this.unwalkableBlocks = notOkPositions;
         this.routes = localRoutes;
         this.safePoints = this.findSafePoints(localRoutes);
+
         this.fastestPoints = this.createFastestPoints();
+
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "buildPath");
         this.currentPath = this.buildPath(shootyLimitations);
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "buildPath");
 
         return this.currentPath;
     }
@@ -358,46 +363,29 @@ public class PathBuilder {
     }
 
     protected void setRoutes(UUID uid, List<BlockPos> points, int iteration, Map<BlockPos, Map<UUID, Integer>> routes) {
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "setRoutes");
         for (BlockPos point : points) {
             routes.computeIfAbsent(point, k -> Maps.newHashMap());
             routes.get(point).put(uid, iteration);
         }
-    }
-
-    protected List<BlockPos> getNewWaveForEnemy(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, MobEntity entity) {
-        List<BlockPos> wave = Lists.newArrayList();
-
-        for (BlockPos point : points) {
-            PathPoint[] vars = new PathPoint[32];
-            entity.getNavigator().getNodeProcessor().func_222859_a(vars, new PathPoint(point.getX(), point.getY(), point.getZ()));
-            List<PathPoint> varsBlocks = Arrays.stream(vars).filter(Objects::nonNull).collect(Collectors.toList());
-
-            for (PathPoint var : varsBlocks) {
-                BlockPos varBlock = new BlockPos(var.x, var.y, var.z);
-                if (usedCoors.get(varBlock.toString()) == null
-                        && var.x >= zone.minX - 1 && var.x <= zone.maxX
-                        && var.z >= zone.minZ - 1 && var.z <= zone.maxZ
-                        && var.y >= zone.minY / 1.5 && var.y <= zone.maxY * 1.5
-                ) {
-                    usedCoors.put(var.toString(), true);
-                    wave.add(varBlock);
-                }
-            }
-        }
-
-        return wave;
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "setRoutes");
     }
 
     protected List<BlockPos> getNewWave(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getNewWave");
         List<BlockPos> tempPoints = Lists.newArrayList();
+
         for (BlockPos point : points) {
+            TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getVariants");
             List<BlockPos> vars = getVariants(world, point, zone, usedCoors, cantGo, limitations);
+            TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getVariants");
 
             for (BlockPos var : vars) {
                 usedCoors.put(var.toString(), true);
                 tempPoints.add(var);
             }
         }
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getNewWave");
 
         return tempPoints;
     }
@@ -441,19 +429,26 @@ public class PathBuilder {
         return enemyPoints;
     }
 
-    protected List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, @Nullable List<BlockPos> cantGo, MovementLimitations limitations) {
+    protected List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "creating variants");
+        int x = start.getX();
+        int y = start.getY();
+        int z = start.getZ();
         List<BlockPos> variants = Lists.newArrayList(
-                getTopPosition(world, start.east(), limitations),
-                getTopPosition(world, start.north(), limitations),
-                getTopPosition(world, start.south(), limitations),
-                getTopPosition(world, start.west(), limitations),
-                getTopPosition(world, start.north().east(), limitations),
-                getTopPosition(world, start.north().west(), limitations),
-                getTopPosition(world, start.south().east(), limitations),
-                getTopPosition(world, start.south().west(), limitations)
-        );
+                getTopPosition(world, new BlockPos(x + 1, y, z), limitations),
+                getTopPosition(world, new BlockPos(x - 1, y, z), limitations),
+                getTopPosition(world, new BlockPos(x, y, z + 1), limitations),
+                getTopPosition(world, new BlockPos(x, y, z - 1), limitations),
 
-        return variants.stream()
+                getTopPosition(world, new BlockPos(x + 1, y, z + 1), limitations),
+                getTopPosition(world, new BlockPos(x + 1, y, z - 1), limitations),
+                getTopPosition(world, new BlockPos(x - 1, y, z - 1), limitations),
+                getTopPosition(world, new BlockPos(x - 1, y, z + 1), limitations)
+        );
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "creating variants");
+
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "filtering variants");
+        List<BlockPos> filteredVariants = variants.stream()
                 .filter(variant -> {
                     if (usedCoors.get(variant.toString()) == null
                             && variant.getX() >= zone.minX - 1 && variant.getX() <= zone.maxX
@@ -484,6 +479,8 @@ public class PathBuilder {
                     return false;
                 })
                 .collect(Collectors.toList());
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "filtering variants");
+        return filteredVariants;
     }
 
     protected BlockPos getEnemyStandPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
@@ -496,6 +493,7 @@ public class PathBuilder {
     }
 
     protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
         if (isSolid(world, position, limitations)) {
             while (isSolid(world, position, limitations)) {
                 position = position.up();
@@ -506,6 +504,7 @@ public class PathBuilder {
             }
             position = position.up();
         }
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
 
         return position;
     }
@@ -517,9 +516,6 @@ public class PathBuilder {
 
         PathNodeType endType = getPathNodeType(world, end);
         if ((endType == PathNodeType.WATER && getPathNodeType(world, end.up()) == PathNodeType.WATER && !limitations.canSwim) || endType == PathNodeType.LAVA || endType == PathNodeType.DAMAGE_FIRE) {
-            if (endType == PathNodeType.DAMAGE_FIRE) {
-//                burningTicks = 60;
-            }
             return false;
         }
 
@@ -550,51 +546,50 @@ public class PathBuilder {
     }
 
     protected boolean fitsIn(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "fitsIn");
         float x = end.getX() + 0.5F;
         int y = end.getY();
         float z = end.getZ() + 0.5F;
         float width = limitations.modelWidth > 1 ? 1 : limitations.modelWidth;
 
-        AxisAlignedBB axisalignedbb1 = new AxisAlignedBB(
-                (double) x - (width / 2),
-                (double) y + 0.001D,
-                (double) z - (width / 2),
-                (double) x + (width / 2),
-                ((float) y + limitations.modelHeight),
-                (double) z + (width / 2)
-        );
-        boolean isCollisionBoxesEmpty = world.isCollisionBoxesEmpty(limitations.entity, axisalignedbb1);
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "canStandOn");
+        boolean isCollisionBoxesEmpty = this.canStandOn(world, end, limitations);
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "canStandOn");
 
         if (isCollisionBoxesEmpty && limitations.modelWidth > 1) {
             List<List<BlockPos>> blocksToCheck = this.mapAllBlocksBetweenTwoPoints(limitations, x, y, z);
             if (!this.samePatternOfBlocks(world, blocksToCheck, limitations)) {
+                TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "fitsIn");
                 return false;
             }
         }
 
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "fitsIn");
         return isCollisionBoxesEmpty;
+    }
+
+    protected boolean canStandOn(IWorldReader world, BlockPos block, MovementLimitations limitations) {
+        for (int y = block.getY(); y <= Math.ceil(block.getY() + limitations.modelHeight); y++) {
+            if (this.isSolid(world, block, limitations)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private boolean samePatternOfBlocks(IWorldReader world, List<List<BlockPos>> blocksToCheck, MovementLimitations limitations) {
         if (blocksToCheck.size() == 0) {
             return false;
         }
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "samePatternOfBlocks");
 
         List<List<Boolean>> checked = Lists.newArrayList();
-        int startY = blocksToCheck.get(0).get(0).getY();
-
         for (List<BlockPos> xBlockToCheck : blocksToCheck) {
             List<Boolean> xChecked = Lists.newArrayList();
 
             for (BlockPos blockToCheck : xBlockToCheck) {
-                boolean checkResult = true;
-                for (int y = startY; y <= Math.ceil(startY + limitations.modelHeight); y++) {
-                    if (this.isSolid(world, blockToCheck, limitations)) {
-                        checkResult = false;
-                        break;
-                    }
-                }
-
+                boolean checkResult = this.canStandOn(world, blockToCheck, limitations);
                 xChecked.add(checkResult);
             }
             checked.add(xChecked);
@@ -604,11 +599,13 @@ public class PathBuilder {
         for (int x = 0; x < checked.size(); x++) {
             for (int z = 0; z < checked.size(); z++) {
                 if (this.squareIsAllTrue(checked, x, z, roundedWidth)) {
+                    TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "samePatternOfBlocks");
                     return true;
                 }
             }
         }
 
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "samePatternOfBlocks");
         return false;
     }
 

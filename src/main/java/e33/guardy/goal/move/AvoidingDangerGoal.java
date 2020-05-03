@@ -3,6 +3,7 @@ package e33.guardy.goal.move;
 import e33.guardy.E33;
 import e33.guardy.client.detail.AnimationState;
 import e33.guardy.client.listener.AnimationStateListener;
+import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
 import e33.guardy.event.MoveEvent;
 import e33.guardy.event.NoActionEvent;
@@ -71,10 +72,9 @@ public class AvoidingDangerGoal extends RandomWalkingGoal {
     }
 
     protected void createPath() {
-        Instant start = Instant.now();
+        TimeMeter.moduleStart(TimeMeter.MODULE_PATH_BUILDING);
         this.creature.getNavigator().setPath(this.pathBuilder.getPath(this.getNearestEnemies(25)), this.speed);
-        Instant end = Instant.now();
-        LOGGER.info("createPath time: " + Duration.between(start, end));
+        TimeMeter.moduleEnd(TimeMeter.MODULE_PATH_BUILDING);
     }
 
     public void startExecuting() {
