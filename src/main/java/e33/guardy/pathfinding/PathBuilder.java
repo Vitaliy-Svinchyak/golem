@@ -28,8 +28,9 @@ public class PathBuilder {
 
     private final ShootyEntity shooty;
     private final NodeProcessor nodeProcessor;
-    public List<BlockPos> unwalkableBlocks = Lists.newArrayList();
     private List<List<BlockPos>> checkingRoutes = Lists.newArrayList();
+    private Map<String, BlockPos> swimmingTopPositionCache = Maps.newHashMap();
+    private Map<String, BlockPos> notSwimmingTopPositionCache = Maps.newHashMap();
     public Map<BlockPos, Map<UUID, Integer>> routes = Maps.newHashMap();
     public List<BlockPos> safePoints = Lists.newArrayList();
     public Map<Integer, List<BlockPos>> fastestPoints = Maps.newHashMap();
@@ -363,7 +364,6 @@ public class PathBuilder {
     }
 
     protected List<BlockPos> getNewWave(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getNewWave");
         List<BlockPos> tempPoints = Lists.newArrayList();
 
         for (BlockPos point : points) {
@@ -376,7 +376,6 @@ public class PathBuilder {
                 tempPoints.add(var);
             }
         }
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getNewWave");
 
         return tempPoints;
     }
@@ -493,6 +492,13 @@ public class PathBuilder {
 
     protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
+        Map<String, BlockPos> cache = limitations.canSwim ? this.swimmingTopPositionCache : this.notSwimmingTopPositionCache;
+        String originalPositionKey = position.toString();
+        if (cache.get(originalPositionKey) != null) { // TODO maybe not needed
+            TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
+            return cache.get(originalPositionKey);
+        }
+
         if (isSolid(world, position, limitations)) {
             while (isSolid(world, position, limitations)) {
                 position = position.up();
@@ -504,7 +510,7 @@ public class PathBuilder {
             position = position.up();
         }
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
-
+        cache.put(originalPositionKey, position);
         return position;
     }
 
@@ -550,9 +556,7 @@ public class PathBuilder {
         int y = end.getY();
         float z = end.getZ() + 0.5F;
 
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "canStandOn");
         boolean isCollisionBoxesEmpty = this.canStandOn(world, end, limitations);
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "canStandOn");
 
         if (isCollisionBoxesEmpty && limitations.modelWidth > 1) {
             List<List<BlockPos>> blocksToCheck = this.mapAllBlocksBetweenTwoPoints(limitations, x, y, z);
