@@ -4,14 +4,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.SnowBlock;
+import net.minecraft.block.*;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -20,7 +20,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -550,7 +549,6 @@ public class PathBuilder {
         float x = end.getX() + 0.5F;
         int y = end.getY();
         float z = end.getZ() + 0.5F;
-        float width = limitations.modelWidth > 1 ? 1 : limitations.modelWidth;
 
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "canStandOn");
         boolean isCollisionBoxesEmpty = this.canStandOn(world, end, limitations);
@@ -640,15 +638,28 @@ public class PathBuilder {
     }
 
     protected boolean isSolid(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
-        if (getPathNodeType(world, position) == PathNodeType.LEAVES || world.getBlockState(position).getBlock() == Blocks.LILY_PAD) {
+        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "isSolid");
+        boolean r = this.isSolidM(world, position, limitations);
+        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "isSolid");
+        return r;
+    }
+
+    protected boolean isSolidM(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
+        BlockState state = world.getBlockState(position);
+        if (state.isAir(world, position)) {
+            return false;
+        }
+
+        if (world.getFluidState(position).isTagged(FluidTags.WATER)) {
+            return limitations.canSwim;
+        }
+
+        Block block = state.getBlock();
+        if (block instanceof LeavesBlock || block == Blocks.LILY_PAD) {
             return true;
         }
 
-        if (limitations.canSwim && getPathNodeType(world, position) == PathNodeType.WATER) {
-            return true;
-        }
-
-        return world.getBlockState(position).isSolid();
+        return state.isSolid();
     }
 
     protected PathNodeType getPathNodeType(IWorldReader world, BlockPos blockPos) {

@@ -28,7 +28,8 @@ public class TimeMeter {
         int maxFunctionNameLength = "name".length();
         int maxDurationLength = "duration".length();
         int maxCallLength = "calls".length();
-        int totalDuration = calls.get(0).totalDuration.getNano();
+        String nanos = calls.get(0).totalDuration.toString().substring(2);
+        float totalNanos = Float.parseFloat(nanos.substring(0, nanos.length() - 1));
 
         for (FunctionCall call : calls) {
             if (call.functionName.length() > maxFunctionNameLength) {
@@ -46,7 +47,10 @@ public class TimeMeter {
         LOGGER.info(addSpace("-", maxFunctionNameLength + maxDurationLength + maxCallLength + 16, "-"));
 
         for (FunctionCall call : calls) {
-            float percent = Math.round((float) call.totalDuration.getNano() / totalDuration * 100);
+            String cnanos = call.totalDuration.toString().substring(2);
+            float callNanos = Float.parseFloat(cnanos.substring(0, cnanos.length() - 1));
+
+            float percent = Math.round(callNanos / totalNanos * 100);
             LOGGER.info(addSpace(call.functionName, maxFunctionNameLength) + " | " + addSpace(call.totalDuration.toString(), maxDurationLength) + " | " + addSpace(call.totalCalls + "", maxCallLength) + " | " + percent + "%");
         }
     }
