@@ -447,39 +447,47 @@ public class PathBuilder {
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "creating variants");
 
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "filtering variants");
-        List<BlockPos> filteredVariants = variants.stream()
-                .filter(variant -> {
-                    if (usedCoors.get(variant.toString()) == null
-                            && variant.getX() >= zone.minX - 1 && variant.getX() <= zone.maxX
-                            && variant.getZ() >= zone.minZ - 1 && variant.getZ() <= zone.maxZ
-                            && variant.getY() >= zone.minY / 1.5 && variant.getY() <= zone.maxY * 1.5
-                    ) {
-                        if (canWalkFromTo(world, start, variant, limitations)) {
-                            // check walls between
-                            if (variant.getX() != start.getX() && variant.getZ() != start.getZ()) {
-                                BlockPos toCheckWall = getTopPosition(world, new BlockPos(variant.getX(), start.getY(), start.getZ()), limitations);
-                                BlockPos toCheckWall2 = getTopPosition(world, new BlockPos(start.getX(), start.getY(), variant.getZ()), limitations);
-
-                                if (toCheckWall.getY() - start.getY() <= limitations.jumHeight && toCheckWall2.getY() - start.getY() <= limitations.jumHeight) {
-                                    return true;
-                                } else {
-                                    cantGo.add(variant);
-
-                                    return false;
-                                }
-                            }
-
-                            return true;
-                        }
-
-                        cantGo.add(variant);
-                        return false;
-                    }
-                    return false;
-                })
-                .collect(Collectors.toList());
+        List<BlockPos> filteredVariants = Lists.newArrayList();
+        for (BlockPos variant : variants) {
+            if (this.isValidPos(world, start, zone, usedCoors, cantGo, limitations, variant)) {
+                filteredVariants.add(variant);
+            }
+        }
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "filtering variants");
         return filteredVariants;
+    }
+
+    protected boolean isValidPos(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations, BlockPos variant) {
+        boolean blockInZone = usedCoors.get(variant.toString()) == null
+                && variant.getX() >= zone.minX - 1 && variant.getX() <= zone.maxX
+                && variant.getZ() >= zone.minZ - 1 && variant.getZ() <= zone.maxZ
+                && variant.getY() >= zone.minY / 1.5 && variant.getY() <= zone.maxY * 1.5;
+
+        if (!blockInZone) {
+            return false;
+        }
+
+        if (!canWalkFromTo(world, start, variant, limitations)) {
+            cantGo.add(variant);
+            return false;
+        }
+
+        // check walls between
+        boolean isDiagonalBlock = variant.getX() != start.getX() && variant.getZ() != start.getZ();
+        if (!isDiagonalBlock) {
+            return true;
+        }
+
+        BlockPos toCheckWall = getTopPosition(world, new BlockPos(variant.getX(), start.getY(), start.getZ()), limitations);
+        BlockPos toCheckWall2 = getTopPosition(world, new BlockPos(start.getX(), start.getY(), variant.getZ()), limitations);
+
+        boolean noWallOnWay = toCheckWall.getY() - start.getY() <= limitations.jumHeight && toCheckWall2.getY() - start.getY() <= limitations.jumHeight;
+        if (noWallOnWay) {
+            return true;
+        }
+
+        cantGo.add(variant);
+        return false;
     }
 
     protected BlockPos getEnemyStandPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
