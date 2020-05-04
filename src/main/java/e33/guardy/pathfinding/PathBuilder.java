@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
+import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -56,7 +57,7 @@ public class PathBuilder {
         List<List<BlockPos>> localCheckingRoutes = Lists.newArrayList();
         List<BlockPos> points = Lists.newArrayList(myPos);
         Map<String, Boolean> usedCoors = Maps.newHashMap();
-        usedCoors.put(myPos.toString(), true);
+        usedCoors.put(ToStringHelper.toString(myPos), true);
         List<BlockPos> cantGo = Lists.newArrayList();
         this.setRoutes(this.shooty.getUniqueID(), points, 0, localRoutes);
 
@@ -195,13 +196,13 @@ public class PathBuilder {
                         leaf.getBlockPos(),
                         this.checkingRoutes.get(i).stream()
                                 // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
-                                .filter(point -> usedCoors.get(point.toString()) == null).collect(Collectors.toList()),
+                                .filter(point -> usedCoors.get(ToStringHelper.toString(point)) == null).collect(Collectors.toList()),
                         limitations
                 );
 
                 if (stepsFromHere.size() == 0) {
                     leaf.die();
-                    usedCoors.put(leaf.getBlockPos().toString(), true);
+                    usedCoors.put(ToStringHelper.toString(leaf.getBlockPos()), true);
                     continue;
                 }
                 List<TreeLeaf> tempPoints = this.getLeafsWithReach(stepsFromHere, maxReach, leaf);
@@ -213,7 +214,7 @@ public class PathBuilder {
                         if (safePoints.contains(child.getBlockPos())) {
                             finalLeafs.add(child);
                         } else {
-                            usedCoors.put(child.getBlockPos().toString(), true);
+                            usedCoors.put(ToStringHelper.toString(child.getBlockPos()), true);
                             tempLeafs.add(child);
                         }
                     }
@@ -372,7 +373,7 @@ public class PathBuilder {
             TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getVariants");
 
             for (BlockPos var : vars) {
-                usedCoors.put(var.toString(), true);
+                usedCoors.put(ToStringHelper.toString(var), true);
                 tempPoints.add(var);
             }
         }
@@ -412,7 +413,7 @@ public class PathBuilder {
         Map<UUID, Map<String, Boolean>> enemyPoints = Maps.newHashMap();
         for (MobEntity enemy : enemies) {
             Map<String, Boolean> usedCoors = Maps.newHashMap();
-            usedCoors.put(enemy.getPosition().toString(), true);
+            usedCoors.put(ToStringHelper.toString(enemy.getPosition()), true);
             enemyPoints.put(enemy.getUniqueID(), usedCoors);
         }
 
@@ -449,7 +450,7 @@ public class PathBuilder {
     }
 
     protected boolean isValidPos(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations, BlockPos variant) {
-        boolean blockInZone = usedCoors.get(variant.toString()) == null
+        boolean blockInZone = usedCoors.get(ToStringHelper.toString(variant)) == null
                 && variant.getX() >= zone.minX - 1 && variant.getX() <= zone.maxX
                 && variant.getZ() >= zone.minZ - 1 && variant.getZ() <= zone.maxZ
                 && variant.getY() >= zone.minY / 1.5 && variant.getY() <= zone.maxY * 1.5;
@@ -493,7 +494,7 @@ public class PathBuilder {
     protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
         Map<String, BlockPos> cache = limitations.canSwim ? this.swimmingTopPositionCache : this.notSwimmingTopPositionCache;
-        String originalPositionKey = position.toString();
+        String originalPositionKey = ToStringHelper.toString(position);
         if (cache.get(originalPositionKey) != null) { // TODO maybe not needed
             TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
             return cache.get(originalPositionKey);
