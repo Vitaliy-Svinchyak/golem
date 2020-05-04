@@ -358,21 +358,17 @@ public class PathBuilder {
     }
 
     protected void setRoutes(UUID uid, List<BlockPos> points, int iteration, Map<BlockPos, Map<UUID, Integer>> routes) {
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "setRoutes");
         for (BlockPos point : points) {
             routes.computeIfAbsent(point, k -> Maps.newHashMap());
             routes.get(point).put(uid, iteration);
         }
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "setRoutes");
     }
 
     protected List<BlockPos> getNewWave(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
         List<BlockPos> tempPoints = Lists.newArrayList();
 
         for (BlockPos point : points) {
-            TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getVariants");
             List<BlockPos> vars = getVariants(world, point, zone, usedCoors, cantGo, limitations);
-            TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getVariants");
 
             for (BlockPos var : vars) {
                 usedCoors.put(ToStringHelper.toString(var), true);
@@ -423,7 +419,6 @@ public class PathBuilder {
     }
 
     protected List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "creating variants");
         int x = start.getX();
         int y = start.getY();
         int z = start.getZ();
@@ -438,16 +433,14 @@ public class PathBuilder {
                 getTopPosition(world, new BlockPos(x - 1, y, z - 1), limitations),
                 getTopPosition(world, new BlockPos(x - 1, y, z + 1), limitations)
         );
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "creating variants");
 
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "filtering variants");
         List<BlockPos> filteredVariants = Lists.newArrayList();
         for (BlockPos variant : variants) {
             if (this.isValidPos(world, start, zone, usedCoors, cantGo, limitations, variant)) {
                 filteredVariants.add(variant);
             }
         }
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "filtering variants");
+
         return filteredVariants;
     }
 
@@ -563,7 +556,6 @@ public class PathBuilder {
     }
 
     protected boolean fitsIn(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "fitsIn");
         float x = end.getX() + 0.5F;
         int y = end.getY();
         float z = end.getZ() + 0.5F;
@@ -573,12 +565,10 @@ public class PathBuilder {
         if (isCollisionBoxesEmpty && limitations.modelWidth > 1) {
             List<List<BlockPos>> blocksToCheck = this.mapAllBlocksBetweenTwoPoints(limitations, x, y, z);
             if (!this.samePatternOfBlocks(world, blocksToCheck, limitations)) {
-                TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "fitsIn");
                 return false;
             }
         }
 
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "fitsIn");
         return isCollisionBoxesEmpty;
     }
 
@@ -596,7 +586,6 @@ public class PathBuilder {
         if (blocksToCheck.size() == 0) {
             return false;
         }
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "samePatternOfBlocks");
 
         List<List<Boolean>> checked = Lists.newArrayList();
         for (List<BlockPos> xBlockToCheck : blocksToCheck) {
@@ -613,13 +602,11 @@ public class PathBuilder {
         for (int x = 0; x < checked.size(); x++) {
             for (int z = 0; z < checked.size(); z++) {
                 if (this.squareIsAllTrue(checked, x, z, roundedWidth)) {
-                    TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "samePatternOfBlocks");
                     return true;
                 }
             }
         }
 
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "samePatternOfBlocks");
         return false;
     }
 

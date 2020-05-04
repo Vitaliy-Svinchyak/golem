@@ -124,43 +124,10 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
                 color = Color.PATH_GREEN;
             }
 
-            this.renderBlockWithColorAndNumber(point, color, text, 1F, x, y, z);
+            if (color != Color.SHOOTY && color != Color.ROUTE_VIOLET) {
+                this.renderBlockWithColorAndNumber(point, color, text, 1F, x, y, z);
+            }
         }
-    }
-
-    private void renderPartialBlocksWithColorAndNumber(float offsetX, float offsetZ, float width, float height, BlockPos block, int number, List<Float> color, double x, double y, double z) {
-        DebugRenderer.func_217732_a(
-                number + ".", // to fix the bug with number 6
-                (double) block.getX() + offsetX + width / 2,
-                (double) block.getY() + 0.15D,
-                (double) block.getZ() + offsetZ + height / 2,
-                -1
-        );
-        DebugRenderer.func_217730_a(
-                (
-                        new AxisAlignedBB(
-                                block.getX() - 0.01 + offsetX,
-                                block.getY() - 1.01,
-                                block.getZ() - 0.01 + offsetZ,
-                                block.getX() + offsetX + width + 0.01,
-                                block.getY() + 0.01,
-                                block.getZ() + offsetZ + height + 0.01
-                        )
-                ).offset(-x, -y, -z),
-                color.get(0),
-                color.get(1),
-                color.get(2),
-                color.get(3)
-        );
-    }
-
-    private void renderBlocks(List<BlockPos> blocks) {
-        ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
-        double x = activeRenderInfo.getProjectedView().x;
-        double y = activeRenderInfo.getProjectedView().y;
-        double z = activeRenderInfo.getProjectedView().z;
-
-        this.renderBlocksWithColor(blocks, Color.UNWALKABLE_BLACK, x, y, z);
     }
 
     private void renderBlockWithColorAndNumber(BlockPos block, Color color, String text, float alpha, double x, double y, double z) {
@@ -188,28 +155,6 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
                 (double) block.getZ() + 0.5D,
                 -1
         );
-    }
-
-    private void renderBlocksWithColor(List<BlockPos> blocks, Color color, double x, double y, double z) {
-        for (BlockPos block : blocks) {
-            //            if (this.getDiffInCoordinates(activeRenderInfo, block) <= 64.0F) {
-            DebugRenderer.func_217730_a(
-                    (
-                            new AxisAlignedBB(
-                                    block.getX() - 0.01,
-                                    block.getY() - 1.01,
-                                    block.getZ() - 0.01,
-                                    block.getX() + 1.01,
-                                    block.getY() + 0.01,
-                                    block.getZ() + 1.01
-                            )
-                    ).offset(-x, -y, -z),
-                    color.red,
-                    color.green,
-                    color.blue,
-                    color.alpha
-            );
-        }
     }
 
     private ActiveRenderInfo getActiveRenderInfo() {
