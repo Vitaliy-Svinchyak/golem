@@ -8,10 +8,12 @@ import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.fluid.IFluidState;
 import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -492,11 +494,9 @@ public class PathBuilder {
     }
 
     protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
         Map<String, BlockPos> cache = limitations.canSwim ? this.swimmingTopPositionCache : this.notSwimmingTopPositionCache;
         String originalPositionKey = ToStringHelper.toString(position);
         if (cache.get(originalPositionKey) != null) { // TODO maybe not needed
-            TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
             return cache.get(originalPositionKey);
         }
 
@@ -510,7 +510,7 @@ public class PathBuilder {
             }
             position = position.up();
         }
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
+
         cache.put(originalPositionKey, position);
         return position;
     }
@@ -520,8 +520,12 @@ public class PathBuilder {
             return false;
         }
 
-        PathNodeType endType = getPathNodeType(world, end);
-        if ((endType == PathNodeType.WATER && getPathNodeType(world, end.up()) == PathNodeType.WATER && !limitations.canSwim) || endType == PathNodeType.LAVA || endType == PathNodeType.DAMAGE_FIRE) {
+        BlockState state = world.getBlockState(end);
+        Block block = state.getBlock();
+        IFluidState fluidState = world.getFluidState(end);
+        if (
+                (!limitations.canSwim && fluidState.isTagged(FluidTags.WATER) && world.getFluidState(end.up()).isTagged(FluidTags.WATER))
+                        || fluidState.isTagged(FluidTags.LAVA) || block == Blocks.FIRE) {
             return false;
         }
 
@@ -532,11 +536,12 @@ public class PathBuilder {
             startY -= 1;
             startY += world.getBlockState(start.down()).get(SnowBlock.LAYERS) * (1F / 7F);
         }
-        if (getPathNodeType(world, start.down()) == PathNodeType.FENCE) {
+
+        if (this.isFence(world, start.down())) {
             startY += 0.5F;
         }
 
-        if (getPathNodeType(world, end.down()) == PathNodeType.FENCE) {
+        if (this.isFence(world, end.down())) {
             endY += 0.5F;
         }
 
@@ -549,6 +554,12 @@ public class PathBuilder {
         }
 
         return true;
+    }
+
+    private boolean isFence(IWorldReader world, BlockPos pos) {
+        BlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();
+        return block.isIn(BlockTags.FENCES) || block.isIn(BlockTags.WALLS) || block instanceof FenceGateBlock;
     }
 
     protected boolean fitsIn(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
@@ -643,9 +654,7 @@ public class PathBuilder {
     }
 
     protected boolean isSolid(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
-        TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "isSolid");
         boolean r = this.isSolidM(world, position, limitations);
-        TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "isSolid");
         return r;
     }
 
