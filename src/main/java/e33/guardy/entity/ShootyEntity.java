@@ -6,16 +6,15 @@ import e33.guardy.goal.move.AvoidingDangerGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.DangerousZoneAvoidanceNavigator;
 import e33.guardy.pathfinding.PathBuilder;
+import e33.guardy.pathfinding.PathBuilderMetrics;
 import e33.guardy.pathfinding.PathPriorityByCoordinates;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
-import net.minecraft.entity.monster.SpiderEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -26,7 +25,6 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.stream.Collectors;
 
 // TODO 2 implement IRangedAttackMob?
 // TODO don't drop weapon when die
@@ -40,7 +38,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
 
-        this.pathBuilder = new PathBuilder(this);
+        this.pathBuilder = new PathBuilderMetrics(this);
         PathFindingDebugRenderer.addEntity(this);
         this.setPathPriority(PathNodeType.WATER, -1.0F);
     }

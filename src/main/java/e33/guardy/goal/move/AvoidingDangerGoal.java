@@ -73,7 +73,9 @@ public class AvoidingDangerGoal extends RandomWalkingGoal {
 
     protected void createPath() {
         TimeMeter.moduleStart(TimeMeter.MODULE_PATH_BUILDING);
+        this.world.getProfiler().startSection("pathfind_my");
         this.creature.getNavigator().setPath(this.pathBuilder.getPath(this.getNearestEnemies(25)), this.speed);
+        this.world.getProfiler().endSection();
         TimeMeter.moduleEnd(TimeMeter.MODULE_PATH_BUILDING);
     }
 

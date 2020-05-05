@@ -2,14 +2,12 @@ package e33.guardy.pathfinding;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.fluid.IFluidState;
-import net.minecraft.pathfinding.NodeProcessor;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.PathPoint;
@@ -30,18 +28,18 @@ public class PathBuilder {
     final static Logger LOGGER = LogManager.getLogger();
 
     private final ShootyEntity shooty;
-    private final NodeProcessor nodeProcessor;
     private List<List<BlockPos>> checkingRoutes = Lists.newArrayList();
+
     private Map<String, BlockPos> swimmingTopPositionCache = Maps.newHashMap();
     private Map<String, BlockPos> notSwimmingTopPositionCache = Maps.newHashMap();
+    private Map<String, Integer> canStandOnCache = Maps.newHashMap();
+
     public Map<BlockPos, Map<UUID, Integer>> routes = Maps.newHashMap();
     public List<BlockPos> safePoints = Lists.newArrayList();
-    public Map<Integer, List<BlockPos>> fastestPoints = Maps.newHashMap();
     public Path currentPath;
 
     public PathBuilder(ShootyEntity shooty) {
         this.shooty = shooty;
-        this.nodeProcessor = shooty.getNavigator().getNodeProcessor();
     }
 
     public Path getPath(List<MobEntity> enemies) {
@@ -105,14 +103,14 @@ public class PathBuilder {
         this.routes = localRoutes;
         this.safePoints = this.findSafePoints(localRoutes);
 
-        this.fastestPoints = this.createFastestPoints();
+//        this.fastestPoints = this.createFastestPoints();
 
         this.currentPath = this.buildPath(shootyLimitations);
 
         return this.currentPath;
     }
 
-    private BlockPos getEntityPos(ShootyEntity entity, MovementLimitations limitations) {
+    protected BlockPos getEntityPos(ShootyEntity entity, MovementLimitations limitations) {
         BlockPos position = entity.getPosition();
 
         if (!this.getTopPosition(entity.world, position, limitations).equals(position)) {
@@ -122,7 +120,7 @@ public class PathBuilder {
         return position;
     }
 
-    private Map<UUID, MovementLimitations> createEnemyLimitations(List<MobEntity> enemies) {
+    protected Map<UUID, MovementLimitations> createEnemyLimitations(List<MobEntity> enemies) {
         Map<UUID, MovementLimitations> limitations = Maps.newHashMap();
 
         for (MobEntity enemy : enemies) {
@@ -132,7 +130,7 @@ public class PathBuilder {
         return limitations;
     }
 
-    private Map<Integer, List<BlockPos>> createFastestPoints() {
+    protected Map<Integer, List<BlockPos>> createFastestPoints() {
         Map<Integer, List<BlockPos>> fastestPoints = Maps.newHashMap();
         UUID shootyUid = this.shooty.getUniqueID();
 
@@ -160,7 +158,7 @@ public class PathBuilder {
         return fastestPoints;
     }
 
-    private Path buildPath(MovementLimitations limitations) {
+    protected Path buildPath(MovementLimitations limitations) {
         LOGGER.info("It will be dangerous...");
 
         int maxReach = 0;
@@ -179,7 +177,7 @@ public class PathBuilder {
         return null;
     }
 
-    private Path buildDangerousPathWithMaxReach(int maxReach, MovementLimitations limitations) {
+    protected Path buildDangerousPathWithMaxReach(int maxReach, MovementLimitations limitations) {
         if (this.safePoints.contains(shooty.getPosition())) {
             LOGGER.error("Already on safe point!");
             return null;
@@ -245,7 +243,7 @@ public class PathBuilder {
         return null;
     }
 
-    private List<TreeLeaf> getLeafsWithReach(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
+    protected List<TreeLeaf> getLeafsWithReach(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
         List<TreeLeaf> filteredPoints = Lists.newArrayList();
 
         for (BlockPos point : points) {
@@ -253,6 +251,7 @@ public class PathBuilder {
             Map<UUID, Integer> entitiesOnPoint = this.routes.get(point);
             int shootySpeed = entitiesOnPoint.get(this.shooty.getUniqueID());
             int fastestEnemySpeed = Integer.MAX_VALUE;
+
             for (UUID entity : entitiesOnPoint.keySet()) {
                 if (!entity.equals(this.shooty.getUniqueID()) && entitiesOnPoint.get(entity) <= shootySpeed) {
                     if (entitiesOnPoint.get(entity) < fastestEnemySpeed) {
@@ -270,7 +269,7 @@ public class PathBuilder {
         return filteredPoints;
     }
 
-    private TreeLeaf calculateTreeLeaf(BlockPos point) {
+    protected TreeLeaf calculateTreeLeaf(BlockPos point) {
         int enemiesOnPoint = 0;
         Map<UUID, Integer> entitiesOnPoint = this.routes.get(point);
         int shootySpeed = entitiesOnPoint.get(this.shooty.getUniqueID());
@@ -287,7 +286,7 @@ public class PathBuilder {
         return new TreeLeaf(point, enemiesOnPoint, fastestEnemySpeed);
     }
 
-    private Path createPathFromTree(TreeLeaf leaf) {
+    protected Path createPathFromTree(TreeLeaf leaf) {
         LOGGER.info("Yeah boy, that's Path!");
         List<PathPoint> pathPoints = Lists.newArrayList();
         BlockPos target = leaf.getBlockPos();
@@ -302,7 +301,7 @@ public class PathBuilder {
         return new Path(pathPoints, target, true);
     }
 
-    private List<BlockPos> getNextStepFromList(BlockPos point, List<BlockPos> nextStepPoints, MovementLimitations limitations) {
+    protected List<BlockPos> getNextStepFromList(BlockPos point, List<BlockPos> nextStepPoints, MovementLimitations limitations) {
         List<BlockPos> nextPoints = Lists.newArrayList();
         for (BlockPos nextPoint : nextStepPoints) {
             int xDiff = Math.abs(nextPoint.getX() - point.getX());
@@ -328,7 +327,7 @@ public class PathBuilder {
         return new AxisAlignedBB(minX, zone.minY, minZ, maxX, zone.maxY, maxZ);
     }
 
-    private List<BlockPos> findSafePoints(Map<BlockPos, Map<UUID, Integer>> routes) {
+    protected List<BlockPos> findSafePoints(Map<BlockPos, Map<UUID, Integer>> routes) {
         Map<Integer, List<BlockPos>> diffInSteps = Maps.newHashMap();
         UUID shooty = this.shooty.getUniqueID();
 
@@ -357,7 +356,7 @@ public class PathBuilder {
         return safestPoints;
     }
 
-    protected void setRoutes(UUID uid, List<BlockPos> points, int iteration, Map<BlockPos, Map<UUID, Integer>> routes) {
+    private void setRoutes(UUID uid, List<BlockPos> points, int iteration, Map<BlockPos, Map<UUID, Integer>> routes) {
         for (BlockPos point : points) {
             routes.computeIfAbsent(point, k -> Maps.newHashMap());
             routes.get(point).put(uid, iteration);
@@ -398,7 +397,7 @@ public class PathBuilder {
         return unBlocked;
     }
 
-    protected Map<UUID, List<BlockPos>> createEnemyPoints(IWorldReader world, List<MobEntity> enemies, Map<UUID, MovementLimitations> enemyLimitations) {
+    private Map<UUID, List<BlockPos>> createEnemyPoints(IWorldReader world, List<MobEntity> enemies, Map<UUID, MovementLimitations> enemyLimitations) {
         Map<UUID, List<BlockPos>> enemyPoints = Maps.newHashMap();
         for (MobEntity enemy : enemies) {
             enemyPoints.put(enemy.getUniqueID(), Lists.newArrayList(getEnemyStandPosition(world, enemy.getPosition(), enemyLimitations.get(enemy.getUniqueID()))));
@@ -407,7 +406,7 @@ public class PathBuilder {
         return enemyPoints;
     }
 
-    protected Map<UUID, Map<String, Boolean>> createEnemyUsedCoors(List<MobEntity> enemies) {
+    private Map<UUID, Map<String, Boolean>> createEnemyUsedCoors(List<MobEntity> enemies) {
         Map<UUID, Map<String, Boolean>> enemyPoints = Maps.newHashMap();
         for (MobEntity enemy : enemies) {
             Map<String, Boolean> usedCoors = Maps.newHashMap();
@@ -552,6 +551,7 @@ public class PathBuilder {
     private boolean isFence(IWorldReader world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
+
         return block.isIn(BlockTags.FENCES) || block.isIn(BlockTags.WALLS) || block instanceof FenceGateBlock;
     }
 
@@ -573,16 +573,24 @@ public class PathBuilder {
     }
 
     protected boolean canStandOn(IWorldReader world, BlockPos block, MovementLimitations limitations) {
-        for (int y = block.getY(); y <= Math.ceil(block.getY() + limitations.modelHeight); y++) {
+        String cacheKey = ToStringHelper.toString(block);
+        int maxHeightToCheck = (int) Math.ceil(block.getY() + limitations.modelHeight);
+        if (this.canStandOnCache.get(cacheKey) != null && this.canStandOnCache.get(cacheKey) >= maxHeightToCheck) {
+            return true;
+        }
+
+        for (int y = block.getY(); y <= maxHeightToCheck; y++) {
             if (this.isSolid(world, block, limitations)) {
+                this.canStandOnCache.put(cacheKey, y);
                 return false;
             }
         }
 
+        this.canStandOnCache.put(cacheKey, maxHeightToCheck);
         return true;
     }
 
-    private boolean samePatternOfBlocks(IWorldReader world, List<List<BlockPos>> blocksToCheck, MovementLimitations limitations) {
+    protected boolean samePatternOfBlocks(IWorldReader world, List<List<BlockPos>> blocksToCheck, MovementLimitations limitations) {
         if (blocksToCheck.size() == 0) {
             return false;
         }
@@ -610,7 +618,7 @@ public class PathBuilder {
         return false;
     }
 
-    private boolean squareIsAllTrue(List<List<Boolean>> checked, int startX, int startZ, int width) {
+    protected boolean squareIsAllTrue(List<List<Boolean>> checked, int startX, int startZ, int width) {
         for (int x = startX; x < startX + width; x++) {
             for (int z = startZ; z < startZ + width; z++) {
                 if (checked.size() <= x || checked.get(x).size() <= z || checked.get(x).get(z) == false) {
@@ -622,7 +630,7 @@ public class PathBuilder {
         return true;
     }
 
-    private List<List<BlockPos>> mapAllBlocksBetweenTwoPoints(MovementLimitations limitations, float stepX, int stepY, float stepZ) {
+    protected List<List<BlockPos>> mapAllBlocksBetweenTwoPoints(MovementLimitations limitations, float stepX, int stepY, float stepZ) {
         double startX = stepX - Math.ceil(limitations.modelWidth / 2);
         double endX = stepX + Math.ceil(limitations.modelWidth / 2);
         double startZ = stepZ - Math.ceil(limitations.modelWidth / 2);
@@ -641,11 +649,6 @@ public class PathBuilder {
     }
 
     protected boolean isSolid(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
-        boolean r = this.isSolidM(world, position, limitations);
-        return r;
-    }
-
-    protected boolean isSolidM(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
         BlockState state = world.getBlockState(position);
         if (state.isAir(world, position)) {
             return false;
@@ -663,12 +666,7 @@ public class PathBuilder {
         return state.isSolid();
     }
 
-    protected PathNodeType getPathNodeType(IWorldReader world, BlockPos blockPos) {
-        return nodeProcessor.getPathNodeType(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
-    }
-
-    protected MovementLimitations createLimitations(MobEntity entity) {
-        LOGGER.info(entity.getPathPriority(PathNodeType.WATER));
+    private MovementLimitations createLimitations(MobEntity entity) {
         return new MovementLimitations(1F, entity.getMaxFallHeight(), entity.getHeight(), entity.getWidth(), entity.getPathPriority(PathNodeType.WATER) >= 0F, entity);
     }
 }
