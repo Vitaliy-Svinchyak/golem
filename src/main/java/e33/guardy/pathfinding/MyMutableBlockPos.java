@@ -8,6 +8,10 @@ public class MyMutableBlockPos extends BlockPos.MutableBlockPos {
         super(pos);
     }
 
+    MyMutableBlockPos(int x, int y, int z) {
+        super(x, y, z);
+    }
+
     public MutableBlockPos up() {
         this.y++;
         return this;

@@ -26,25 +26,25 @@ public class PathBuilderMetrics extends PathBuilder {
         return r;
     }
 
-    protected Path buildPath(MovementLimitations limitations) {
+    protected Path buildPath(MovementLimitations limitations, int enemiesCount) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "buildPath");
-        Path r = super.buildPath(limitations);
+        Path r = super.buildPath(limitations, enemiesCount);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "buildPath");
 
         return r;
     }
 
-    protected Path buildDangerousPathWithMaxReach(int maxReach, MovementLimitations limitations) {
+    protected Path buildPathWithMaxEnemiesOnPoint(int maxEnemies, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "buildDangerousPathWithMaxReach");
-        Path r = super.buildDangerousPathWithMaxReach(maxReach, limitations);
+        Path r = super.buildPathWithMaxEnemiesOnPoint(maxEnemies, limitations);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "buildDangerousPathWithMaxReach");
 
         return r;
     }
 
-    protected List<TreeLeaf> getLeafsWithReach(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
+    protected List<TreeLeaf> getLeafsWithMaxEnemies(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getLeafsWithReach");
-        List<TreeLeaf> r = super.getLeafsWithReach(points, maxEnemiesOnPoint, parent);
+        List<TreeLeaf> r = super.getLeafsWithMaxEnemies(points, maxEnemiesOnPoint, parent);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getLeafsWithReach");
 
         return r;
@@ -58,41 +58,41 @@ public class PathBuilderMetrics extends PathBuilder {
         return r;
     }
 
-    protected List<BlockPos> findSafePoints(Map<BlockPos, Map<UUID, Integer>> routes) {
+    protected List<BlockPos> findSafePoints(Map<BlockPos, Map<UUID, Integer>> speedTracker) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "findSafePoints");
-        List<BlockPos> r = super.findSafePoints(routes);
+        List<BlockPos> r = super.findSafePoints(speedTracker);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "findSafePoints");
 
         return r;
     }
 
-    protected List<BlockPos> getNewWave(List<BlockPos> points, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
+    protected List<BlockPos> makeSteps(List<BlockPos> previousSteps, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> visitedPoints, List<BlockPos> blockedPoints, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getNewWave");
-        List<BlockPos> r = super.getNewWave(points, world, zone, usedCoors, cantGo, limitations);
+        List<BlockPos> r = super.makeSteps(previousSteps, world, zone, visitedPoints, blockedPoints, limitations);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getNewWave");
 
         return r;
     }
 
-    protected List<BlockPos> getVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations) {
+    protected List<BlockPos> getStepVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> visitedPoints, List<BlockPos> blockedPoints, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getVariants");
-        List<BlockPos> r = super.getVariants(world, start, zone, usedCoors, cantGo, limitations);
+        List<BlockPos> r = super.getStepVariants(world, start, zone, visitedPoints, blockedPoints, limitations);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getVariants");
 
         return r;
     }
 
-    protected boolean isValidPos(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> usedCoors, List<BlockPos> cantGo, MovementLimitations limitations, BlockPos variant) {
+    protected boolean isValidPosition(IWorldReader world, BlockPos previousPosition, BlockPos variant, AxisAlignedBB zone, Map<String, Boolean> visitedPoints, List<BlockPos> blockedPoints, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "isValidPos");
-        boolean r = super.isValidPos(world, start, zone, usedCoors, cantGo, limitations, variant);
+        boolean r = super.isValidPosition(world, previousPosition, variant, zone, visitedPoints, blockedPoints, limitations);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "isValidPos");
 
         return r;
     }
 
-    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
+    protected BlockPos getTopPosition(IWorldReader world, int x, int y, int z, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
-        BlockPos r = super.getTopPosition(world, position, limitations);
+        BlockPos r = super.getTopPosition(world, x, y, z, limitations);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getTopPosition");
 
         return r;

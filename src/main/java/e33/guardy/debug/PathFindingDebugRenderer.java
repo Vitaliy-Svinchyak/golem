@@ -59,7 +59,7 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
         List<ShootyEntity> entitiesToRemove = Lists.newArrayList();
         for (ShootyEntity entity : entities) {
             if (entity.isAlive()) {
-                this.renderRoutes(entity.pathBuilder.routes, entity.pathBuilder.safePoints, entity.pathBuilder.currentPath, entity.getUniqueID());
+                this.renderRoutes(entity.pathBuilder.speedTracker, entity.pathBuilder.safePoints, entity.pathBuilder.currentPath, entity.getUniqueID());
             } else {
                 entitiesToRemove.add(entity);
             }
