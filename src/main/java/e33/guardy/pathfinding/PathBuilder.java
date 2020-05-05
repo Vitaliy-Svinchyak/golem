@@ -159,6 +159,11 @@ public class PathBuilder {
     }
 
     protected Path buildPath(MovementLimitations limitations) {
+        if (this.safePoints.contains(shooty.getPosition())) {
+            LOGGER.error("Already on safe point!");
+            return null;
+        }
+
         LOGGER.info("It will be dangerous...");
 
         int maxReach = 0;
@@ -178,11 +183,6 @@ public class PathBuilder {
     }
 
     protected Path buildDangerousPathWithMaxReach(int maxReach, MovementLimitations limitations) {
-        if (this.safePoints.contains(shooty.getPosition())) {
-            LOGGER.error("Already on safe point!");
-            return null;
-        }
-
         List<TreeLeaf> leafs = this.checkingRoutes.get(0).stream().map(this::calculateTreeLeaf).collect(Collectors.toList());
         int i = 0;
         Map<String, Boolean> usedCoors = Maps.newHashMap();
@@ -194,9 +194,8 @@ public class PathBuilder {
             for (TreeLeaf leaf : leafs) {
                 List<BlockPos> stepsFromHere = this.getNextStepFromList(
                         leaf.getBlockPos(),
-                        this.checkingRoutes.get(i).stream()
-                                // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
-                                .filter(point -> usedCoors.get(ToStringHelper.toString(point)) == null).collect(Collectors.toList()),
+                        // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
+                        this.filterByUsedCoors(this.checkingRoutes.get(i), usedCoors),
                         limitations
                 );
 
@@ -241,6 +240,17 @@ public class PathBuilder {
         }
 
         return null;
+    }
+
+    private List<BlockPos> filterByUsedCoors(List<BlockPos> positions, Map<String, Boolean> usedCoors) {
+        List<BlockPos> filtered = Lists.newArrayList();
+        for (BlockPos position : positions) {
+            if (usedCoors.get(ToStringHelper.toString(position)) == null) {
+                filtered.add(position);
+            }
+        }
+
+        return filtered;
     }
 
     protected List<TreeLeaf> getLeafsWithReach(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
@@ -485,13 +495,14 @@ public class PathBuilder {
         return position;
     }
 
-    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
+    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos originalPosition, MovementLimitations limitations) {
         Map<String, BlockPos> cache = limitations.canSwim ? this.swimmingTopPositionCache : this.notSwimmingTopPositionCache;
-        String originalPositionKey = ToStringHelper.toString(position);
-        if (cache.get(originalPositionKey) != null) { // TODO maybe not needed
+        String originalPositionKey = ToStringHelper.toString(originalPosition);
+        if (cache.get(originalPositionKey) != null) {
             return cache.get(originalPositionKey);
         }
 
+        BlockPos position = new MyMutableBlockPos(originalPosition);
         if (isSolid(world, position, limitations)) {
             while (isSolid(world, position, limitations)) {
                 position = position.up();
@@ -503,8 +514,9 @@ public class PathBuilder {
             position = position.up();
         }
 
-        cache.put(originalPositionKey, position);
-        return position;
+        BlockPos finishedPosition = position.toImmutable();
+        cache.put(originalPositionKey, finishedPosition);
+        return finishedPosition;
     }
 
     protected boolean canWalkFromTo(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
@@ -591,10 +603,6 @@ public class PathBuilder {
     }
 
     protected boolean samePatternOfBlocks(IWorldReader world, List<List<BlockPos>> blocksToCheck, MovementLimitations limitations) {
-        if (blocksToCheck.size() == 0) {
-            return false;
-        }
-
         List<List<Boolean>> checked = Lists.newArrayList();
         for (List<BlockPos> xBlockToCheck : blocksToCheck) {
             List<Boolean> xChecked = Lists.newArrayList();
