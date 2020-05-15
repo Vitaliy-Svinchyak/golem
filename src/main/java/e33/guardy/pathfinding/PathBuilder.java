@@ -13,9 +13,11 @@ import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IWorldReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -138,7 +140,6 @@ public class PathBuilder {
 
         int maxEnemiesOnPoint = 0;
         while (maxEnemiesOnPoint < enemiesCount) {
-            LOGGER.debug(maxEnemiesOnPoint);
             Path path = this.buildPathWithMaxEnemiesOnPoint(maxEnemiesOnPoint, limitations);
 
             if (path != null) {
@@ -251,7 +252,6 @@ public class PathBuilder {
     }
 
     protected Path createPathFromTree(TreeLeaf leaf) {
-        LOGGER.info("Yeah boy, that's Path!");
         List<PathPoint> pathPoints = Lists.newArrayList();
         BlockPos target = leaf.getBlockPos();
 
@@ -376,8 +376,8 @@ public class PathBuilder {
             return true;
         }
 
-        BlockPos toCheckWall = getTopPosition(world, newPosition.getX(), previousPosition.getY(), previousPosition.getZ(), limitations);
-        BlockPos toCheckWall2 = getTopPosition(world, previousPosition.getX(), previousPosition.getY(), newPosition.getZ(), limitations);
+        BlockPos toCheckWall = this.getTopPosition(world, newPosition.getX(), previousPosition.getY(), previousPosition.getZ(), limitations);
+        BlockPos toCheckWall2 = this.getTopPosition(world, previousPosition.getX(), previousPosition.getY(), newPosition.getZ(), limitations);
 
         boolean noWallOnWay = toCheckWall.getY() - previousPosition.getY() <= limitations.jumHeight && toCheckWall2.getY() - previousPosition.getY() <= limitations.jumHeight;
         if (noWallOnWay) {
@@ -427,12 +427,11 @@ public class PathBuilder {
     }
 
     protected boolean canWalkFromTo(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
-        if (!this.fitsIn(world, start, end, limitations)) {
+        if (!this.fitsIn(world, end, limitations)) {
             return false;
         }
 
-        BlockState state = world.getBlockState(end);
-        Block block = state.getBlock();
+        Block block =  world.getBlockState(end).getBlock();
         IFluidState fluidState = world.getFluidState(end);
         if (
                 (!limitations.canSwim && fluidState.isTagged(FluidTags.WATER) && world.getFluidState(end.up()).isTagged(FluidTags.WATER))
@@ -440,40 +439,40 @@ public class PathBuilder {
             return false;
         }
 
-        float startY = start.getY();
-        float endY = end.getY();
+        double startY = start.getY();
+        double endY = end.getY();
 
-        if (world.getBlockState(start.down()).getBlock() instanceof SnowBlock) {
-            startY -= 1;
-            startY += world.getBlockState(start.down()).get(SnowBlock.LAYERS) * (1F / 7F);
+        BlockPos start2 = start.down();
+        BlockState startState = world.getBlockState(start2);
+        VoxelShape startShape = startState.getShape(world, start2);
+        if (!startShape.isEmpty()) {
+            startY = startY - 1 + startShape.getEnd(Direction.Axis.Y);
         }
 
-        if (this.isFence(world, start.down())) {
-            startY += 0.5F;
+        BlockPos end2 = end.down();
+        BlockState endState = world.getBlockState(end2);
+        VoxelShape endShape = endState.getShape(world, end2);
+        if (!endShape.isEmpty()) {
+            endY = endY - 1 + endShape.getEnd(Direction.Axis.Y);
         }
 
-        if (this.isFence(world, end.down())) {
-            endY += 0.5F;
-        }
-
-        float diffInHeight = startY - endY;
+        double diffInHeight = startY - endY;
 
         if (start.getY() > end.getY()) {
-            return diffInHeight <= limitations.maxFallHeight && this.fitsIn(world, start, new BlockPos(end.getX(), start.getY(), end.getZ()), limitations);
+            return diffInHeight <= limitations.maxFallHeight && this.fitsIn(world, new BlockPos(end.getX(), start.getY(), end.getZ()), limitations);
         } else if (start.getY() < end.getY()) {
-            return Math.abs(diffInHeight) <= limitations.jumHeight && this.fitsIn(world, start, new BlockPos(start.getX(), end.getY(), start.getZ()), limitations);
+            return Math.abs(diffInHeight) <= limitations.jumHeight && this.fitsIn(world, new BlockPos(start.getX(), end.getY(), start.getZ()), limitations);
         }
 
         return true;
     }
 
-    protected boolean fitsIn(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
+    protected boolean fitsIn(IWorldReader world, BlockPos end, MovementLimitations limitations) {
         float x = end.getX() + 0.5F;
         int y = end.getY();
         float z = end.getZ() + 0.5F;
 
         boolean canStandOnPosition = this.canStandOn(world, end, limitations);
-
         if (canStandOnPosition && limitations.modelWidth > 1) {
             List<List<BlockPos>> blocksToCheck = this.mapAllBlocksBetweenTwoPoints(limitations, x, y, z);
             if (!this.samePatternOfBlocks(world, blocksToCheck, limitations)) {
@@ -484,16 +483,16 @@ public class PathBuilder {
         return canStandOnPosition;
     }
 
-    protected boolean canStandOn(IWorldReader world, BlockPos block, MovementLimitations limitations) {
-        String cacheKey = ToStringHelper.toString(block);
-        int maxHeightToCheck = (int) Math.ceil(block.getY() + limitations.modelHeight);
-        if (this.canStandOnCache.get(cacheKey) != null && this.canStandOnCache.get(cacheKey) >= maxHeightToCheck) {
+    protected boolean canStandOn(IWorldReader world, BlockPos position, MovementLimitations limitations) {
+        String cacheKey = ToStringHelper.toString(position);
+        int maxHeightToCheck = (int) Math.ceil(position.getY() + limitations.modelHeight);
+        if (this.canStandOnCache.get(cacheKey) != null && this.canStandOnCache.get(cacheKey) >= maxHeightToCheck) { // todo optimize to not recache if it was not high because of block
             return true;
         }
 
-        for (int y = block.getY(); y <= maxHeightToCheck; y++) {
-            if (this.isSolid(world, block, limitations)) {
-                this.canStandOnCache.put(cacheKey, y);
+        for (int y = position.getY(); y < maxHeightToCheck; y++) {
+            if (this.isSolid(world, new BlockPos(position.getX(), y, position.getZ()), limitations)) {
+                this.canStandOnCache.put(cacheKey, y - 1);
                 return false;
             }
         }
@@ -567,7 +566,16 @@ public class PathBuilder {
         }
 
         Block block = state.getBlock();
-        if (block instanceof LeavesBlock || block == Blocks.LILY_PAD) {
+        if (block instanceof LeavesBlock
+                || block == Blocks.LILY_PAD
+                || block instanceof GlassBlock
+                || block instanceof BedBlock
+                || block instanceof ShulkerBoxBlock
+                || block instanceof HopperBlock
+                || block instanceof TrapDoorBlock
+                || block instanceof FlowerPotBlock
+                || block instanceof LanternBlock
+        ) {
             return true;
         }
 

@@ -12,6 +12,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.goal.RandomWalkingGoal;
 import net.minecraft.entity.monster.SpiderEntity;
+import net.minecraft.pathfinding.Path;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
@@ -74,7 +75,8 @@ public class AvoidingDangerGoal extends RandomWalkingGoal {
     protected void createPath() {
         TimeMeter.moduleStart(TimeMeter.MODULE_PATH_BUILDING);
         this.world.getProfiler().startSection("pathfind_my");
-        this.creature.getNavigator().setPath(this.pathBuilder.getPath(this.getNearestEnemies(25)), this.speed);
+        Path path = this.pathBuilder.getPath(this.getNearestEnemies(25));
+//        this.creature.getNavigator().setPath(path, this.speed);
         this.world.getProfiler().endSection();
         TimeMeter.moduleEnd(TimeMeter.MODULE_PATH_BUILDING);
     }

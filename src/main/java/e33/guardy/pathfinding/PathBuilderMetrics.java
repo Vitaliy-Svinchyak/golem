@@ -106,17 +106,17 @@ public class PathBuilderMetrics extends PathBuilder {
         return r;
     }
 
-    protected boolean fitsIn(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
+    protected boolean fitsIn(IWorldReader world, BlockPos end, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "fitsIn");
-        boolean r = super.fitsIn(world, start, end, limitations);
+        boolean r = super.fitsIn(world, end, limitations);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "fitsIn");
 
         return r;
     }
 
-    protected boolean canStandOn(IWorldReader world, BlockPos block, MovementLimitations limitations) {
+    protected boolean canStandOn(IWorldReader world, BlockPos position, MovementLimitations limitations) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "canStandOn");
-        boolean r = super.canStandOn(world, block, limitations);
+        boolean r = super.canStandOn(world, position, limitations);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "canStandOn");
 
         return r;

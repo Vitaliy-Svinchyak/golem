@@ -4,11 +4,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.platform.GlStateManager;
 import e33.guardy.entity.ShootyEntity;
+import net.minecraft.block.BedBlock;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
@@ -124,13 +127,15 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
                 color = Color.PATH_GREEN;
             }
 
-            if (color != Color.SHOOTY && color != Color.ROUTE_VIOLET) {
-                this.renderBlockWithColorAndNumber(point, color, text, 1F, x, y, z);
-            }
+//            if (color != Color.SHOOTY && color != Color.ROUTE_VIOLET) {
+            this.renderBlockWithColorAndNumber(point, color, text, 1F, x, y, z);
+//            }
         }
     }
 
     private void renderBlockWithColorAndNumber(BlockPos block, Color color, String text, float alpha, double x, double y, double z) {
+        BlockState state = this.minecraft.world.getBlockState(block.down());
+        double topY = block.getY() - 1 + state.getShape(this.minecraft.world, block).getEnd(Direction.Axis.Y);
         DebugRenderer.func_217730_a(
                 (
                         new AxisAlignedBB(
@@ -138,7 +143,7 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
                                 block.getY() - 1.01,
                                 block.getZ() + 0.01,
                                 block.getX() + 0.99,
-                                block.getY() + 0.01,
+                                topY + 0.01,
                                 block.getZ() + 0.99
                         )
                 ).offset(-x, -y, -z),
@@ -151,7 +156,7 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
         DebugRenderer.func_217732_a(
                 "." + text + ".",
                 (double) block.getX() + 0.5D,
-                (double) block.getY() + 0.35D,
+                (double) topY + 0.35D,
                 (double) block.getZ() + 0.5D,
                 -1
         );
