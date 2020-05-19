@@ -7,11 +7,21 @@ import e33.guardy.debug.DangerousZoneDebugRenderer;
 import e33.guardy.debug.PathFindingDebugRenderer;
 import e33.guardy.entity.BulletEntity;
 import e33.guardy.entity.ShootyEntity;
+import e33.guardy.init.EntityRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 
+import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.gen.feature.structure.MineshaftStructure;
+import net.minecraft.world.gen.feature.structure.StructureStart;
+import net.minecraft.world.gen.feature.structure.VillageStructure;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.BusBuilder;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -56,4 +66,36 @@ public class E33 {
             E33.PATH_FINDING_DEBUG_RENDERER.render(50);
         }
     }
+
+    @SubscribeEvent
+    public void spawnShooty(LivingDamageEvent event) {
+        BlockPos pos = event.getEntity().getPosition();
+        IChunk chunk = event.getEntity().world.getChunk(pos);
+        if (event.getEntity() instanceof AbstractVillagerEntity) {
+            this.spawnShootyInChunk(chunk, pos);
+        }
+    }
+
+    public void spawnShootyInChunk(IChunk chunk, BlockPos entityPos) {
+        ChunkPos chunkPos = chunk.getPos();
+
+        boolean shootyExists = chunk.getWorldForge().getEntitiesWithinAABB(
+                ShootyEntity.class,
+                new AxisAlignedBB(chunkPos.getXStart() - 50, 0, chunkPos.getZStart() - 50, chunkPos.getXEnd() + 50, 255, chunkPos.getZEnd() + 50)
+        ).size() > 0;
+
+        if (shootyExists) {
+            return;
+        }
+
+        for (StructureStart str : chunk.getStructureStarts().values()) {
+            if (str.getStructure() instanceof VillageStructure || str.getStructure() instanceof MineshaftStructure) {
+                ShootyEntity shooty = new ShootyEntity(EntityRegistry.SHOOTY, Minecraft.getInstance().world);
+                shooty.setPosition(entityPos.getX(), entityPos.getY(), entityPos.getZ());
+                chunk.getWorldForge().addEntity(shooty);
+                return;
+            }
+        }
+    }
+
 }

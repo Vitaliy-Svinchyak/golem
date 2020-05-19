@@ -45,7 +45,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
 
     @Override
     public void tick() {
-        this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
+        this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();// TODO not every tick
         super.tick();
     }
 
@@ -128,6 +128,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     public ILivingEntityData onInitialSpawn(IWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
         spawnDataIn = super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
 
+        LOGGER.info("spawned!");
 //        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(ItemRegistry.stickItem));
         return spawnDataIn;
     }
