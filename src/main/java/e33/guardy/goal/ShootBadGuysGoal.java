@@ -10,8 +10,6 @@ import e33.guardy.event.ShotEvent;
 import e33.guardy.fight.ShootExpectations;
 import e33.guardy.fight.ShootingNavigator;
 import e33.guardy.init.SoundsRegistry;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.goal.Goal;
@@ -83,7 +81,7 @@ public class ShootBadGuysGoal extends Goal {
 
         LivingEntity attackTarget = this.entity.getAttackTarget();
 
-        if (!this.entity.avoidPeacefulCreaturesGoal.bulletPathIsClear(attackTarget)) {
+        if (!this.entity.avoidPeacefulCreaturesHelper.bulletPathIsClear(attackTarget)) {
             LOGGER.error("I can't!!!!!!");
             this.entity.setAttackTarget(null);
             return;

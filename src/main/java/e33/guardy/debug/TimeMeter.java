@@ -23,7 +23,7 @@ public class TimeMeter {
     public static void moduleEnd(String moduleName) {
         end(moduleName, moduleName);
         List<FunctionCall> calls = new ArrayList<>(measuring.get(moduleName).values());
-        calls.sort(((c1, c2) -> (int) c2.totalDuration.minus(c1.totalDuration).toNanos()));
+//        calls.sort(((c1, c2) -> (int) c2.totalDuration.minus(c1.totalDuration).toNanos()));
 
         int maxFunctionNameLength = "name".length();
         int maxDurationLength = "duration".length();

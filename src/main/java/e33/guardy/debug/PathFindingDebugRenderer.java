@@ -25,7 +25,6 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
     final static Logger LOGGER = LogManager.getLogger();
     private final static List<ShootyEntity> entities = Lists.newArrayList();
     private static List<ShootyEntity> entitiesToAdd = Lists.newArrayList();
-    private final static Map<UUID, List<Float>> colors = Maps.newHashMap();
     private final Minecraft minecraft;
 
     public PathFindingDebugRenderer(Minecraft minecraft) {
@@ -128,12 +127,12 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
             }
 
 //            if (color != Color.SHOOTY && color != Color.ROUTE_VIOLET) {
-            this.renderBlockWithColorAndNumber(point, color, text, 1F, x, y, z);
+            this.renderBlockWithColorAndNumber(point, color, text, x, y, z);
 //            }
         }
     }
 
-    private void renderBlockWithColorAndNumber(BlockPos block, Color color, String text, float alpha, double x, double y, double z) {
+    private void renderBlockWithColorAndNumber(BlockPos block, Color color, String text, double x, double y, double z) {
         BlockState state = this.minecraft.world.getBlockState(block.down());
         double topY = block.getY() - 1 + state.getShape(this.minecraft.world, block).getEnd(Direction.Axis.Y);
         DebugRenderer.func_217730_a(
@@ -150,7 +149,7 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
                 color.red,
                 color.green,
                 color.blue,
-                alpha
+                color.alpha
         );
 
         DebugRenderer.func_217732_a(

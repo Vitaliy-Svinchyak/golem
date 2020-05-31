@@ -36,7 +36,7 @@ abstract public class AbstractPriorityAttackGoal extends TargetGoal {
         // TODO 2 custom canSee to check not only eyes to eyes. But eyes to legs/arms too. But only if first check returns 0 enemies in district
         ShootyEntity goalOwner = (ShootyEntity) this.goalOwner;
         // func_213344_a - canTarget
-        return this.goalOwner.func_213344_a(mob, this.entityPredicate) && ShootExpectations.shouldAttack(mob, this.goalOwner) && goalOwner.avoidPeacefulCreaturesGoal.bulletPathIsClear(mob);
+        return this.goalOwner.func_213344_a(mob, this.entityPredicate) && ShootExpectations.shouldAttack(mob, this.goalOwner) && goalOwner.avoidPeacefulCreaturesHelper.bulletPathIsClear(mob);
     }
 
     AxisAlignedBB getTargetableArea(double distance) {

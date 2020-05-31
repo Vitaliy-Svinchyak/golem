@@ -10,7 +10,7 @@ import e33.guardy.event.NoActionEvent;
 import e33.guardy.pathfinding.PathBuilder;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.goal.RandomWalkingGoal;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.monster.SpiderEntity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.EntityPredicates;
@@ -18,27 +18,23 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AvoidingDangerGoal extends RandomWalkingGoal {
+public class AvoidingDangerGoal extends Goal {
     private World world;
     private PathBuilder pathBuilder;
     private ShootyEntity shooty;
 
     private final static Logger LOGGER = LogManager.getLogger();
 
-    public AvoidingDangerGoal(ShootyEntity creatureIn, double speedIn) {
-        super(creatureIn, speedIn, 1);
-
+    public AvoidingDangerGoal(ShootyEntity creatureIn) {
         this.shooty = creatureIn;
-        this.world = this.creature.getEntityWorld();
+        this.world = this.shooty.getEntityWorld();
     }
 
     public boolean shouldExecute() {
-        if (this.creature.isBeingRidden()) {
+        if (this.shooty.isBeingRidden()) {
             return false;
         }
 
@@ -46,26 +42,18 @@ public class AvoidingDangerGoal extends RandomWalkingGoal {
     }
 
     protected List<MobEntity> getNearestEnemies(int range) {
-        return this.world.getEntitiesWithinAABB(SpiderEntity.class, this.creature.getBoundingBox().grow(range), EntityPredicates.NOT_SPECTATING)
+        return this.world.getEntitiesWithinAABB(SpiderEntity.class, this.shooty.getBoundingBox().grow(range), EntityPredicates.NOT_SPECTATING)
                 .stream().filter(LivingEntity::isAlive).collect(Collectors.toList());
     }
 
     protected boolean enemiesAreTooClose() {
-        List<MobEntity> enemies = this.getNearestEnemies(8);
-
-        for (MobEntity enemy : enemies) {
-            if (this.creature.getDistanceSq(enemy) <= 50F) {
-                return true;
-            }
-        }
-
-        return false;
+        return this.getNearestEnemies(8).size() > 0;
     }
 
     public boolean shouldContinueExecuting() {
         boolean continueExecuting = this.enemiesAreTooClose();
 
-        if (continueExecuting && this.creature.getNavigator().noPath()) {
+        if (continueExecuting && this.shooty.getNavigator().noPath()) {
             this.createPath();
         }
 
@@ -96,18 +84,18 @@ public class AvoidingDangerGoal extends RandomWalkingGoal {
 
     public void resetTask() {
         this.stop();
-        this.creature.getNavigator().clearPath();
+        this.shooty.getNavigator().clearPath();
     }
 
     private void move() {
         LOGGER.info("move");
-        E33.internalEventBus.post(new MoveEvent(this.creature));
+        E33.internalEventBus.post(new MoveEvent(this.shooty));
     }
 
     private void stop() {
         LOGGER.info("stop");
-        if (AnimationStateListener.getAnimationState(this.creature) == AnimationState.MOVE) {
-            E33.internalEventBus.post(new NoActionEvent(this.creature));
+        if (AnimationStateListener.getAnimationState(this.shooty) == AnimationState.MOVE) {
+            E33.internalEventBus.post(new NoActionEvent(this.shooty));
         }
     }
 }

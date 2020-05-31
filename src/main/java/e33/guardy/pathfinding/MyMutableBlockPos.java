@@ -8,7 +8,7 @@ public class MyMutableBlockPos extends BlockPos.MutableBlockPos {
         super(pos);
     }
 
-    MyMutableBlockPos(int x, int y, int z) {
+    public MyMutableBlockPos(int x, int y, int z) {
         super(x, y, z);
     }
 

@@ -1,6 +1,7 @@
 package e33.guardy.util;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 
 public class ToStringHelper {
     public static String toString(BlockPos pos) {
@@ -11,16 +12,7 @@ public class ToStringHelper {
         return x + "," + y + "," + z;
     }
 
-    public static int toInt(int x, int y, int z) {
-        return toString(x, y, z).hashCode();
-    }
-
-    public static int toInt(BlockPos pos) {
-        return toString(pos).hashCode();
-    }
-
-    static final int hash(Object key) {
-        int h;
-        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    public static String toString(ChunkPos pos) {
+        return pos.x + "," + pos.z;
     }
 }

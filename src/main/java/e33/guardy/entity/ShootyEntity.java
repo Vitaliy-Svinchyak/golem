@@ -1,8 +1,9 @@
 package e33.guardy.entity;
 
 import e33.guardy.debug.PathFindingDebugRenderer;
+import e33.guardy.debug.PatrolRouteDebugRenderer;
 import e33.guardy.goal.attack.AvoidPeacefulCreaturesHelper;
-import e33.guardy.goal.move.AvoidingDangerGoal;
+import e33.guardy.goal.move.PatrolVillageGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.DangerousZoneAvoidanceNavigator;
 import e33.guardy.pathfinding.PathBuilder;
@@ -31,7 +32,8 @@ import javax.annotation.Nullable;
 public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordinates {
 
     public final PathBuilder pathBuilder;
-    public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesHelper(this);
+    public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesHelper = new AvoidPeacefulCreaturesHelper(this);
+    public PatrolVillageGoal patrolVillageGoal;
 
     public ShootyEntity(EntityType<? extends ShootyEntity> shooty, World world) {
         super(shooty, world);
@@ -40,12 +42,13 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
 
         this.pathBuilder = new PathBuilderMetrics(this);
         PathFindingDebugRenderer.addEntity(this);
+        PatrolRouteDebugRenderer.addEntity(this);
         this.setPathPriority(PathNodeType.WATER, -1.0F);
     }
 
     @Override
     public void tick() {
-        this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();// TODO not every tick
+        this.avoidPeacefulCreaturesHelper.findPeacefulCreatures();// TODO not every tick
         super.tick();
     }
 
@@ -61,9 +64,11 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
 
     @Override
     protected void registerGoals() {
+        this.patrolVillageGoal = new PatrolVillageGoal(this);
         // TODO 2 custom priority queue
 //        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
-        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this, 0.5F));
+//        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this, 0.5F));
+        this.goalSelector.addGoal(1, this.patrolVillageGoal);
 //        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
 //        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
 //        this.goalSelector.addGoal(2, lookGoal);
