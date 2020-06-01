@@ -1,34 +1,24 @@
 package e33.guardy.debug;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.mojang.blaze3d.platform.GlStateManager;
 import e33.guardy.entity.ShootyEntity;
-import e33.guardy.pathfinding.MyMutableBlockPos;
-import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.debug.DebugRenderer;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.IWorldReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Map;
 
 public class PatrolRouteDebugRenderer implements DebugRenderer.IDebugRenderer {
     final static Logger LOGGER = LogManager.getLogger();
     private final static List<ShootyEntity> entities = Lists.newArrayList();
     private static List<ShootyEntity> entitiesToAdd = Lists.newArrayList();
-    private Map<String, Integer> topPositionCache = Maps.newHashMap();
-    private Map<String, Boolean> allBlocks = Maps.newHashMap();
     private final Minecraft minecraft;
 
     public PatrolRouteDebugRenderer(Minecraft minecraft) {
@@ -63,7 +53,6 @@ public class PatrolRouteDebugRenderer implements DebugRenderer.IDebugRenderer {
         GlStateManager.lineWidth(6.0F);
 
         List<ShootyEntity> entitiesToRemove = Lists.newArrayList();
-        allBlocks = Maps.newHashMap();
 
         for (ShootyEntity entity : entities) {
             if (entity.isAlive()) {
@@ -122,55 +111,5 @@ public class PatrolRouteDebugRenderer implements DebugRenderer.IDebugRenderer {
 
     private ActiveRenderInfo getActiveRenderInfo() {
         return this.minecraft.gameRenderer.getActiveRenderInfo();
-    }
-
-    protected int getTopPosition(IWorldReader world, int x, int y, int z) {
-        String cacheKey = ToStringHelper.toString(x, y, z);
-        if (this.topPositionCache.get(cacheKey) != null) {
-            return this.topPositionCache.get(cacheKey);
-        }
-        BlockPos position = new MyMutableBlockPos(x, y, z);
-
-        if (isSolid(world, position)) {
-            while (isSolid(world, position)) {
-                position = position.up();
-            }
-        } else {
-            while (!isSolid(world, position)) {
-                position = position.down();
-            }
-            position = position.up();
-        }
-
-        this.topPositionCache.put(cacheKey, position.getY());
-
-        return position.getY();
-    }
-
-    protected boolean isSolid(IWorldReader world, @Nonnull BlockPos position) {
-        BlockState state = world.getBlockState(position);
-        if (state.isAir(world, position)) {
-            return false;
-        }
-
-        if (world.getFluidState(position).isTagged(FluidTags.WATER)) {
-            return true;
-        }
-
-        Block block = state.getBlock();
-        if (block instanceof LeavesBlock
-                || block == Blocks.LILY_PAD
-                || block instanceof GlassBlock
-                || block instanceof BedBlock
-                || block instanceof ShulkerBoxBlock
-                || block instanceof HopperBlock
-                || block instanceof TrapDoorBlock
-                || block instanceof FlowerPotBlock
-                || block instanceof LanternBlock
-        ) {
-            return true;
-        }
-
-        return state.isSolid();
     }
 }

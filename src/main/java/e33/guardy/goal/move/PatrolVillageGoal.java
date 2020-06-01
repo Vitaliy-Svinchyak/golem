@@ -15,7 +15,6 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.GlobalPos;
-import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PatrolVillageGoal extends Goal {
     final static Logger LOGGER = LogManager.getLogger();
@@ -58,7 +58,7 @@ public class PatrolVillageGoal extends Goal {
 
     protected List<BlockPos> getPatrolPoints() {
         List<VillagerEntity> villagers = this.world.getEntitiesWithinAABB(VillagerEntity.class, this.shooty.getBoundingBox().grow(150));
-        Map<String, Boolean> usedPoses = Maps.newHashMap();
+        Map<String, Boolean> usedChunkPoses = Maps.newHashMap();
 
         if (villagers.size() == 0) {
             return Lists.newArrayList();
@@ -72,15 +72,15 @@ public class PatrolVillageGoal extends Goal {
             for (BlockPos memoryPosition : memoryPoints) {
                 ChunkPos chunkPosition = this.world.getChunkAt(memoryPosition).getPos();
 
-                if (usedPoses.get(ToStringHelper.toString(chunkPosition)) == null) {
-                    usedPoses.put(ToStringHelper.toString(chunkPosition), true);
+                if (usedChunkPoses.get(ToStringHelper.toString(chunkPosition)) == null) {
+                    usedChunkPoses.put(ToStringHelper.toString(chunkPosition), true);
                     chunks.add(chunkPosition);
                 }
             }
         }
 
-        List<ChunkPos> roundedChunks = this.roundChunkPositions(chunks, usedPoses);
-        List<ChunkPos> roundedChunks2 = this.roundChunkPositions(roundedChunks, usedPoses);
+        List<ChunkPos> roundedChunks = this.roundChunkPositions(chunks, usedChunkPoses);
+        List<ChunkPos> roundedChunks2 = this.roundChunkPositions(roundedChunks, usedChunkPoses);
 
         return this.createPoints(roundedChunks2);
     }
@@ -111,6 +111,34 @@ public class PatrolVillageGoal extends Goal {
             }
         }
 
+        int maxX = angularPoints.get(0).getX();
+        int minX = angularPoints.get(0).getX();
+        int maxZ = angularPoints.get(0).getZ();
+        int minZ = angularPoints.get(0).getZ();
+        for (BlockPos pos : angularPoints) {
+            if (pos.getX() > maxX) {
+                maxX = pos.getX();
+            }
+            if (pos.getX() < minX) {
+                minX = pos.getX();
+            }
+
+            if (pos.getZ() > maxZ) {
+                maxZ = pos.getZ();
+            }
+            if (pos.getZ() < minZ) {
+                minZ = pos.getZ();
+            }
+        }
+
+        int finalMinX = minX;
+        int finalMaxX = maxX;
+        int finalMinZ = minZ;
+        int finalMaxZ = maxZ;
+        angularPoints = angularPoints.stream()
+                .filter(pos -> pos.getX() == finalMinX || pos.getX() == finalMaxX || pos.getZ() == finalMinZ || pos.getZ() == finalMaxZ)
+                .collect(Collectors.toList());
+
         return angularPoints;
     }
 
@@ -132,12 +160,8 @@ public class PatrolVillageGoal extends Goal {
                     boolean validZ = allBlocks.get(ToStringHelper.toString(x, 0, z + 1)) == null || allBlocks.get(ToStringHelper.toString(x, 0, z - 1)) == null;
 
                     if (validX || validZ) {
-                        int y = this.getTopPosition(this.world, x, this.shooty.getPosition().getY(), z);
-
-                        if (allBlocks.get(ToStringHelper.toString(x, y, z)) == null) {
-                            patrolPoints.add(new BlockPos(x, y, z));
-                            allBlocks.put(ToStringHelper.toString(x, y, z), true);
-                        }
+                        int y = this.getTopPosition(x, this.shooty.getPosition().getY(), z);
+                        patrolPoints.add(new BlockPos(x, y, z));
                     }
                 }
             }
@@ -180,17 +204,24 @@ public class PatrolVillageGoal extends Goal {
 
     private List<BlockPos> getNeighbors(BlockPos point, Map<String, Boolean> usedPoses) {
         List<BlockPos> neighbors = Lists.newArrayList();
-        if (usedPoses.get(ToStringHelper.toString(point.north())) != null) {
-            neighbors.add(point.north());
+        if (usedPoses.get(ToStringHelper.toString(point.getX(), 0, point.getZ() + 1)) != null) {
+            int y = this.getTopPosition(point.getX(), this.shooty.getPosition().getY(), point.getZ() + 1);
+            neighbors.add(new BlockPos(point.getX(), y, point.getZ() + 1));
         }
-        if (usedPoses.get(ToStringHelper.toString(point.south())) != null) {
-            neighbors.add(point.south());
+
+        if (usedPoses.get(ToStringHelper.toString(point.getX(), 0, point.getZ() - 1)) != null) {
+            int y = this.getTopPosition(point.getX(), this.shooty.getPosition().getY(), point.getZ() - 1);
+            neighbors.add(new BlockPos(point.getX(), y, point.getZ() - 1));
         }
-        if (usedPoses.get(ToStringHelper.toString(point.west())) != null) {
-            neighbors.add(point.west());
+
+        if (usedPoses.get(ToStringHelper.toString(point.getX() + 1, 0, point.getZ())) != null) {
+            int y = this.getTopPosition(point.getX() + 1, this.shooty.getPosition().getY(), point.getZ());
+            neighbors.add(new BlockPos(point.getX() + 1, y, point.getZ()));
         }
-        if (usedPoses.get(ToStringHelper.toString(point.east())) != null) {
-            neighbors.add(point.east());
+
+        if (usedPoses.get(ToStringHelper.toString(point.getX() - 1, 0, point.getZ())) != null) {
+            int y = this.getTopPosition(point.getX() - 1, this.shooty.getPosition().getY(), point.getZ());
+            neighbors.add(new BlockPos(point.getX() - 1, y, point.getZ()));
         }
 
         return neighbors;
@@ -230,19 +261,19 @@ public class PatrolVillageGoal extends Goal {
         return knownPositions;
     }
 
-    private int getTopPosition(IWorldReader world, int x, int y, int z) {
+    private int getTopPosition(int x, int y, int z) {
         String cacheKey = ToStringHelper.toString(x, y, z);
         if (this.topPositionCache.get(cacheKey) != null) {
             return this.topPositionCache.get(cacheKey);
         }
         BlockPos position = new MyMutableBlockPos(x, y, z);
 
-        if (isSolid(world, position)) {
-            while (isSolid(world, position)) {
+        if (isSolid(position)) {
+            while (isSolid(position)) {
                 position = position.up();
             }
         } else {
-            while (!isSolid(world, position)) {
+            while (!isSolid(position)) {
                 position = position.down();
             }
             position = position.up();
@@ -253,13 +284,13 @@ public class PatrolVillageGoal extends Goal {
         return position.getY();
     }
 
-    private boolean isSolid(IWorldReader world, @Nonnull BlockPos position) {
-        BlockState state = world.getBlockState(position);
-        if (state.isAir(world, position)) {
+    private boolean isSolid(@Nonnull BlockPos position) {
+        BlockState state = this.world.getBlockState(position);
+        if (state.isAir(this.world, position)) {
             return false;
         }
 
-        if (world.getFluidState(position).isTagged(FluidTags.WATER)) {
+        if (this.world.getFluidState(position).isTagged(FluidTags.WATER)) {
             return true;
         }
 
