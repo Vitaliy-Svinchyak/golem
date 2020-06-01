@@ -68,7 +68,7 @@ public class PatrolRouteDebugRenderer implements DebugRenderer.IDebugRenderer {
         for (ShootyEntity entity : entities) {
             if (entity.isAlive()) {
                 if (entity.patrolVillageGoal != null && entity.patrolVillageGoal.patrolPoints != null) {
-                    this.renderRoutes(entity.patrolVillageGoal.patrolPoints, entity.getPosition().getY());
+                    this.renderRoutes(entity.patrolVillageGoal.patrolPoints, entity.patrolVillageGoal.angularPoints);
                 }
             } else {
                 entitiesToRemove.add(entity);
@@ -83,7 +83,7 @@ public class PatrolRouteDebugRenderer implements DebugRenderer.IDebugRenderer {
         GlStateManager.popMatrix();
     }
 
-    private void renderRoutes(List<BlockPos> patrolPoints, int startY) {
+    private void renderRoutes(List<BlockPos> patrolPoints, List<BlockPos> angularPoints) {
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double offsetX = activeRenderInfo.getProjectedView().x;
         double offsetY = activeRenderInfo.getProjectedView().y;
@@ -91,6 +91,10 @@ public class PatrolRouteDebugRenderer implements DebugRenderer.IDebugRenderer {
 
         for (BlockPos pos : patrolPoints) {
             this.renderBlockWithColorAndNumber(pos, Color.VILLAGE_BLACK, offsetX, offsetY, offsetZ);
+        }
+
+        for (BlockPos pos : angularPoints) {
+            this.renderBlockWithColorAndNumber(pos, Color.VILLAGE_RED, offsetX, offsetY, offsetZ);
         }
     }
 

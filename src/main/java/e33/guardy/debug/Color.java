@@ -7,6 +7,7 @@ import java.util.List;
 public enum Color {
     SHOOTY(0.02F, 0.49F, 0.63F, 1F),
     VILLAGE_BLACK(0F, 0F, 0F, 1F),
+    VILLAGE_RED(0.81F, 0.09F, 0.21F, 1F),
     SAFE_GREEN(0F, 0.45F, 0.35F, 1F),
     PATH_GREEN(0F, 1F, 0F, 1F),
     ROUTE_VIOLET(0.53F, 0.01F, 0.94F, 1F),

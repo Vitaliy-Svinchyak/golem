@@ -31,6 +31,8 @@ public class PatrolVillageGoal extends Goal {
     private ShootyEntity shooty;
     private Map<String, Integer> topPositionCache = Maps.newHashMap();
     public List<BlockPos> patrolPoints = null;
+    public List<BlockPos> angularPoints = null;
+    private static Map<String, Boolean> allBlocks = Maps.newHashMap();
 
     public PatrolVillageGoal(ShootyEntity creatureIn) {
         this.shooty = creatureIn;
@@ -84,14 +86,35 @@ public class PatrolVillageGoal extends Goal {
     }
 
     private List<BlockPos> createPoints(List<ChunkPos> villageChunks) {
-        Map<String, Boolean> allBlocks = Maps.newHashMap();
         List<BlockPos> patrolPoints = this.createPatrolPoints(villageChunks);
+        angularPoints = this.createAngularPoints(patrolPoints);
+
+        for (BlockPos pos : angularPoints) {
+            patrolPoints.remove(pos);
+        }
 
         return patrolPoints;
     }
 
+    private List<BlockPos> createAngularPoints(List<BlockPos> patrolPoints) {
+        List<BlockPos> angularPoints = Lists.newArrayList();
+
+        for (BlockPos pos : patrolPoints) {
+            List<BlockPos> neighbors = this.getNeighbors(pos, allBlocks);
+            if (neighbors.size() != 2) {
+                continue;
+            }
+
+            boolean neighborsOnOneLine = neighbors.get(0).getX() == neighbors.get(1).getX() || neighbors.get(0).getZ() == neighbors.get(1).getZ();
+            if (!neighborsOnOneLine) {
+                angularPoints.add(pos);
+            }
+        }
+
+        return angularPoints;
+    }
+
     private List<BlockPos> createPatrolPoints(List<ChunkPos> villageChunks) {
-        Map<String, Boolean> allBlocks = Maps.newHashMap();
         List<BlockPos> patrolPoints = Lists.newArrayList();
 
         for (ChunkPos chunkPos : villageChunks) {
@@ -153,6 +176,24 @@ public class PatrolVillageGoal extends Goal {
         }
 
         return neighbors > 1;
+    }
+
+    private List<BlockPos> getNeighbors(BlockPos point, Map<String, Boolean> usedPoses) {
+        List<BlockPos> neighbors = Lists.newArrayList();
+        if (usedPoses.get(ToStringHelper.toString(point.north())) != null) {
+            neighbors.add(point.north());
+        }
+        if (usedPoses.get(ToStringHelper.toString(point.south())) != null) {
+            neighbors.add(point.south());
+        }
+        if (usedPoses.get(ToStringHelper.toString(point.west())) != null) {
+            neighbors.add(point.west());
+        }
+        if (usedPoses.get(ToStringHelper.toString(point.east())) != null) {
+            neighbors.add(point.east());
+        }
+
+        return neighbors;
     }
 
     private List<BlockPos> getVillagerKnownPositionsOfVillage(VillagerEntity villager) {
