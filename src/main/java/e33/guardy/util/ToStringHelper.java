@@ -15,4 +15,8 @@ public class ToStringHelper {
     public static String toString(ChunkPos pos) {
         return pos.x + "," + pos.z;
     }
+
+    public static String toString(int x, int z) {
+        return x + "," + z;
+    }
 }

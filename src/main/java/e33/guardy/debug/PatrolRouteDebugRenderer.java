@@ -67,10 +67,8 @@ public class PatrolRouteDebugRenderer implements DebugRenderer.IDebugRenderer {
 
         for (ShootyEntity entity : entities) {
             if (entity.isAlive()) {
-                if (entity.patrolVillageGoal != null && entity.patrolVillageGoal.villageChunks != null) {
-                    LOGGER.info("renderRoutes");
-                    this.renderRoutes(entity.patrolVillageGoal.villageChunks, entity.getPosition().getY());
-                    LOGGER.info("rendered");
+                if (entity.patrolVillageGoal != null && entity.patrolVillageGoal.patrolPoints != null) {
+                    this.renderRoutes(entity.patrolVillageGoal.patrolPoints, entity.getPosition().getY());
                 }
             } else {
                 entitiesToRemove.add(entity);
@@ -83,41 +81,16 @@ public class PatrolRouteDebugRenderer implements DebugRenderer.IDebugRenderer {
         GlStateManager.enableTexture();
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
-        LOGGER.info("end");
     }
 
-    private void renderRoutes(List<ChunkPos> villageChunks, int startY) {
+    private void renderRoutes(List<BlockPos> patrolPoints, int startY) {
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double offsetX = activeRenderInfo.getProjectedView().x;
         double offsetY = activeRenderInfo.getProjectedView().y;
         double offsetZ = activeRenderInfo.getProjectedView().z;
-        for (ChunkPos chunkPos : villageChunks) {
-            for (int x = chunkPos.getXStart(); x <= chunkPos.getXEnd(); x++) {
-                for (int z = chunkPos.getZStart(); z <= chunkPos.getZEnd(); z++) {
-                    allBlocks.put(ToStringHelper.toString(x, 0, z), true);
-                }
-            }
-        }
 
-        LOGGER.info(villageChunks.size());
-        for (ChunkPos chunkPos : villageChunks) {
-            LOGGER.info("chunk: " + chunkPos.getXStart() + " " + chunkPos.getZStart() + " : " + chunkPos.getXEnd() + " " + chunkPos.getZEnd());
-
-            for (int x = chunkPos.getXStart(); x <= chunkPos.getXEnd(); x++) {
-                for (int z = chunkPos.getZStart(); z <= chunkPos.getZEnd(); z++) {
-                    boolean validX = allBlocks.get(ToStringHelper.toString(x + 1, 0, z)) == null || allBlocks.get(ToStringHelper.toString(x - 1, 0, z)) == null;
-                    boolean validZ = allBlocks.get(ToStringHelper.toString(x, 0, z + 1)) == null || allBlocks.get(ToStringHelper.toString(x, 0, z - 1)) == null;
-
-                    if (validX || validZ) {
-                        int y = this.getTopPosition(this.minecraft.world, x, startY, z);
-
-                        if (allBlocks.get(ToStringHelper.toString(x, y, z)) == null) {
-                            this.renderBlockWithColorAndNumber(new BlockPos(x, y, z), Color.VILLAGE_BLACK, offsetX, offsetY, offsetZ);
-                            allBlocks.put(ToStringHelper.toString(x, y, z), true);
-                        }
-                    }
-                }
-            }
+        for (BlockPos pos : patrolPoints) {
+            this.renderBlockWithColorAndNumber(pos, Color.VILLAGE_BLACK, offsetX, offsetY, offsetZ);
         }
     }
 
