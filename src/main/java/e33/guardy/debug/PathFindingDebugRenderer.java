@@ -1,78 +1,29 @@
 package e33.guardy.debug;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.mojang.blaze3d.platform.GlStateManager;
 import e33.guardy.entity.ShootyEntity;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
-    final static Logger LOGGER = LogManager.getLogger();
-    private final static List<ShootyEntity> entities = Lists.newArrayList();
-    private static List<ShootyEntity> entitiesToAdd = Lists.newArrayList();
-    private final Minecraft minecraft;
+public class PathFindingDebugRenderer extends AbstractDebugRenderer implements DebugRenderer.IDebugRenderer {
 
     public PathFindingDebugRenderer(Minecraft minecraft) {
-        this.minecraft = minecraft;
-    }
-
-    public static void addEntity(ShootyEntity entity) {
-        entitiesToAdd.add(entity);
-    }
-
-    private static void removeEntities(List<ShootyEntity> entitiesToRemove) {
-        entities.removeAll(entitiesToRemove);
-    }
-
-    private static void addNewEntities() {
-        entities.addAll(entitiesToAdd);
-        entitiesToAdd = Lists.newArrayList();
+        super(minecraft);
     }
 
     @Override
-    public void render(long l) {
-        if (entities.size() == 0) {
-            addNewEntities();
-            return;
-        }
-
-        GlStateManager.pushMatrix();
-        GlStateManager.enableBlend();
-        GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        GlStateManager.color4f(0.0F, 1.0F, 0.0F, 0.75F);
-        GlStateManager.disableTexture();
-        GlStateManager.lineWidth(6.0F);
-
-        List<ShootyEntity> entitiesToRemove = Lists.newArrayList();
+    void renderEntities(List<ShootyEntity> entities) {
         for (ShootyEntity entity : entities) {
-            if (entity.isAlive()) {
-                this.renderRoutes(entity.pathBuilder.speedTracker, entity.pathBuilder.safePoints, entity.pathBuilder.currentPath, entity.getUniqueID());
-            } else {
-                entitiesToRemove.add(entity);
-            }
+            this.renderRoutes(entity.pathBuilder.speedTracker, entity.pathBuilder.safePoints, entity.pathBuilder.currentPath, entity.getUniqueID());
         }
-
-        removeEntities(entitiesToRemove);
-        addNewEntities();
-
-        GlStateManager.enableTexture();
-        GlStateManager.disableBlend();
-        GlStateManager.popMatrix();
     }
 
     private void renderRoutes(Map<BlockPos, Map<UUID, Integer>> routes, List<BlockPos> safePoints, Path path, UUID shooty) {
@@ -130,39 +81,6 @@ public class PathFindingDebugRenderer implements DebugRenderer.IDebugRenderer {
             this.renderBlockWithColorAndNumber(point, color, text, x, y, z);
 //            }
         }
-    }
-
-    private void renderBlockWithColorAndNumber(BlockPos block, Color color, String text, double x, double y, double z) {
-        BlockState state = this.minecraft.world.getBlockState(block.down());
-        double topY = block.getY() - 1 + state.getShape(this.minecraft.world, block).getEnd(Direction.Axis.Y);
-        DebugRenderer.func_217730_a(
-                (
-                        new AxisAlignedBB(
-                                block.getX() + 0.01,
-                                block.getY() - 1.01,
-                                block.getZ() + 0.01,
-                                block.getX() + 0.99,
-                                topY + 0.01,
-                                block.getZ() + 0.99
-                        )
-                ).offset(-x, -y, -z),
-                color.red,
-                color.green,
-                color.blue,
-                color.alpha
-        );
-
-        DebugRenderer.func_217732_a(
-                "." + text + ".",
-                (double) block.getX() + 0.5D,
-                (double) topY + 0.35D,
-                (double) block.getZ() + 0.5D,
-                -1
-        );
-    }
-
-    private ActiveRenderInfo getActiveRenderInfo() {
-        return this.minecraft.gameRenderer.getActiveRenderInfo();
     }
 
     @Nonnull

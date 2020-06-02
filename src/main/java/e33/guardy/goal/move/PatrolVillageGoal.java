@@ -139,7 +139,34 @@ public class PatrolVillageGoal extends Goal {
                 .filter(pos -> pos.getX() == finalMinX || pos.getX() == finalMaxX || pos.getZ() == finalMinZ || pos.getZ() == finalMaxZ)
                 .collect(Collectors.toList());
 
-        return angularPoints;
+        return this.sortAngularPoints(angularPoints, maxX, maxZ, minX, minZ);
+    }
+
+    private List<BlockPos> sortAngularPoints(List<BlockPos> angularPoints, int maxX, int maxZ, int minX, int minZ) {
+        List<BlockPos> topRow = angularPoints.stream()
+                .filter(pos -> pos.getX() == maxX)
+                .sorted((pos1, pos2) -> pos1.getZ() - pos2.getZ())
+                .collect(Collectors.toList());
+        List<BlockPos> rightRow = angularPoints.stream()
+                .filter(pos -> pos.getZ() == maxZ)
+                .sorted((pos1, pos2) -> pos2.getX() - pos1.getX())
+                .collect(Collectors.toList());
+        List<BlockPos> bottomRow = angularPoints.stream()
+                .filter(pos -> pos.getX() == minX)
+                .sorted((pos1, pos2) -> pos2.getZ() - pos1.getZ())
+                .collect(Collectors.toList());
+        List<BlockPos> leftRow = angularPoints.stream()
+                .filter(pos -> pos.getZ() == minZ)
+                .sorted((pos1, pos2) -> pos1.getX() - pos2.getX())
+                .collect(Collectors.toList());
+
+        List<BlockPos> sortedAngularPoints = Lists.newArrayList();
+        sortedAngularPoints.addAll(topRow);
+        sortedAngularPoints.addAll(rightRow);
+        sortedAngularPoints.addAll(bottomRow);
+        sortedAngularPoints.addAll(leftRow);
+
+        return sortedAngularPoints;
     }
 
     private List<BlockPos> createPatrolPoints(List<ChunkPos> villageChunks) {
