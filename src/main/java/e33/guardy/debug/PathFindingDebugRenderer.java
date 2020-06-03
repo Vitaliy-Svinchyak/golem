@@ -37,7 +37,7 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
     private void renderRoutes(PathCreator pathCreator) {
         Path path = pathCreator.currentPath;
         List<BlockPos> safePoints = pathCreator.safestPoints;
-        List<BlockPos> pathBlocks = PathFindingDebugRenderer.turnToBlocks(path);
+        List<BlockPos> pathBlocks = this.turnPathToBlocksList(path);
 
         Map<BlockPos, PositionStats> positionStats;
         if (statsCache.get(path.hashCode()) != null) {
@@ -145,22 +145,6 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
         }
 
         return new PositionStats(shootySpeed, fastestEnemySpeed, totalEnemySpeed, isSafe, isPath);
-    }
-
-    @Nonnull
-    private static List<BlockPos> turnToBlocks(@Nullable Path path) {
-        List<BlockPos> accuratePath = Lists.newArrayList();
-        if (path == null) {
-            return accuratePath;
-        }
-        accuratePath.add(path.func_224770_k());
-
-        for (int pathIndex = 0; pathIndex < path.getCurrentPathLength(); ++pathIndex) {
-            PathPoint pathPoint = path.getPathPointFromIndex(pathIndex);
-            accuratePath.add(new BlockPos(pathPoint.x, pathPoint.y, pathPoint.z));
-        }
-
-        return accuratePath;
     }
 }
 

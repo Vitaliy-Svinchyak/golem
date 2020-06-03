@@ -4,17 +4,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.pathfinding.MovementLimitations;
 import e33.guardy.pathfinding.StepHistoryKeeper;
-import e33.guardy.pathfinding.TreeLeaf;
+import e33.guardy.pathfinding.leafs.DangerousTreeLeaf;
 import e33.guardy.pathfinding.targetFinding.ITargetFinder;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SafePathBuilder implements IPathBuilder {
+public class SafePathBuilder extends AbstractPathBuilder implements IPathBuilder {
 
     private ITargetFinder finder;
     private Collection<ITargetFinder> enemyScouts;
@@ -28,9 +27,9 @@ public class SafePathBuilder implements IPathBuilder {
         this.finder = finder;
 
         List<BlockPos> safePoints = finder.getTargets();
-
         int maxEnemiesOnPoint = 0;
-        int enemiesCount = 10; // TODO
+        int enemiesCount = this.enemyScouts.size();
+
         while (maxEnemiesOnPoint < enemiesCount) {
             Path path = this.buildPathWithMaxEnemiesOnPoint(maxEnemiesOnPoint, limitations, safePoints);
 
@@ -46,17 +45,17 @@ public class SafePathBuilder implements IPathBuilder {
 
     private Path buildPathWithMaxEnemiesOnPoint(int maxEnemies, MovementLimitations limitations, List<BlockPos> safePoints) {
         StepHistoryKeeper stepHistory = this.finder.getStepHistory();
-        List<TreeLeaf> leafs = stepHistory.getStepPositions(0).stream().map(b -> this.calculateTreeLeaf(b, null)).collect(Collectors.toList());
+        List<DangerousTreeLeaf> leafs = stepHistory.getStepPositions(0).stream().map(b -> this.calculateTreeLeaf(b, null)).collect(Collectors.toList());
         Map<String, Boolean> visitedPoints = Maps.newHashMap();
-        List<TreeLeaf> safeLeafs = Lists.newArrayList();
+        List<DangerousTreeLeaf> safeLeafs = Lists.newArrayList();
         Iterator<Integer> stepIterator = stepHistory.getStepNumbers().iterator();
         stepIterator.next(); // skipping 0 step
 
         while (stepIterator.hasNext()) {
             int stepNumber = stepIterator.next();
-            List<TreeLeaf> currentLeafs = Lists.newArrayList();
+            List<DangerousTreeLeaf> currentLeafs = Lists.newArrayList();
 
-            for (TreeLeaf leaf : leafs) {
+            for (DangerousTreeLeaf leaf : leafs) {
                 List<BlockPos> newSteps = this.getNextStepsFromCurrentPosition(
                         leaf.getBlockPos(),
                         // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
@@ -70,9 +69,9 @@ public class SafePathBuilder implements IPathBuilder {
                     continue;
                 }
 
-                List<TreeLeaf> newLeafs = this.getLeafsWithMaxEnemies(newSteps, maxEnemies, leaf);
+                List<DangerousTreeLeaf> newLeafs = this.getLeafsWithMaxEnemies(newSteps, maxEnemies, leaf);
                 if (newLeafs.size() != 0) {
-                    for (TreeLeaf child : newLeafs) {
+                    for (DangerousTreeLeaf child : newLeafs) {
                         leaf.addChild(child);
 
                         if (safePoints.contains(child.getBlockPos())) {
@@ -96,8 +95,8 @@ public class SafePathBuilder implements IPathBuilder {
             return null;
         }
 
-        TreeLeaf safestLeaf = safeLeafs.get(0);
-        for (TreeLeaf leaf : safeLeafs) {
+        DangerousTreeLeaf safestLeaf = safeLeafs.get(0);
+        for (DangerousTreeLeaf leaf : safeLeafs) {
             // TODO compare length
             // TODO try to find another way between dangerous parts (with lower maxEnemies)
             if (leaf.enemiesCount < safestLeaf.enemiesCount) {
@@ -111,12 +110,11 @@ public class SafePathBuilder implements IPathBuilder {
         return this.createPathFromTree(safestLeaf);
     }
 
-
-    private List<TreeLeaf> getLeafsWithMaxEnemies(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
-        List<TreeLeaf> filteredPoints = Lists.newArrayList();
+    private List<DangerousTreeLeaf> getLeafsWithMaxEnemies(List<BlockPos> points, int maxEnemiesOnPoint, DangerousTreeLeaf parent) {
+        List<DangerousTreeLeaf> filteredPoints = Lists.newArrayList();
 
         for (BlockPos point : points) {
-            TreeLeaf leaf = this.calculateTreeLeaf(point, parent);
+            DangerousTreeLeaf leaf = this.calculateTreeLeaf(point, parent);
             // TODO can cache to not recalculate each time the same points
             if (parent.enemiesCount - leaf.enemiesCount <= maxEnemiesOnPoint) {
                 filteredPoints.add(leaf);
@@ -126,7 +124,7 @@ public class SafePathBuilder implements IPathBuilder {
         return filteredPoints;
     }
 
-    private TreeLeaf calculateTreeLeaf(BlockPos position, TreeLeaf parent) {
+    private DangerousTreeLeaf calculateTreeLeaf(BlockPos position, DangerousTreeLeaf parent) {
         int fasterEnemiesCount = 0;
         int shootySpeed = this.finder.getStepHistory().getPositionStep(position);
         int fastestEnemySpeed = Integer.MAX_VALUE;
@@ -144,51 +142,9 @@ public class SafePathBuilder implements IPathBuilder {
         }
 
         if (parent == null) {
-            return new TreeLeaf(position, fasterEnemiesCount, fastestEnemySpeed);
+            return new DangerousTreeLeaf(position, fasterEnemiesCount, fastestEnemySpeed);
         }
 
-        return new TreeLeaf(position, parent.enemiesCount + fasterEnemiesCount, parent.totalEnemySpeed + fastestEnemySpeed);
-    }
-
-    private Path createPathFromTree(TreeLeaf leaf) {
-        List<PathPoint> pathPoints = Lists.newArrayList();
-        BlockPos target = leaf.getBlockPos();
-
-        while (leaf != null) {
-            BlockPos block = leaf.getBlockPos();
-            pathPoints.add(new PathPoint(block.getX(), block.getY(), block.getZ()));
-            leaf = leaf.getParent();
-        }
-
-        Collections.reverse(pathPoints);
-        return new Path(pathPoints, target, true);
-    }
-
-    private List<BlockPos> getNextStepsFromCurrentPosition(BlockPos currentPosition, List<BlockPos> nextStepPoints, MovementLimitations limitations) {
-        List<BlockPos> nextSteps = Lists.newArrayList();
-
-        for (BlockPos nextPoint : nextStepPoints) {
-            int xDiff = Math.abs(nextPoint.getX() - currentPosition.getX());
-            int zDiff = Math.abs(nextPoint.getZ() - currentPosition.getZ());
-            int yDiff = nextPoint.getY() - currentPosition.getY();
-
-            if (xDiff <= 1 && zDiff <= 1 && yDiff <= limitations.jumHeight && yDiff >= -limitations.maxFallHeight) {
-                nextSteps.add(nextPoint);
-            }
-        }
-
-        return nextSteps;
-    }
-
-    private List<BlockPos> filterByVisitedPoints(List<BlockPos> positions, Map<String, Boolean> visitedPoints) {
-        List<BlockPos> filtered = Lists.newArrayList();
-
-        for (BlockPos position : positions) {
-            if (visitedPoints.get(ToStringHelper.toString(position)) == null) {
-                filtered.add(position);
-            }
-        }
-
-        return filtered;
+        return new DangerousTreeLeaf(position, parent.enemiesCount + fasterEnemiesCount, parent.totalEnemySpeed + fastestEnemySpeed);
     }
 }

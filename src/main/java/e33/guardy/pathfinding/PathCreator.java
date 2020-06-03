@@ -3,9 +3,11 @@ package e33.guardy.pathfinding;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.entity.ShootyEntity;
+import e33.guardy.pathfinding.pathBuilding.PatrolPathBuilder;
 import e33.guardy.pathfinding.pathBuilding.SafePathBuilder;
 import e33.guardy.pathfinding.targetFinding.FullScouting;
 import e33.guardy.pathfinding.targetFinding.ITargetFinder;
+import e33.guardy.pathfinding.targetFinding.PositionFinder;
 import e33.guardy.pathfinding.targetFinding.SafePlaceFinder;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -50,10 +52,8 @@ public class PathCreator {
         MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
         IWorldReader world = this.shooty.getEntityWorld();
         AxisAlignedBB searchZone = this.getSearchZone();
-        List<BlockPos> blockedPoints = Lists.newArrayList();
 
         Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
-
         Map<UUID, ITargetFinder> enemyScouts = this.createEnemyScouts(enemies);
         this.createEnemiesCurrentSteps(world, enemies, enemyLimitations, enemyScouts);
 
@@ -63,7 +63,7 @@ public class PathCreator {
 
         int stepNumber = 1;
         while (stepNumber < 100) {
-            List<BlockPos> newSteps = this.nextStepVariator.makeSteps(this.safePlaceFinder, world, searchZone, blockedPoints, shootyLimitations);
+            List<BlockPos> newSteps = this.nextStepVariator.makeSteps(this.safePlaceFinder, world, searchZone, null, shootyLimitations);
             if (newSteps.size() == 0) {
                 break;
             }
@@ -91,6 +91,45 @@ public class PathCreator {
         this.currentPath = pathBuilder.build(shootyLimitations, this.safePlaceFinder);
 
         return this.currentPath;
+    }
+
+    public List<Path> getCycledPathsThroughPositions(List<BlockPos> positions) {
+        List<Path> pathParts = Lists.newArrayList();
+        MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
+
+        LOGGER.info(positions.size() + " size");
+        for (int i = 0; i < positions.size(); i++) {
+            BlockPos startPosition = positions.get(i);
+            BlockPos endPosition;
+            if (i == positions.size() - 1) {
+                endPosition = positions.get(0);
+            } else {
+                endPosition = positions.get(i + 1);
+            }
+
+            PositionFinder finder = new PositionFinder(startPosition, endPosition);
+            pathParts.add(this.findPath(finder, shootyLimitations));
+            LOGGER.info(i + " finished");
+        }
+
+        return pathParts;
+    }
+
+    private Path findPath(PositionFinder finder, MovementLimitations shootyLimitations) {
+        IWorldReader world = this.shooty.getEntityWorld();
+        AxisAlignedBB searchZone = this.shooty.getBoundingBox().grow(150);
+        StepHistoryKeeper stepHistory = finder.getStepHistory();
+
+        int i = 0;
+        while (!finder.targetFound() && stepHistory.getLastStepPositions().size() > 0) {
+            List<BlockPos> steps = this.nextStepVariator.makeSteps(finder, world, searchZone, null, shootyLimitations);
+            finder.nextStep(steps, i);
+            i++;
+        }
+
+        PatrolPathBuilder builder = new PatrolPathBuilder();
+
+        return builder.build(shootyLimitations, finder);
     }
 
     protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos originalPosition, MovementLimitations limitations) {

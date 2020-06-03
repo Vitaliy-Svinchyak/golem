@@ -7,12 +7,16 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.debug.DebugRenderer;
+import net.minecraft.pathfinding.Path;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRenderer {
@@ -124,5 +128,21 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
 
     ActiveRenderInfo getActiveRenderInfo() {
         return this.minecraft.gameRenderer.getActiveRenderInfo();
+    }
+
+    @Nonnull
+    List<BlockPos> turnPathToBlocksList(@Nullable Path path) {
+        List<BlockPos> accuratePath = Lists.newArrayList();
+        if (path == null) {
+            return accuratePath;
+        }
+        accuratePath.add(path.func_224770_k());
+
+        for (int pathIndex = 0; pathIndex < path.getCurrentPathLength(); ++pathIndex) {
+            PathPoint pathPoint = path.getPathPointFromIndex(pathIndex);
+            accuratePath.add(new BlockPos(pathPoint.x, pathPoint.y, pathPoint.z));
+        }
+
+        return accuratePath;
     }
 }

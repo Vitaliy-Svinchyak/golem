@@ -3,6 +3,7 @@ package e33.guardy.pathfinding;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.entity.ShootyEntity;
+import e33.guardy.pathfinding.leafs.DangerousTreeLeaf;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
 import net.minecraft.entity.MobEntity;
@@ -154,16 +155,16 @@ public class PathBuilder {
     }
 
     protected Path buildPathWithMaxEnemiesOnPoint(int maxEnemies, MovementLimitations limitations) {
-        List<TreeLeaf> leafs = this.blocksPerStep.get(0).stream().map(b -> this.calculateTreeLeaf(b, null)).collect(Collectors.toList());
+        List<DangerousTreeLeaf> leafs = this.blocksPerStep.get(0).stream().map(b -> this.calculateDangerousTreeLeaf(b, null)).collect(Collectors.toList());
         int stepNumber = 0;
         Map<String, Boolean> visitedPoints = Maps.newHashMap();
-        List<TreeLeaf> safeLeafs = Lists.newArrayList();
+        List<DangerousTreeLeaf> safeLeafs = Lists.newArrayList();
 
         while (leafs.size() > 0 && stepNumber < this.blocksPerStep.size()) {
             stepNumber++;
-            List<TreeLeaf> currentLeafs = Lists.newArrayList();
+            List<DangerousTreeLeaf> currentLeafs = Lists.newArrayList();
 
-            for (TreeLeaf leaf : leafs) {
+            for (DangerousTreeLeaf leaf : leafs) {
                 List<BlockPos> newSteps = this.getNextStepsFromCurrentPosition(
                         leaf.getBlockPos(),
                         // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
@@ -177,9 +178,9 @@ public class PathBuilder {
                     continue;
                 }
 
-                List<TreeLeaf> newLeafs = this.getLeafsWithMaxEnemies(newSteps, maxEnemies, leaf);
+                List<DangerousTreeLeaf> newLeafs = this.getLeafsWithMaxEnemies(newSteps, maxEnemies, leaf);
                 if (newLeafs.size() != 0) {
-                    for (TreeLeaf child : newLeafs) {
+                    for (DangerousTreeLeaf child : newLeafs) {
                         leaf.addChild(child);
 
                         if (safePoints.contains(child.getBlockPos())) {
@@ -199,8 +200,8 @@ public class PathBuilder {
             return null;
         }
 
-        TreeLeaf safestLeaf = safeLeafs.get(0);
-        for (TreeLeaf leaf : safeLeafs) {
+        DangerousTreeLeaf safestLeaf = safeLeafs.get(0);
+        for (DangerousTreeLeaf leaf : safeLeafs) {
             // TODO compare length
             // TODO try to find another way between dangerous parts (with lower maxEnemies)
             if (leaf.enemiesCount < safestLeaf.enemiesCount) {
@@ -214,11 +215,11 @@ public class PathBuilder {
         return this.createPathFromTree(safestLeaf);
     }
 
-    protected List<TreeLeaf> getLeafsWithMaxEnemies(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
-        List<TreeLeaf> filteredPoints = Lists.newArrayList();
+    protected List<DangerousTreeLeaf> getLeafsWithMaxEnemies(List<BlockPos> points, int maxEnemiesOnPoint, DangerousTreeLeaf parent) {
+        List<DangerousTreeLeaf> filteredPoints = Lists.newArrayList();
 
         for (BlockPos point : points) {
-            TreeLeaf leaf = this.calculateTreeLeaf(point, parent);
+            DangerousTreeLeaf leaf = this.calculateDangerousTreeLeaf(point, parent);
             // TODO can cache to not recalculate each time the same points
             if (parent.enemiesCount - leaf.enemiesCount <= maxEnemiesOnPoint) {
                 filteredPoints.add(leaf);
@@ -228,7 +229,7 @@ public class PathBuilder {
         return filteredPoints;
     }
 
-    protected TreeLeaf calculateTreeLeaf(BlockPos point, TreeLeaf parent) {
+    protected DangerousTreeLeaf calculateDangerousTreeLeaf(BlockPos point, DangerousTreeLeaf parent) {
         int fasterEnemiesCount = 0;
         Map<UUID, Integer> entitiesOnPoint = this.speedTracker.get(point);
         int shootySpeed = entitiesOnPoint.get(this.shooty.getUniqueID());
@@ -245,13 +246,13 @@ public class PathBuilder {
         }
 
         if (parent == null) {
-            return new TreeLeaf(point, fasterEnemiesCount, fastestEnemySpeed);
+            return new DangerousTreeLeaf(point, fasterEnemiesCount, fastestEnemySpeed);
         }
 
-        return new TreeLeaf(point, parent.enemiesCount + fasterEnemiesCount, parent.totalEnemySpeed + fastestEnemySpeed);
+        return new DangerousTreeLeaf(point, parent.enemiesCount + fasterEnemiesCount, parent.totalEnemySpeed + fastestEnemySpeed);
     }
 
-    protected Path createPathFromTree(TreeLeaf leaf) {
+    protected Path createPathFromTree(DangerousTreeLeaf leaf) {
         List<PathPoint> pathPoints = Lists.newArrayList();
         BlockPos target = leaf.getBlockPos();
 
@@ -431,7 +432,7 @@ public class PathBuilder {
             return false;
         }
 
-        Block block =  world.getBlockState(end).getBlock();
+        Block block = world.getBlockState(end).getBlock();
         IFluidState fluidState = world.getFluidState(end);
         if (
                 (!limitations.canSwim && fluidState.isTagged(FluidTags.WATER) && world.getFluidState(end.up()).isTagged(FluidTags.WATER))

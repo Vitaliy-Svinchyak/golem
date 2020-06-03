@@ -65,8 +65,8 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
         this.patrolVillageGoal = new PatrolVillageGoal(this);
         // TODO 2 custom priority queue
 //        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
-        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this));
-//        this.goalSelector.addGoal(1, this.patrolVillageGoal);
+//        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this));
+        this.goalSelector.addGoal(1, this.patrolVillageGoal);
 //        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
 //        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
 //        this.goalSelector.addGoal(2, lookGoal);

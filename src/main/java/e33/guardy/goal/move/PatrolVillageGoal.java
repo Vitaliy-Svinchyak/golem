@@ -7,10 +7,12 @@ import e33.guardy.entity.ShootyEntity;
 import e33.guardy.pathfinding.MyMutableBlockPos;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
+import net.minecraft.pathfinding.Path;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -33,6 +35,8 @@ public class PatrolVillageGoal extends Goal {
     public List<BlockPos> patrolPoints = null;
     public List<BlockPos> angularPoints = null;
     private static Map<String, Boolean> allBlocks = Maps.newHashMap();
+    public List<Path> pathParts = null;
+    public int currentPathPartNumber = 0;
 
     public PatrolVillageGoal(ShootyEntity creatureIn) {
         this.shooty = creatureIn;
@@ -45,14 +49,15 @@ public class PatrolVillageGoal extends Goal {
     }
 
     public boolean shouldContinueExecuting() {
+
         return !this.shooty.getNavigator().noPath(); // TODO
     }
 
     public void startExecuting() {
         if (this.patrolPoints == null) {
-            TimeMeter.moduleStart("PatrolVillageGoal");
             this.patrolPoints = this.getPatrolPoints();
-            TimeMeter.moduleEnd("PatrolVillageGoal");
+            this.pathParts = this.shooty.pathCreator.getCycledPathsThroughPositions(angularPoints);
+//            this.shooty.getNavigator().setPath(this.pathParts.get(0), this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
         }
     }
 
@@ -166,7 +171,9 @@ public class PatrolVillageGoal extends Goal {
         sortedAngularPoints.addAll(bottomRow);
         sortedAngularPoints.addAll(leftRow);
 
-        return sortedAngularPoints;
+        return sortedAngularPoints.stream()
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     private List<BlockPos> createPatrolPoints(List<ChunkPos> villageChunks) {

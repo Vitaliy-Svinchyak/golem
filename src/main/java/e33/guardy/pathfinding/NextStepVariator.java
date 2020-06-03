@@ -107,7 +107,9 @@ class NextStepVariator {
         }
 
         if (!this.canWalkFromTo(world, previousPosition, newPosition, limitations)) {
-            blockedPoints.add(newPosition);
+            if (blockedPoints != null) {
+                blockedPoints.add(newPosition);
+            }
             return false;
         }
 
@@ -125,7 +127,10 @@ class NextStepVariator {
             return true;
         }
 
-        blockedPoints.add(newPosition);
+        if (blockedPoints != null) {
+            blockedPoints.add(newPosition);
+        }
+
         return false;
     }
 

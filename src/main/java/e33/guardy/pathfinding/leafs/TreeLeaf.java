@@ -1,4 +1,4 @@
-package e33.guardy.pathfinding;
+package e33.guardy.pathfinding.leafs;
 
 import com.google.common.collect.Lists;
 import net.minecraft.util.math.BlockPos;
@@ -7,16 +7,12 @@ import java.util.List;
 
 public class TreeLeaf {
     private final BlockPos blockPos;
-    public final int enemiesCount;
-    public final int totalEnemySpeed;
     private TreeLeaf parent;
     private List<TreeLeaf> children = Lists.newArrayList();
     private boolean alive = true;
 
-    public TreeLeaf(BlockPos blockPos, int enemiesCount, int totalEnemySpeed) {
+    public TreeLeaf(BlockPos blockPos) {
         this.blockPos = blockPos;
-        this.enemiesCount = enemiesCount;
-        this.totalEnemySpeed = totalEnemySpeed;
     }
 
     public TreeLeaf getParent() {

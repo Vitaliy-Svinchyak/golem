@@ -2,6 +2,8 @@ package e33.guardy.pathfinding;
 
 import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
+import e33.guardy.pathfinding.leafs.DangerousTreeLeaf;
+import e33.guardy.pathfinding.leafs.TreeLeaf;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -42,15 +44,15 @@ public class PathBuilderMetrics extends PathBuilder {
         return r;
     }
 
-    protected List<TreeLeaf> getLeafsWithMaxEnemies(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
+    protected List<DangerousTreeLeaf> getLeafsWithMaxEnemies(List<BlockPos> points, int maxEnemiesOnPoint, DangerousTreeLeaf parent) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "getLeafsWithReach");
-        List<TreeLeaf> r = super.getLeafsWithMaxEnemies(points, maxEnemiesOnPoint, parent);
+        List<DangerousTreeLeaf> r = super.getLeafsWithMaxEnemies(points, maxEnemiesOnPoint, parent);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "getLeafsWithReach");
 
         return r;
     }
 
-    protected Path createPathFromTree(TreeLeaf leaf) {
+    protected Path createPathFromTree(DangerousTreeLeaf leaf) {
         TimeMeter.start(TimeMeter.MODULE_PATH_BUILDING, "createPathFromTree");
         Path r = super.createPathFromTree(leaf);
         TimeMeter.end(TimeMeter.MODULE_PATH_BUILDING, "createPathFromTree");
