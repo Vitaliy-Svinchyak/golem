@@ -15,8 +15,8 @@ public class SafePlaceFinder extends AbstractTargetFinder {
 
     private final Collection<ITargetFinder> enemyScouts;
 
-    public SafePlaceFinder(Collection<ITargetFinder> enemyScouts) {
-        super();
+    public SafePlaceFinder(BlockPos startPosition, Collection<ITargetFinder> enemyScouts) {
+        super(startPosition);
         this.enemyScouts = enemyScouts;
     }
 

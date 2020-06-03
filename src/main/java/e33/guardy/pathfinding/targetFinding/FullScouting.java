@@ -6,6 +6,10 @@ import java.util.List;
 
 public class FullScouting extends AbstractTargetFinder {
 
+    public FullScouting(BlockPos startPosition) {
+        super(startPosition);
+    }
+
     @Override
     public boolean targetFound() {
         return true;

@@ -28,14 +28,17 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
     void renderEntities(List<ShootyEntity> entities) {
         for (ShootyEntity entity : entities) {
             if (entity.pathCreator.currentPath != null) {
-                this.renderRoutes(entity.pathCreator, entity.pathCreator.safestPoints, entity.pathCreator.currentPath, entity.getUniqueID());
+                this.renderRoutes(entity.pathCreator);
             }
         }
     }
 
-    private void renderRoutes(PathCreator pathCreator, List<BlockPos> safePoints, Path path, UUID shooty) {
+    private void renderRoutes(PathCreator pathCreator) {
+        Path path = pathCreator.currentPath;
+        List<BlockPos> safePoints = pathCreator.safestPoints;
         List<BlockPos> pathBlocks = PathFindingDebugRenderer.turnToBlocks(path);
         Map<BlockPos, PositionStats> positionStats = this.createPositionStats(pathCreator, safePoints, pathBlocks);
+
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double x = activeRenderInfo.getProjectedView().x;
         double y = activeRenderInfo.getProjectedView().y;

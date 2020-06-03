@@ -9,9 +9,8 @@ abstract public class AbstractTargetFinder implements ITargetFinder {
 
     private final StepHistoryKeeper stepHistoryKeeper;
 
-    public AbstractTargetFinder() {
-        this.stepHistoryKeeper = new StepHistoryKeeper();
-        this.clear();
+    public AbstractTargetFinder(BlockPos startPosition) {
+        this.stepHistoryKeeper = new StepHistoryKeeper(startPosition);
     }
 
     public StepHistoryKeeper getStepHistory() {

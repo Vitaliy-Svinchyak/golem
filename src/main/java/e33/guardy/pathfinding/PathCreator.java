@@ -58,53 +58,47 @@ public class PathCreator {
         IWorldReader world = this.shooty.getEntityWorld();
         AxisAlignedBB searchZone = this.getSearchZone();
         BlockPos shootyCurrentPosition = this.getEntityPos(shooty, shootyLimitations);
-        List<BlockPos> currentSteps = Lists.newArrayList(shootyCurrentPosition);
         Map<String, Boolean> visitedPoints = Maps.newHashMap();
         visitedPoints.put(ToStringHelper.toString(shootyCurrentPosition), true);
         List<BlockPos> blockedPoints = Lists.newArrayList();
 
         Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
-        Map<UUID, List<BlockPos>> enemyCurrentSteps = this.createEnemiesCurrentSteps(world, enemies, enemyLimitations);
         Map<UUID, Map<String, Boolean>> enemyVisitedPoints = this.createEnemiesVisitedPoints(enemies);
 
         Map<UUID, ITargetFinder> enemyScouts = this.createEnemyScouts(enemies);
-        SafePlaceFinder shootyFinder = new SafePlaceFinder(enemyScouts.values());
-        this.enemyScouts = enemyScouts.values();
-        this.safePlaceFinder = shootyFinder;
+        this.createEnemiesCurrentSteps(world, enemies, enemyLimitations, enemyScouts);
 
-        int stepNumber = 0;
-        while (currentSteps.size() > 0) {
-            List<BlockPos> newSteps = this.makeSteps(currentSteps, world, searchZone, visitedPoints, blockedPoints, shootyLimitations);
-            currentSteps = newSteps;
-            shootyFinder.nextStep(newSteps, stepNumber);
+        this.safePlaceFinder = new SafePlaceFinder(shootyCurrentPosition, enemyScouts.values());
+        this.enemyScouts = enemyScouts.values();
+
+        int stepNumber = 1;
+        while (stepNumber < 100) {
+            List<BlockPos> newSteps = this.makeSteps(this.safePlaceFinder.getStepHistory().getLastStepPositions(), world, searchZone, visitedPoints, blockedPoints, shootyLimitations);
+            if (newSteps.size() == 0) {
+                break;
+            }
+            this.safePlaceFinder.nextStep(newSteps, stepNumber);
 
             for (MobEntity enemy : enemies) {
                 UUID uid = enemy.getUniqueID();
-                List<BlockPos> enemyBlockedPoints = Lists.newArrayList();
-                List<BlockPos> enemyNewSteps = this.makeSteps(enemyCurrentSteps.get(uid), world, searchZone, enemyVisitedPoints.get(uid), enemyBlockedPoints, enemyLimitations.get(uid));
-                enemyCurrentSteps.put(uid, enemyNewSteps);
                 ITargetFinder enemyScout = enemyScouts.get(uid);
+                List<BlockPos> enemyBlockedPoints = Lists.newArrayList();
+                List<BlockPos> enemyNewSteps = this.makeSteps(enemyScout.getStepHistory().getLastStepPositions(), world, searchZone, enemyVisitedPoints.get(uid), enemyBlockedPoints, enemyLimitations.get(uid));
 
                 if (enemyBlockedPoints.size() > 0) {
                     List<BlockPos> enemyReachableForAttackPoints = this.getReachableForAttackPoints(enemyNewSteps, enemyBlockedPoints);
-
                     enemyNewSteps.addAll(enemyReachableForAttackPoints);
-                    enemyScout.nextStep(enemyNewSteps, stepNumber);
-                } else {
-                    enemyScout.nextStep(enemyNewSteps, stepNumber);
                 }
+
+                enemyScout.nextStep(enemyNewSteps, stepNumber);
             }
 
             stepNumber++;
-            if (stepNumber >= 100) {
-                LOGGER.error("Too many iterations!!!");
-                break;
-            }
         }
 
-        this.safestPoints = shootyFinder.getTargets();
+        this.safestPoints = this.safePlaceFinder.getTargets();
         SafePathBuilder pathBuilder = new SafePathBuilder(enemyScouts.values());
-        this.currentPath = pathBuilder.build(shootyLimitations, shootyFinder);
+        this.currentPath = pathBuilder.build(shootyLimitations, this.safePlaceFinder);
 
         return this.currentPath;
     }
@@ -408,7 +402,7 @@ public class PathCreator {
         Map<UUID, ITargetFinder> scouts = Maps.newHashMap();
 
         for (MobEntity enemy : enemies) {
-            scouts.put(enemy.getUniqueID(), new FullScouting());
+            scouts.put(enemy.getUniqueID(), new FullScouting(enemy.getPosition()));
         }
 
         return scouts;
@@ -434,14 +428,10 @@ public class PathCreator {
         return unBlockedPoints;
     }
 
-    private Map<UUID, List<BlockPos>> createEnemiesCurrentSteps(IWorldReader world, List<MobEntity> enemies, Map<UUID, MovementLimitations> enemyLimitations) {
-        Map<UUID, List<BlockPos>> enemiesCurrentSteps = Maps.newHashMap();
-
+    private void createEnemiesCurrentSteps(IWorldReader world, List<MobEntity> enemies, Map<UUID, MovementLimitations> enemyLimitations, Map<UUID, ITargetFinder> enemyScouts) {
         for (MobEntity enemy : enemies) {
-            enemiesCurrentSteps.put(enemy.getUniqueID(), Lists.newArrayList(getEnemyStandPosition(world, enemy.getPosition(), enemyLimitations.get(enemy.getUniqueID()))));
+            enemyScouts.get(enemy.getUniqueID()).nextStep(Lists.newArrayList(getEnemyStandPosition(world, enemy.getPosition(), enemyLimitations.get(enemy.getUniqueID()))), 0);
         }
-
-        return enemiesCurrentSteps;
     }
 
     private Map<UUID, Map<String, Boolean>> createEnemiesVisitedPoints(List<MobEntity> enemies) {

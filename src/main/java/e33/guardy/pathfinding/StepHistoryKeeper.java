@@ -1,5 +1,6 @@
 package e33.guardy.pathfinding;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.util.math.BlockPos;
@@ -11,9 +12,19 @@ import java.util.Set;
 public class StepHistoryKeeper {
     private Map<String, Integer> positionsToStep;
     private Map<Integer, List<BlockPos>> stepToPositions;
+    private int lastStep = 0;
 
-    public StepHistoryKeeper() {
+    public StepHistoryKeeper(BlockPos startPosition) {
         this.clear();
+        this.saveStep(Lists.newArrayList(startPosition), 0);
+    }
+
+    public Integer getLastStepNumber() {
+        return this.lastStep;
+    }
+
+    public List<BlockPos> getLastStepPositions() {
+        return this.stepToPositions.get(this.getLastStepNumber());
     }
 
     public Set<Integer> getStepNumbers() {
@@ -33,6 +44,7 @@ public class StepHistoryKeeper {
     }
 
     public void saveStep(List<BlockPos> positionsInStep, int stepNumber) {
+        this.lastStep = stepNumber;
         this.stepToPositions.put(stepNumber, positionsInStep);
 
         for (BlockPos blockPos : positionsInStep) {
