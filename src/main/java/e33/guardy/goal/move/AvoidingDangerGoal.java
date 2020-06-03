@@ -62,7 +62,7 @@ public class AvoidingDangerGoal extends Goal {
     protected void createPath() {
         TimeMeter.moduleStart(TimeMeter.MODULE_PATH_BUILDING);
         this.world.getProfiler().startSection("pathfind_my");
-        Path path = this.shooty.pathCreator.getPath(this.getNearestEnemies(25));
+        Path path = this.shooty.pathCreator.getSafePath(this.getNearestEnemies(25));
         this.shooty.getNavigator().setPath(path, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
         this.world.getProfiler().endSection();
         TimeMeter.moduleEnd(TimeMeter.MODULE_PATH_BUILDING);

@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public class PathFindingDebugRenderer extends AbstractDebugRenderer implements DebugRenderer.IDebugRenderer {
+    private Map<Integer, Map<BlockPos, PositionStats>> statsCache = Maps.newHashMap();
 
     public PathFindingDebugRenderer(Minecraft minecraft) {
         super(minecraft);
@@ -37,7 +38,14 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
         Path path = pathCreator.currentPath;
         List<BlockPos> safePoints = pathCreator.safestPoints;
         List<BlockPos> pathBlocks = PathFindingDebugRenderer.turnToBlocks(path);
-        Map<BlockPos, PositionStats> positionStats = this.createPositionStats(pathCreator, safePoints, pathBlocks);
+
+        Map<BlockPos, PositionStats> positionStats;
+        if (statsCache.get(path.hashCode()) != null) {
+            positionStats = statsCache.get(path.hashCode());
+        } else {
+            positionStats = this.createPositionStats(pathCreator, safePoints, pathBlocks);
+            statsCache.put(path.hashCode(), positionStats);
+        }
 
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double x = activeRenderInfo.getProjectedView().x;
