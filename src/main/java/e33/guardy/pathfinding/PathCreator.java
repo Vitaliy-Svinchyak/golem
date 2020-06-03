@@ -25,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,9 +39,9 @@ public class PathCreator {
     protected Map<String, BlockPos> notSwimmingTopPositionCache = Maps.newHashMap();
     protected Map<String, Integer> canStandOnCache = Maps.newHashMap();
 
-    public Map<BlockPos, Map<UUID, Integer>> speedTracker = Maps.newHashMap();
     public Path currentPath;
     public SafePlaceFinder safePlaceFinder;
+    public Collection<ITargetFinder> enemyScouts;
     public List<BlockPos> safestPoints = Lists.newArrayList();
 
     public PathCreator(ShootyEntity shooty) {
@@ -51,34 +52,30 @@ public class PathCreator {
         if (!this.shooty.onGround) {
             return null;
         }
+        this.currentPath = null;
 
         MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
         IWorldReader world = this.shooty.getEntityWorld();
         AxisAlignedBB searchZone = this.getSearchZone();
         BlockPos shootyCurrentPosition = this.getEntityPos(shooty, shootyLimitations);
-        Map<BlockPos, Map<UUID, Integer>> speedTracker = Maps.newHashMap();
         List<BlockPos> currentSteps = Lists.newArrayList(shootyCurrentPosition);
         Map<String, Boolean> visitedPoints = Maps.newHashMap();
         visitedPoints.put(ToStringHelper.toString(shootyCurrentPosition), true);
         List<BlockPos> blockedPoints = Lists.newArrayList();
-        this.rememberSpeed(this.shooty.getUniqueID(), currentSteps, 0, speedTracker);
 
         Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
         Map<UUID, List<BlockPos>> enemyCurrentSteps = this.createEnemiesCurrentSteps(world, enemies, enemyLimitations);
         Map<UUID, Map<String, Boolean>> enemyVisitedPoints = this.createEnemiesVisitedPoints(enemies);
-        for (MobEntity enemy : enemies) {
-            this.rememberSpeed(enemy.getUniqueID(), enemyCurrentSteps.get(enemy.getUniqueID()), 0, speedTracker);
-        }
 
         Map<UUID, ITargetFinder> enemyScouts = this.createEnemyScouts(enemies);
         SafePlaceFinder shootyFinder = new SafePlaceFinder(enemyScouts.values());
+        this.enemyScouts = enemyScouts.values();
         this.safePlaceFinder = shootyFinder;
 
         int stepNumber = 0;
         while (currentSteps.size() > 0) {
             List<BlockPos> newSteps = this.makeSteps(currentSteps, world, searchZone, visitedPoints, blockedPoints, shootyLimitations);
             currentSteps = newSteps;
-            this.rememberSpeed(this.shooty.getUniqueID(), newSteps, stepNumber, speedTracker);
             shootyFinder.nextStep(newSteps, stepNumber);
 
             for (MobEntity enemy : enemies) {
@@ -86,13 +83,10 @@ public class PathCreator {
                 List<BlockPos> enemyBlockedPoints = Lists.newArrayList();
                 List<BlockPos> enemyNewSteps = this.makeSteps(enemyCurrentSteps.get(uid), world, searchZone, enemyVisitedPoints.get(uid), enemyBlockedPoints, enemyLimitations.get(uid));
                 enemyCurrentSteps.put(uid, enemyNewSteps);
-                this.rememberSpeed(uid, enemyNewSteps, stepNumber, speedTracker);
                 ITargetFinder enemyScout = enemyScouts.get(uid);
 
                 if (enemyBlockedPoints.size() > 0) {
                     List<BlockPos> enemyReachableForAttackPoints = this.getReachableForAttackPoints(enemyNewSteps, enemyBlockedPoints);
-
-                    this.rememberSpeed(uid, enemyReachableForAttackPoints, stepNumber, speedTracker);
 
                     enemyNewSteps.addAll(enemyReachableForAttackPoints);
                     enemyScout.nextStep(enemyNewSteps, stepNumber);
@@ -108,7 +102,6 @@ public class PathCreator {
             }
         }
 
-        this.speedTracker = speedTracker;
         this.safestPoints = shootyFinder.getTargets();
         SafePathBuilder pathBuilder = new SafePathBuilder(enemyScouts.values());
         this.currentPath = pathBuilder.build(shootyLimitations, shootyFinder);
@@ -461,13 +454,6 @@ public class PathCreator {
         }
 
         return enemiesVisitedPoints;
-    }
-
-    private void rememberSpeed(UUID uid, List<BlockPos> positions, int stepNumber, Map<BlockPos, Map<UUID, Integer>> speedTracker) {
-        for (BlockPos point : positions) {
-            speedTracker.computeIfAbsent(point, k -> Maps.newHashMap());
-            speedTracker.get(point).put(uid, stepNumber);
-        }
     }
 
     private AxisAlignedBB getSearchZone() {
