@@ -35,7 +35,7 @@ public class StepHistoryKeeper {
         return this.stepToPositions.get(stepNumber);
     }
 
-    public int getPositionStep(BlockPos position) {
+    public Integer getPositionStep(BlockPos position) {
         return this.positionsToStep.get(ToStringHelper.toString(position));
     }
 

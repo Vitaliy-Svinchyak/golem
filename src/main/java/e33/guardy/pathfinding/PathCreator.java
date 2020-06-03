@@ -58,12 +58,9 @@ public class PathCreator {
         IWorldReader world = this.shooty.getEntityWorld();
         AxisAlignedBB searchZone = this.getSearchZone();
         BlockPos shootyCurrentPosition = this.getEntityPos(shooty, shootyLimitations);
-        Map<String, Boolean> visitedPoints = Maps.newHashMap();
-        visitedPoints.put(ToStringHelper.toString(shootyCurrentPosition), true);
         List<BlockPos> blockedPoints = Lists.newArrayList();
 
         Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
-        Map<UUID, Map<String, Boolean>> enemyVisitedPoints = this.createEnemiesVisitedPoints(enemies);
 
         Map<UUID, ITargetFinder> enemyScouts = this.createEnemyScouts(enemies);
         this.createEnemiesCurrentSteps(world, enemies, enemyLimitations, enemyScouts);
@@ -73,7 +70,7 @@ public class PathCreator {
 
         int stepNumber = 1;
         while (stepNumber < 100) {
-            List<BlockPos> newSteps = this.makeSteps(this.safePlaceFinder.getStepHistory().getLastStepPositions(), world, searchZone, visitedPoints, blockedPoints, shootyLimitations);
+            List<BlockPos> newSteps = this.makeSteps(this.safePlaceFinder, world, searchZone, blockedPoints, shootyLimitations);
             if (newSteps.size() == 0) {
                 break;
             }
@@ -83,7 +80,7 @@ public class PathCreator {
                 UUID uid = enemy.getUniqueID();
                 ITargetFinder enemyScout = enemyScouts.get(uid);
                 List<BlockPos> enemyBlockedPoints = Lists.newArrayList();
-                List<BlockPos> enemyNewSteps = this.makeSteps(enemyScout.getStepHistory().getLastStepPositions(), world, searchZone, enemyVisitedPoints.get(uid), enemyBlockedPoints, enemyLimitations.get(uid));
+                List<BlockPos> enemyNewSteps = this.makeSteps(enemyScout, world, searchZone, enemyBlockedPoints, enemyLimitations.get(uid));
 
                 if (enemyBlockedPoints.size() > 0) {
                     List<BlockPos> enemyReachableForAttackPoints = this.getReachableForAttackPoints(enemyNewSteps, enemyBlockedPoints);
@@ -103,22 +100,21 @@ public class PathCreator {
         return this.currentPath;
     }
 
-    protected List<BlockPos> makeSteps(List<BlockPos> previousSteps, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> visitedPoints, List<BlockPos> blockedPoints, MovementLimitations limitations) {
+    protected List<BlockPos> makeSteps(ITargetFinder finder, IWorldReader world, AxisAlignedBB zone, List<BlockPos> blockedPoints, MovementLimitations limitations) {
+        StepHistoryKeeper stepHistory = finder.getStepHistory();
+        List<BlockPos> previousSteps = finder.getStepHistory().getLastStepPositions();
         List<BlockPos> newSteps = Lists.newArrayList();
 
         for (BlockPos point : previousSteps) {
-            List<BlockPos> stepVariants = getStepVariants(world, point, zone, visitedPoints, blockedPoints, limitations);
+            List<BlockPos> stepVariants = getStepVariants(world, point, zone, stepHistory, blockedPoints, newSteps, limitations);
 
-            for (BlockPos variant : stepVariants) {
-                visitedPoints.put(ToStringHelper.toString(variant), true);
-                newSteps.add(variant);
-            }
+            newSteps.addAll(stepVariants);
         }
 
         return newSteps;
     }
 
-    protected List<BlockPos> getStepVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, Map<String, Boolean> visitedPoints, List<BlockPos> blockedPoints, MovementLimitations limitations) {
+    protected List<BlockPos> getStepVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, StepHistoryKeeper stepHistory, List<BlockPos> blockedPoints, List<BlockPos> usedOnThisStepPositions, MovementLimitations limitations) {
         int x = start.getX();
         int y = start.getY();
         int z = start.getZ();
@@ -137,7 +133,8 @@ public class PathCreator {
         List<BlockPos> filteredVariants = Lists.newArrayList();
 
         for (BlockPos variant : variants) {
-            if (this.isValidPosition(world, start, variant, zone, visitedPoints, blockedPoints, limitations)) {
+            // TODO optimize usedOnThisStepPositions to map
+            if (!usedOnThisStepPositions.contains(variant) && this.isValidPosition(world, start, variant, zone, stepHistory, blockedPoints, limitations)) {
                 filteredVariants.add(variant);
             }
         }
@@ -145,8 +142,8 @@ public class PathCreator {
         return filteredVariants;
     }
 
-    protected boolean isValidPosition(IWorldReader world, BlockPos previousPosition, BlockPos newPosition, AxisAlignedBB zone, Map<String, Boolean> visitedPoints, List<BlockPos> blockedPoints, MovementLimitations limitations) {
-        boolean blockInZone = visitedPoints.get(ToStringHelper.toString(newPosition)) == null
+    protected boolean isValidPosition(IWorldReader world, BlockPos previousPosition, BlockPos newPosition, AxisAlignedBB zone, StepHistoryKeeper stepHistory, List<BlockPos> blockedPoints, MovementLimitations limitations) {
+        boolean blockInZone = stepHistory.getPositionStep(newPosition) == null
                 && newPosition.getX() >= zone.minX - 1 && newPosition.getX() <= zone.maxX
                 && newPosition.getZ() >= zone.minZ - 1 && newPosition.getZ() <= zone.maxZ
                 && newPosition.getY() >= zone.minY / 1.5 && newPosition.getY() <= zone.maxY * 1.5;
@@ -432,18 +429,6 @@ public class PathCreator {
         for (MobEntity enemy : enemies) {
             enemyScouts.get(enemy.getUniqueID()).nextStep(Lists.newArrayList(getEnemyStandPosition(world, enemy.getPosition(), enemyLimitations.get(enemy.getUniqueID()))), 0);
         }
-    }
-
-    private Map<UUID, Map<String, Boolean>> createEnemiesVisitedPoints(List<MobEntity> enemies) {
-        Map<UUID, Map<String, Boolean>> enemiesVisitedPoints = Maps.newHashMap();
-
-        for (MobEntity enemy : enemies) {
-            Map<String, Boolean> visitedPoints = Maps.newHashMap();
-            visitedPoints.put(ToStringHelper.toString(enemy.getPosition()), true);
-            enemiesVisitedPoints.put(enemy.getUniqueID(), visitedPoints);
-        }
-
-        return enemiesVisitedPoints;
     }
 
     private AxisAlignedBB getSearchZone() {
