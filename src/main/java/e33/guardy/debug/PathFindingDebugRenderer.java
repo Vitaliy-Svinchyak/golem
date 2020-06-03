@@ -22,7 +22,7 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
     @Override
     void renderEntities(List<ShootyEntity> entities) {
         for (ShootyEntity entity : entities) {
-            this.renderRoutes(entity.pathBuilder.speedTracker, entity.pathBuilder.safePoints, entity.pathBuilder.currentPath, entity.getUniqueID());
+            this.renderRoutes(entity.pathCreator.speedTracker, entity.pathCreator.safestPoints, entity.pathCreator.currentPath, entity.getUniqueID());
         }
     }
 

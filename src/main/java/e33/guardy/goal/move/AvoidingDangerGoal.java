@@ -7,9 +7,9 @@ import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
 import e33.guardy.event.MoveEvent;
 import e33.guardy.event.NoActionEvent;
-import e33.guardy.pathfinding.PathBuilder;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.monster.SpiderEntity;
 import net.minecraft.pathfinding.Path;
@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 public class AvoidingDangerGoal extends Goal {
     private World world;
-    private PathBuilder pathBuilder;
     private ShootyEntity shooty;
 
     private final static Logger LOGGER = LogManager.getLogger();
@@ -63,17 +62,13 @@ public class AvoidingDangerGoal extends Goal {
     protected void createPath() {
         TimeMeter.moduleStart(TimeMeter.MODULE_PATH_BUILDING);
         this.world.getProfiler().startSection("pathfind_my");
-        Path path = this.pathBuilder.getPath(this.getNearestEnemies(25));
-//        this.creature.getNavigator().setPath(path, this.speed);
+        Path path = this.shooty.pathCreator.getPath(this.getNearestEnemies(25));
+        this.shooty.getNavigator().setPath(path, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
         this.world.getProfiler().endSection();
         TimeMeter.moduleEnd(TimeMeter.MODULE_PATH_BUILDING);
     }
 
     public void startExecuting() {
-        if (this.pathBuilder == null) {
-            this.pathBuilder = this.shooty.pathBuilder;
-        }
-
         this.move();
         this.createPath();
     }

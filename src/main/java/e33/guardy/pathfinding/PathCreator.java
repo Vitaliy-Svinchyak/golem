@@ -3,6 +3,10 @@ package e33.guardy.pathfinding;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.entity.ShootyEntity;
+import e33.guardy.pathfinding.pathBuilding.SafePathBuilder;
+import e33.guardy.pathfinding.targetFinding.FullScouting;
+import e33.guardy.pathfinding.targetFinding.ITargetFinder;
+import e33.guardy.pathfinding.targetFinding.SafePlaceFinder;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
 import net.minecraft.entity.MobEntity;
@@ -10,8 +14,6 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.fluid.IFluidState;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNodeType;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -23,24 +25,25 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-public class PathBuilder {
+public class PathCreator {
     final static Logger LOGGER = LogManager.getLogger();
 
     protected final ShootyEntity shooty;
-    protected List<List<BlockPos>> blocksPerStep = Lists.newArrayList();
 
     protected Map<String, BlockPos> swimmingTopPositionCache = Maps.newHashMap();
     protected Map<String, BlockPos> notSwimmingTopPositionCache = Maps.newHashMap();
     protected Map<String, Integer> canStandOnCache = Maps.newHashMap();
 
     public Map<BlockPos, Map<UUID, Integer>> speedTracker = Maps.newHashMap();
-    public List<BlockPos> safePoints = Lists.newArrayList();
     public Path currentPath;
+    public SafePlaceFinder safePlaceFinder;
+    public List<BlockPos> safestPoints = Lists.newArrayList();
 
-    public PathBuilder(ShootyEntity shooty) {
+    public PathCreator(ShootyEntity shooty) {
         this.shooty = shooty;
     }
 
@@ -57,7 +60,6 @@ public class PathBuilder {
         List<BlockPos> currentSteps = Lists.newArrayList(shootyCurrentPosition);
         Map<String, Boolean> visitedPoints = Maps.newHashMap();
         visitedPoints.put(ToStringHelper.toString(shootyCurrentPosition), true);
-        List<List<BlockPos>> blocksPerStep = Lists.newArrayList();
         List<BlockPos> blockedPoints = Lists.newArrayList();
         this.rememberSpeed(this.shooty.getUniqueID(), currentSteps, 0, speedTracker);
 
@@ -68,12 +70,16 @@ public class PathBuilder {
             this.rememberSpeed(enemy.getUniqueID(), enemyCurrentSteps.get(enemy.getUniqueID()), 0, speedTracker);
         }
 
+        Map<UUID, ITargetFinder> enemyScouts = this.createEnemyScouts(enemies);
+        SafePlaceFinder shootyFinder = new SafePlaceFinder(enemyScouts.values());
+        this.safePlaceFinder = shootyFinder;
+
         int stepNumber = 0;
         while (currentSteps.size() > 0) {
             List<BlockPos> newSteps = this.makeSteps(currentSteps, world, searchZone, visitedPoints, blockedPoints, shootyLimitations);
-            blocksPerStep.add(newSteps);
             currentSteps = newSteps;
             this.rememberSpeed(this.shooty.getUniqueID(), newSteps, stepNumber, speedTracker);
+            shootyFinder.nextStep(newSteps, stepNumber);
 
             for (MobEntity enemy : enemies) {
                 UUID uid = enemy.getUniqueID();
@@ -81,11 +87,17 @@ public class PathBuilder {
                 List<BlockPos> enemyNewSteps = this.makeSteps(enemyCurrentSteps.get(uid), world, searchZone, enemyVisitedPoints.get(uid), enemyBlockedPoints, enemyLimitations.get(uid));
                 enemyCurrentSteps.put(uid, enemyNewSteps);
                 this.rememberSpeed(uid, enemyNewSteps, stepNumber, speedTracker);
+                ITargetFinder enemyScout = enemyScouts.get(uid);
 
                 if (enemyBlockedPoints.size() > 0) {
                     List<BlockPos> enemyReachableForAttackPoints = this.getReachableForAttackPoints(enemyNewSteps, enemyBlockedPoints);
 
                     this.rememberSpeed(uid, enemyReachableForAttackPoints, stepNumber, speedTracker);
+
+                    enemyNewSteps.addAll(enemyReachableForAttackPoints);
+                    enemyScout.nextStep(enemyNewSteps, stepNumber);
+                } else {
+                    enemyScout.nextStep(enemyNewSteps, stepNumber);
                 }
             }
 
@@ -96,221 +108,12 @@ public class PathBuilder {
             }
         }
 
-        this.blocksPerStep = blocksPerStep;
         this.speedTracker = speedTracker;
-        this.safePoints = this.findSafePoints(speedTracker);
-        this.currentPath = this.buildPath(shootyLimitations, enemies.size());
+        this.safestPoints = shootyFinder.getTargets();
+        SafePathBuilder pathBuilder = new SafePathBuilder(enemyScouts.values());
+        this.currentPath = pathBuilder.build(shootyLimitations, shootyFinder);
 
         return this.currentPath;
-    }
-
-    protected Map<Integer, List<BlockPos>> createFastestPoints() {
-        Map<Integer, List<BlockPos>> fastestPoints = Maps.newHashMap();
-        UUID shootyUid = this.shooty.getUniqueID();
-
-        for (BlockPos point : speedTracker.keySet()) {
-            Map<UUID, Integer> steps = speedTracker.get(point);
-
-            if (steps.get(shootyUid) != null) {
-                int stepNumber = steps.get(shootyUid);
-                int fastestEnemy = Integer.MAX_VALUE;
-                for (UUID enemy : steps.keySet()) {
-                    if (!enemy.equals(shootyUid) && steps.get(enemy) < fastestEnemy) {
-                        fastestEnemy = steps.get(enemy);
-                    }
-                }
-
-                if (fastestEnemy > stepNumber) {
-                    if (fastestPoints.get(stepNumber) == null) {
-                        fastestPoints.put(stepNumber, Lists.newArrayList());
-                    }
-                    fastestPoints.get(stepNumber).add(point);
-                }
-            }
-        }
-
-        return fastestPoints;
-    }
-
-    protected Path buildPath(MovementLimitations limitations, int enemiesCount) {
-        if (this.safePoints.contains(shooty.getPosition())) {
-            LOGGER.debug("Already on safe point!");
-            return null;
-        }
-
-        int maxEnemiesOnPoint = 0;
-        while (maxEnemiesOnPoint < enemiesCount) {
-            Path path = this.buildPathWithMaxEnemiesOnPoint(maxEnemiesOnPoint, limitations);
-
-            if (path != null) {
-                return path;
-            }
-
-            maxEnemiesOnPoint++;
-        }
-
-        LOGGER.debug("No path :(");
-        return null;
-    }
-
-    protected Path buildPathWithMaxEnemiesOnPoint(int maxEnemies, MovementLimitations limitations) {
-        List<TreeLeaf> leafs = this.blocksPerStep.get(0).stream().map(b -> this.calculateTreeLeaf(b, null)).collect(Collectors.toList());
-        int stepNumber = 0;
-        Map<String, Boolean> visitedPoints = Maps.newHashMap();
-        List<TreeLeaf> safeLeafs = Lists.newArrayList();
-
-        while (leafs.size() > 0 && stepNumber < this.blocksPerStep.size()) {
-            stepNumber++;
-            List<TreeLeaf> currentLeafs = Lists.newArrayList();
-
-            for (TreeLeaf leaf : leafs) {
-                List<BlockPos> newSteps = this.getNextStepsFromCurrentPosition(
-                        leaf.getBlockPos(),
-                        // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
-                        this.filterByVisitedPoints(this.blocksPerStep.get(stepNumber), visitedPoints),
-                        limitations
-                );
-
-                if (newSteps.size() == 0) {
-                    leaf.die();
-                    visitedPoints.put(ToStringHelper.toString(leaf.getBlockPos()), true);
-                    continue;
-                }
-
-                List<TreeLeaf> newLeafs = this.getLeafsWithMaxEnemies(newSteps, maxEnemies, leaf);
-                if (newLeafs.size() != 0) {
-                    for (TreeLeaf child : newLeafs) {
-                        leaf.addChild(child);
-
-                        if (safePoints.contains(child.getBlockPos())) {
-                            safeLeafs.add(child);
-                        } else {
-                            visitedPoints.put(ToStringHelper.toString(child.getBlockPos()), true);
-                            currentLeafs.add(child);
-                        }
-                    }
-                }
-            }
-
-            leafs = currentLeafs;
-        }
-
-        if (safeLeafs.size() == 0) {
-            return null;
-        }
-
-        TreeLeaf safestLeaf = safeLeafs.get(0);
-        for (TreeLeaf leaf : safeLeafs) {
-            // TODO compare length
-            // TODO try to find another way between dangerous parts (with lower maxEnemies)
-            if (leaf.enemiesCount < safestLeaf.enemiesCount) {
-                safestLeaf = leaf;
-            }
-            if (leaf.enemiesCount == safestLeaf.enemiesCount && leaf.totalEnemySpeed > safestLeaf.totalEnemySpeed) {
-                safestLeaf = leaf;
-            }
-        }
-
-        return this.createPathFromTree(safestLeaf);
-    }
-
-    protected List<TreeLeaf> getLeafsWithMaxEnemies(List<BlockPos> points, int maxEnemiesOnPoint, TreeLeaf parent) {
-        List<TreeLeaf> filteredPoints = Lists.newArrayList();
-
-        for (BlockPos point : points) {
-            TreeLeaf leaf = this.calculateTreeLeaf(point, parent);
-            // TODO can cache to not recalculate each time the same points
-            if (parent.enemiesCount - leaf.enemiesCount <= maxEnemiesOnPoint) {
-                filteredPoints.add(leaf);
-            }
-        }
-
-        return filteredPoints;
-    }
-
-    protected TreeLeaf calculateTreeLeaf(BlockPos point, TreeLeaf parent) {
-        int fasterEnemiesCount = 0;
-        Map<UUID, Integer> entitiesOnPoint = this.speedTracker.get(point);
-        int shootySpeed = entitiesOnPoint.get(this.shooty.getUniqueID());
-        int fastestEnemySpeed = Integer.MAX_VALUE;
-        UUID shootyUid = this.shooty.getUniqueID();
-
-        for (UUID entity : entitiesOnPoint.keySet()) {
-            if (!entity.equals(shootyUid) && entitiesOnPoint.get(entity) <= shootySpeed) {
-                if (entitiesOnPoint.get(entity) < fastestEnemySpeed) {
-                    fastestEnemySpeed = entitiesOnPoint.get(entity);
-                }
-                fasterEnemiesCount++;
-            }
-        }
-
-        if (parent == null) {
-            return new TreeLeaf(point, fasterEnemiesCount, fastestEnemySpeed);
-        }
-
-        return new TreeLeaf(point, parent.enemiesCount + fasterEnemiesCount, parent.totalEnemySpeed + fastestEnemySpeed);
-    }
-
-    protected Path createPathFromTree(TreeLeaf leaf) {
-        List<PathPoint> pathPoints = Lists.newArrayList();
-        BlockPos target = leaf.getBlockPos();
-
-        while (leaf != null) {
-            BlockPos block = leaf.getBlockPos();
-            pathPoints.add(new PathPoint(block.getX(), block.getY(), block.getZ()));
-            leaf = leaf.getParent();
-        }
-
-        Collections.reverse(pathPoints);
-        return new Path(pathPoints, target, true);
-    }
-
-    protected List<BlockPos> getNextStepsFromCurrentPosition(BlockPos currentPosition, List<BlockPos> nextStepPoints, MovementLimitations limitations) {
-        List<BlockPos> nextSteps = Lists.newArrayList();
-
-        for (BlockPos nextPoint : nextStepPoints) {
-            int xDiff = Math.abs(nextPoint.getX() - currentPosition.getX());
-            int zDiff = Math.abs(nextPoint.getZ() - currentPosition.getZ());
-            int yDiff = nextPoint.getY() - currentPosition.getY();
-
-            if (xDiff <= 1 && zDiff <= 1 && yDiff <= limitations.jumHeight && yDiff >= -limitations.maxFallHeight) {
-                nextSteps.add(nextPoint);
-            }
-        }
-
-        return nextSteps;
-    }
-
-    protected List<BlockPos> findSafePoints(Map<BlockPos, Map<UUID, Integer>> speedTracker) {
-        Map<Integer, List<BlockPos>> diffInSpeed = Maps.newHashMap();
-        UUID shootyUid = this.shooty.getUniqueID();
-
-        for (BlockPos position : speedTracker.keySet()) {
-            Map<UUID, Integer> steps = speedTracker.get(position);
-
-            if (steps.get(shootyUid) != null) {
-                int fastestEnemySpeed = Integer.MAX_VALUE;
-
-                for (UUID entityUid : steps.keySet()) {
-                    if (!entityUid.equals(shootyUid) && steps.get(entityUid) < fastestEnemySpeed) {
-                        fastestEnemySpeed = steps.get(entityUid);
-                    }
-                }
-
-                diffInSpeed.computeIfAbsent(fastestEnemySpeed, k -> Lists.newArrayList());
-                diffInSpeed.get(fastestEnemySpeed).add(position);
-            }
-        }
-
-        List<BlockPos> safestPoints = Lists.newArrayList();
-        List<Integer> sortedDiffs = diffInSpeed.keySet().stream().sorted().collect(Collectors.toList());
-
-        if (sortedDiffs.size() > 0) {
-            int maxDiff = sortedDiffs.get(sortedDiffs.size() - 1);
-            safestPoints = diffInSpeed.get(maxDiff);
-        }
-
-        return safestPoints;
     }
 
     protected List<BlockPos> makeSteps(List<BlockPos> previousSteps, IWorldReader world, AxisAlignedBB zone, Map<String, Boolean> visitedPoints, List<BlockPos> blockedPoints, MovementLimitations limitations) {
@@ -431,7 +234,7 @@ public class PathBuilder {
             return false;
         }
 
-        Block block =  world.getBlockState(end).getBlock();
+        Block block = world.getBlockState(end).getBlock();
         IFluidState fluidState = world.getFluidState(end);
         if (
                 (!limitations.canSwim && fluidState.isTagged(FluidTags.WATER) && world.getFluidState(end.up()).isTagged(FluidTags.WATER))
@@ -607,11 +410,15 @@ public class PathBuilder {
         return limitations;
     }
 
-    private boolean isFence(IWorldReader world, BlockPos position) {
-        BlockState state = world.getBlockState(position);
-        Block block = state.getBlock();
 
-        return block.isIn(BlockTags.FENCES) || block.isIn(BlockTags.WALLS) || block instanceof FenceGateBlock;
+    private Map<UUID, ITargetFinder> createEnemyScouts(List<MobEntity> enemies) {
+        Map<UUID, ITargetFinder> scouts = Maps.newHashMap();
+
+        for (MobEntity enemy : enemies) {
+            scouts.put(enemy.getUniqueID(), new FullScouting());
+        }
+
+        return scouts;
     }
 
     // Used for spiders. If there is a tunnel with height and width both of 1, then he can attack from nearest point but can be inside tunnel
@@ -672,17 +479,5 @@ public class PathBuilder {
         double maxZ = zone.maxZ + Math.abs(zone.maxZ % 16) - 1;
 
         return new AxisAlignedBB(minX, zone.minY, minZ, maxX, zone.maxY, maxZ);
-    }
-
-    private List<BlockPos> filterByVisitedPoints(List<BlockPos> positions, Map<String, Boolean> visitedPoints) {
-        List<BlockPos> filtered = Lists.newArrayList();
-
-        for (BlockPos position : positions) {
-            if (visitedPoints.get(ToStringHelper.toString(position)) == null) {
-                filtered.add(position);
-            }
-        }
-
-        return filtered;
     }
 }
