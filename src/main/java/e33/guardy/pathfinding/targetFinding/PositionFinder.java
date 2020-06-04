@@ -29,7 +29,7 @@ public class PositionFinder extends AbstractTargetFinder {
     public void nextStep(List<BlockPos> blocksInStep, int stepNumber) {
         super.nextStep(blocksInStep, stepNumber);
 
-        if (blocksInStep.contains(this.searchedPosition)) {
+        if (this.getStepHistory().getPositionStep(this.searchedPosition) != null) {
             this.positionFound = true;
         }
     }

@@ -75,7 +75,12 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
         entitiesToAdd = Lists.newArrayList();
     }
 
-    void renderBlockWithColorAndNumber(BlockPos block, Color color, String text, double x, double y, double z) {
+    void renderBlockWithColorAndNumber(BlockPos block, Color color, String text) {
+        ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
+        double offsetX = activeRenderInfo.getProjectedView().x;
+        double offsetY = activeRenderInfo.getProjectedView().y;
+        double offsetZ = activeRenderInfo.getProjectedView().z;
+
         BlockState state = this.minecraft.world.getBlockState(block.down());
         double topY = block.getY() - 1 + state.getShape(this.minecraft.world, block).getEnd(Direction.Axis.Y);
         DebugRenderer.func_217730_a(
@@ -88,7 +93,7 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
                                 topY + 0.01,
                                 block.getZ() + 0.99
                         )
-                ).offset(-x, -y, -z),
+                ).offset(-offsetX, -offsetY, -offsetZ),
                 color.red,
                 color.green,
                 color.blue,
@@ -104,7 +109,12 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
         );
     }
 
-    void renderBlockWithColor(BlockPos block, Color color, double offsetX, double offsetY, double offsetZ) {
+    void renderBlockWithColor(BlockPos block, Color color) {
+        ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
+        double offsetX = activeRenderInfo.getProjectedView().x;
+        double offsetY = activeRenderInfo.getProjectedView().y;
+        double offsetZ = activeRenderInfo.getProjectedView().z;
+
         BlockState state = this.minecraft.world.getBlockState(block.down());
         double topY = block.getY() - 1 + state.getShape(this.minecraft.world, block).getEnd(Direction.Axis.Y);
 
@@ -126,7 +136,7 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
         );
     }
 
-    ActiveRenderInfo getActiveRenderInfo() {
+    private ActiveRenderInfo getActiveRenderInfo() {
         return this.minecraft.gameRenderer.getActiveRenderInfo();
     }
 

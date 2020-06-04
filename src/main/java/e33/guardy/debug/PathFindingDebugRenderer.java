@@ -47,11 +47,6 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
             statsCache.put(path.hashCode(), positionStats);
         }
 
-        ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
-        double x = activeRenderInfo.getProjectedView().x;
-        double y = activeRenderInfo.getProjectedView().y;
-        double z = activeRenderInfo.getProjectedView().z;
-
         for (BlockPos point : positionStats.keySet()) {
             Color color = Color.SHOOTY;
             PositionStats stats = positionStats.get(point);
@@ -94,7 +89,7 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
             }
 
 //            if (color != Color.SHOOTY && color != Color.ROUTE_VIOLET) {
-            this.renderBlockWithColorAndNumber(point, color, text, x, y, z);
+            this.renderBlockWithColorAndNumber(point, color, text);
 //            }
         }
     }

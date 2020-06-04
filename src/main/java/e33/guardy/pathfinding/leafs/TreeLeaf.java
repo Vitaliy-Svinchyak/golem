@@ -56,6 +56,10 @@ public class TreeLeaf {
         return blockPos;
     }
 
+    public boolean equals(TreeLeaf leaf) {
+        return this.getBlockPos().equals(leaf.getBlockPos());
+    }
+
     @Override
     public String toString() {
         return "TreeLeaf { " + this.blockPos.toString() + " }";

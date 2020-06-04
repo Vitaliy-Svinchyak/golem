@@ -7,7 +7,6 @@ import e33.guardy.entity.ShootyEntity;
 import e33.guardy.pathfinding.MyMutableBlockPos;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.goal.Goal;
@@ -55,8 +54,10 @@ public class PatrolVillageGoal extends Goal {
 
     public void startExecuting() {
         if (this.patrolPoints == null) {
+            TimeMeter.moduleStart(TimeMeter.MODULE_PATROL_PATH_BUILDING);
             this.patrolPoints = this.getPatrolPoints();
             this.pathParts = this.shooty.pathCreator.getCycledPathsThroughPositions(angularPoints);
+            TimeMeter.moduleEnd(TimeMeter.MODULE_PATROL_PATH_BUILDING);
 //            this.shooty.getNavigator().setPath(this.pathParts.get(0), this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
         }
     }

@@ -7,22 +7,23 @@ import org.apache.logging.log4j.Logger;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class TimeMeter {
     public static String MODULE_PATH_BUILDING = "PathBuilding";
+    public static String MODULE_PATROL_PATH_BUILDING = "Patrol PathBuilding";
     final static Logger LOGGER = LogManager.getLogger();
-    private static Map<String, Map<String, FunctionCall>> measuring = Maps.newHashMap();
+    private static LinkedHashMap<String, FunctionCall> measuring = Maps.newLinkedHashMap();
 
     public static void moduleStart(String moduleName) {
-        measuring.put(moduleName, Maps.newHashMap());
-        start(moduleName, moduleName);
+        start(moduleName);
     }
 
     public static void moduleEnd(String moduleName) {
-        end(moduleName, moduleName);
-        List<FunctionCall> calls = new ArrayList<>(measuring.get(moduleName).values());
+        end(moduleName);
+        List<FunctionCall> calls = new ArrayList<>(measuring.values());
 //        calls.sort(((c1, c2) -> (int) c2.totalDuration.minus(c1.totalDuration).toNanos()));
 
         int maxFunctionNameLength = "name".length();
@@ -59,18 +60,16 @@ public class TimeMeter {
         return str + new String(new char[neededLength - str.length()]).replace("\0", charToUse.length == 0 ? " " : charToUse[0]);
     }
 
-    public static void start(String moduleName, String functionName) {
-        Map<String, FunctionCall> calls = measuring.get(moduleName);
-
-        if (calls.get(functionName) == null) {
-            calls.put(functionName, new FunctionCall(functionName));
+    public static void start(String functionName) {
+        if (measuring.get(functionName) == null) {
+            measuring.put(functionName, new FunctionCall(functionName));
         }
 
-        calls.get(functionName).start();
+        measuring.get(functionName).start();
     }
 
-    public static void end(String moduleName, String functionName) {
-        measuring.get(moduleName).get(functionName).end();
+    public static void end(String functionName) {
+        measuring.get(functionName).end();
     }
 
     private static class FunctionCall {

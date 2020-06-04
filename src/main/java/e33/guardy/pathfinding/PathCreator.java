@@ -2,6 +2,7 @@ package e33.guardy.pathfinding;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
 import e33.guardy.pathfinding.pathBuilding.PatrolPathBuilder;
 import e33.guardy.pathfinding.pathBuilding.SafePathBuilder;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+// TODO TreeLeaf from start. Will not need to search path after
 public class PathCreator {
     final static Logger LOGGER = LogManager.getLogger();
 
@@ -94,6 +96,7 @@ public class PathCreator {
     }
 
     public List<Path> getCycledPathsThroughPositions(List<BlockPos> positions) {
+        this.nextStepVariator.clearCache();
         List<Path> pathParts = Lists.newArrayList();
         MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
 
@@ -108,14 +111,16 @@ public class PathCreator {
             }
 
             PositionFinder finder = new PositionFinder(startPosition, endPosition);
-            pathParts.add(this.findPath(finder, shootyLimitations));
+            TimeMeter.start("findPathBetweenPoints");
+            pathParts.add(this.findPathBetweenPoints(finder, shootyLimitations, i));
+            TimeMeter.end("findPathBetweenPoints");
             LOGGER.info(i + " finished");
         }
 
         return pathParts;
     }
 
-    private Path findPath(PositionFinder finder, MovementLimitations shootyLimitations) {
+    private Path findPathBetweenPoints(PositionFinder finder, MovementLimitations shootyLimitations, int pointNumber) {
         IWorldReader world = this.shooty.getEntityWorld();
         AxisAlignedBB searchZone = this.shooty.getBoundingBox().grow(150);
         StepHistoryKeeper stepHistory = finder.getStepHistory();
@@ -127,9 +132,13 @@ public class PathCreator {
             i++;
         }
 
+        LOGGER.info(i + " cycles " + finder.targetFound());
         PatrolPathBuilder builder = new PatrolPathBuilder();
 
-        return builder.build(shootyLimitations, finder);
+        TimeMeter.start("build PathBetweenPoints");
+        Path path = builder.build(shootyLimitations, finder);
+        TimeMeter.end("build PathBetweenPoints");
+        return path;
     }
 
     protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos originalPosition, MovementLimitations limitations) {
