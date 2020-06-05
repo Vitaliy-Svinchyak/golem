@@ -122,7 +122,6 @@ public class PatrolPathBuilder extends AbstractPathBuilder implements IPathBuild
         TreeLeaf nearestLeaf = null;
 
         while (stepIterator.hasNext()) {
-            TimeMeter.start("cycle");
             int stepNumber = stepIterator.next();
             List<TreeLeaf> iterationLeafs = Lists.newArrayList();
 
@@ -134,7 +133,6 @@ public class PatrolPathBuilder extends AbstractPathBuilder implements IPathBuild
                 );
 
                 if (newSteps.size() == 0) {
-                    leaf.die();
                     visitedPoints.put(ToStringHelper.toString(leaf.getBlockPos()), true);
                     continue;
                 }
@@ -163,8 +161,6 @@ public class PatrolPathBuilder extends AbstractPathBuilder implements IPathBuild
             if (startLeafs.size() == 0) {
                 break;
             }
-
-            TimeMeter.end("cycle");
         }
 
         if (nearestLeaf != null) {

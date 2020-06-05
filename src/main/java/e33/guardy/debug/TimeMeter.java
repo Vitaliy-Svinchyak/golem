@@ -1,5 +1,6 @@
 package e33.guardy.debug;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,13 +10,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TimeMeter {
     public static String MODULE_PATH_BUILDING = "PathBuilding";
     public static String MODULE_PATROL_PATH_BUILDING = "Patrol PathBuilding";
     final static Logger LOGGER = LogManager.getLogger();
     private static LinkedHashMap<String, FunctionCall> measuring = Maps.newLinkedHashMap();
+    private static LinkedHashMap<String, FunctionCall> measuringTree = Maps.newLinkedHashMap();
+    private static List<String> openedFunctions = Lists.newArrayList();
 
     public static void moduleStart(String moduleName) {
         start(moduleName);
@@ -24,8 +26,17 @@ public class TimeMeter {
     public static void moduleEnd(String moduleName) {
         end(moduleName);
         List<FunctionCall> calls = new ArrayList<>(measuring.values());
-//        calls.sort(((c1, c2) -> (int) c2.totalDuration.minus(c1.totalDuration).toNanos()));
+        List<FunctionCall> treeCalls = new ArrayList<>(measuringTree.values());
 
+        printCalls(calls);
+        printCalls(treeCalls);
+
+        measuring = Maps.newLinkedHashMap();
+        measuringTree = Maps.newLinkedHashMap();
+        openedFunctions = Lists.newArrayList();
+    }
+
+    private static void printCalls(List<FunctionCall> calls) {
         int maxFunctionNameLength = "name".length();
         int maxDurationLength = "duration".length();
         int maxCallLength = "calls".length();
@@ -33,8 +44,8 @@ public class TimeMeter {
         float totalNanos = Float.parseFloat(nanos.substring(0, nanos.length() - 1));
 
         for (FunctionCall call : calls) {
-            if (call.functionName.length() > maxFunctionNameLength) {
-                maxFunctionNameLength = call.functionName.length();
+            if (getRealFunctionName(call.functionName).length() > maxFunctionNameLength) {
+                maxFunctionNameLength = getRealFunctionName(call.functionName).length();
             }
             if (call.totalDuration.toString().length() > maxDurationLength) {
                 maxDurationLength = call.totalDuration.toString().length();
@@ -44,20 +55,44 @@ public class TimeMeter {
             }
         }
 
-        LOGGER.info(addSpace("name", maxFunctionNameLength) + " | " + addSpace("duration", maxDurationLength) + " | " + "calls" + " | " + "percent");
-        LOGGER.info(addSpace("-", maxFunctionNameLength + maxDurationLength + maxCallLength + 16, "-"));
+        LOGGER.info(addSpaceAtEnd("name", maxFunctionNameLength) + " | " + addSpaceAtEnd("duration", maxDurationLength) + " | " + "calls" + " | " + "percent" + " | " + "average");
+        LOGGER.info(addSpaceAtEnd("-", maxFunctionNameLength + maxDurationLength + maxCallLength + 25, "-"));
 
         for (FunctionCall call : calls) {
             String cnanos = call.totalDuration.toString().substring(2);
             float callNanos = Float.parseFloat(cnanos.substring(0, cnanos.length() - 1));
 
             float percent = Math.round(callNanos / totalNanos * 100);
-            LOGGER.info(addSpace(call.functionName, maxFunctionNameLength) + " | " + addSpace(call.totalDuration.toString(), maxDurationLength) + " | " + addSpace(call.totalCalls + "", maxCallLength) + " | " + percent + "%");
+            String functionName = getRealFunctionName(call.functionName);
+            LOGGER.info(addSpaceAtEnd(
+                    functionName, maxFunctionNameLength) + " | "
+                    + addSpaceAtEnd(call.totalDuration.toString().substring(2), maxDurationLength) + " | "
+                    + addSpaceAtEnd(call.totalCalls + "", maxCallLength) + " | "
+                    + addSpaceAtEnd(percent + "%", 6) + " | "
+                    + call.getAverageDuration());
         }
     }
 
-    private static String addSpace(String str, int neededLength, String... charToUse) {
-        return str + new String(new char[neededLength - str.length()]).replace("\0", charToUse.length == 0 ? " " : charToUse[0]);
+    private static String getRealFunctionName(String functionName) {
+        if (functionName.indexOf('.') != -1) {
+            String[] names = functionName.split("\\.");
+            String realFunctionName = names[names.length - 1];
+            functionName = addSpaceAtStart(realFunctionName, (names.length * 2) + realFunctionName.length(), '⮑');
+        }
+
+        return functionName;
+    }
+
+    private static String addSpaceAtEnd(String str, int neededLength, String... charToUse) {
+        return str + repeatChar(neededLength - str.length(), charToUse.length == 0 ? " " : charToUse[0]);
+    }
+
+    private static String addSpaceAtStart(String str, int neededLength, char additionalCharacterBefore) {
+        return repeatChar(neededLength - str.length(), " ") + additionalCharacterBefore + str;
+    }
+
+    private static String repeatChar(int neededLength, String charToUse) {
+        return new String(new char[neededLength]).replace("\0", charToUse);
     }
 
     public static void start(String functionName) {
@@ -66,10 +101,23 @@ public class TimeMeter {
         }
 
         measuring.get(functionName).start();
+
+        openedFunctions.add(functionName);
+        String measuringTreeFunctionName = String.join(".", openedFunctions);
+        if (measuringTree.get(measuringTreeFunctionName) == null) {
+            measuringTree.put(measuringTreeFunctionName, new FunctionCall(measuringTreeFunctionName));
+        }
+
+        measuringTree.get(measuringTreeFunctionName).start();
     }
 
     public static void end(String functionName) {
         measuring.get(functionName).end();
+
+        String measuringTreeFunctionName = String.join(".", openedFunctions);
+        measuringTree.get(measuringTreeFunctionName).end();
+
+        openedFunctions.remove(functionName);
     }
 
     private static class FunctionCall {
@@ -96,8 +144,8 @@ public class TimeMeter {
             this.start = null;
         }
 
-        Duration getAverageDuration() {
-            return Duration.ofNanos(this.totalDuration.getNano() / this.totalCalls);
+        String getAverageDuration() {
+            return Duration.ofNanos(this.totalDuration.toNanos() / this.totalCalls).toString().substring(2);
         }
     }
 }

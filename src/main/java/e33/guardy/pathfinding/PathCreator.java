@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class PathCreator {
 
     public PathCreator(ShootyEntity shooty) {
         this.shooty = shooty;
-        this.nextStepVariator = new NextStepVariator();
+        this.nextStepVariator = new NextStepVariator(this.shooty.getEntityWorld());
     }
 
     public Path getSafePath(List<MobEntity> enemies) {
@@ -52,12 +53,11 @@ public class PathCreator {
         this.currentPath = null;
 
         MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
-        IWorldReader world = this.shooty.getEntityWorld();
         AxisAlignedBB searchZone = this.getSearchZone();
 
         Map<UUID, MovementLimitations> enemyLimitations = this.createEnemyLimitations(enemies);
         Map<UUID, ITargetFinder> enemyScouts = this.createEnemyScouts(enemies);
-        this.createEnemiesCurrentSteps(world, enemies, enemyLimitations, enemyScouts);
+        this.createEnemiesCurrentSteps(enemies, enemyLimitations, enemyScouts);
 
         BlockPos shootyCurrentPosition = this.getShootyPos(shooty, shootyLimitations);
         this.safePlaceFinder = new SafePlaceFinder(shootyCurrentPosition, enemyScouts.values());
@@ -65,7 +65,7 @@ public class PathCreator {
 
         int stepNumber = 1;
         while (stepNumber < 100) {
-            List<BlockPos> newSteps = this.nextStepVariator.makeSteps(this.safePlaceFinder, world, searchZone, null, shootyLimitations);
+            List<BlockPos> newSteps = this.nextStepVariator.makeSteps(this.safePlaceFinder, searchZone, null, shootyLimitations);
             if (newSteps.size() == 0) {
                 break;
             }
@@ -75,7 +75,7 @@ public class PathCreator {
                 UUID uid = enemy.getUniqueID();
                 ITargetFinder enemyScout = enemyScouts.get(uid);
                 List<BlockPos> enemyBlockedPoints = Lists.newArrayList();
-                List<BlockPos> enemyNewSteps = this.nextStepVariator.makeSteps(enemyScout, world, searchZone, enemyBlockedPoints, enemyLimitations.get(uid));
+                List<BlockPos> enemyNewSteps = this.nextStepVariator.makeSteps(enemyScout, searchZone, enemyBlockedPoints, enemyLimitations.get(uid));
 
                 if (enemyBlockedPoints.size() > 0) {
                     List<BlockPos> enemyReachableForAttackPoints = this.getReachableForAttackPoints(enemyNewSteps, enemyBlockedPoints);
@@ -127,7 +127,7 @@ public class PathCreator {
 
         int i = 0;
         while (!finder.targetFound() && stepHistory.getLastStepPositions().size() > 0) {
-            List<BlockPos> steps = this.nextStepVariator.makeSteps(finder, world, searchZone, null, shootyLimitations);
+            List<BlockPos> steps = this.nextStepVariator.makeSteps(finder, searchZone, null, shootyLimitations);
             finder.nextStep(steps, i);
             i++;
         }
@@ -141,8 +141,9 @@ public class PathCreator {
         return path;
     }
 
-    protected BlockPos getTopPosition(IWorldReader world, @Nonnull BlockPos originalPosition, MovementLimitations limitations) {
-        return this.nextStepVariator.getTopPosition(world, originalPosition.getX(), originalPosition.getY(), originalPosition.getZ(), limitations);
+    @Nullable
+    protected BlockPos getTopOrBottomPosition(@Nonnull BlockPos originalPosition, MovementLimitations limitations) {
+        return this.nextStepVariator.getTopOrBottomPosition(originalPosition.getX(), originalPosition.getY(), originalPosition.getZ(), limitations);
     }
 
     private MovementLimitations createLimitations(MobEntity entity) {
@@ -153,7 +154,8 @@ public class PathCreator {
     private BlockPos getShootyPos(ShootyEntity entity, MovementLimitations limitations) {
         BlockPos position = entity.getPosition();
 
-        if (!this.getTopPosition(entity.world, position, limitations).equals(position)) {
+        BlockPos movedPosition = this.getTopOrBottomPosition(position, limitations);
+        if (movedPosition == null || !movedPosition.equals(position)) {
             return new BlockPos(Math.round(entity.posX), MathHelper.floor(entity.posY), Math.round(entity.posZ));
         }
 
@@ -201,14 +203,14 @@ public class PathCreator {
         return unBlockedPoints;
     }
 
-    private void createEnemiesCurrentSteps(IWorldReader world, List<MobEntity> enemies, Map<UUID, MovementLimitations> enemyLimitations, Map<UUID, ITargetFinder> enemyScouts) {
+    private void createEnemiesCurrentSteps(List<MobEntity> enemies, Map<UUID, MovementLimitations> enemyLimitations, Map<UUID, ITargetFinder> enemyScouts) {
         for (MobEntity enemy : enemies) {
-            enemyScouts.get(enemy.getUniqueID()).nextStep(Lists.newArrayList(getEntityStandPosition(world, enemy.getPosition(), enemyLimitations.get(enemy.getUniqueID()))), 0);
+            enemyScouts.get(enemy.getUniqueID()).nextStep(Lists.newArrayList(getEntityStandPosition(enemy.getPosition(), enemyLimitations.get(enemy.getUniqueID()))), 0);
         }
     }
 
-    private BlockPos getEntityStandPosition(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
-        while (!this.nextStepVariator.isSolid(world, position, limitations)) {
+    private BlockPos getEntityStandPosition(@Nonnull BlockPos position, MovementLimitations limitations) {
+        while (!this.nextStepVariator.isSolid(position, limitations)) {
             position = position.down();
         }
         position = position.up();

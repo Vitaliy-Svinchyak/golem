@@ -12,32 +12,47 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IWorldReader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
 class NextStepVariator {
+    final static Logger LOGGER = LogManager.getLogger();
 
+    private final IWorldReader world;
     private Map<String, BlockPos> swimmingTopPositionCache = Maps.newHashMap();
     private Map<String, BlockPos> notSwimmingTopPositionCache = Maps.newHashMap();
     private Map<String, Integer> canStandOnCache = Maps.newHashMap();
 
-    List<BlockPos> makeSteps(ITargetFinder finder, IWorldReader world, AxisAlignedBB zone, List<BlockPos> blockedPoints, MovementLimitations limitations) {
+    NextStepVariator(IWorldReader world) {
+        this.world = world;
+    }
+
+    List<BlockPos> makeSteps(ITargetFinder finder, AxisAlignedBB zone, List<BlockPos> blockedPoints, MovementLimitations limitations) {
         StepHistoryKeeper stepHistory = finder.getStepHistory();
         List<BlockPos> previousSteps = finder.getStepHistory().getLastStepPositions();
         List<BlockPos> newSteps = Lists.newArrayList();
+        Map<String, Boolean> usedOnThisStep = Maps.newHashMap();
 
         for (BlockPos point : previousSteps) {
-            List<BlockPos> stepVariants = getStepVariants(world, point, zone, stepHistory, blockedPoints, newSteps, limitations);
+            List<BlockPos> stepVariants = getStepVariants(point, zone, stepHistory, blockedPoints, usedOnThisStep, limitations);
 
             newSteps.addAll(stepVariants);
+            for (BlockPos position : stepVariants) {
+                usedOnThisStep.put(ToStringHelper.toString(position), true);
+            }
         }
 
         return newSteps;
     }
 
-    BlockPos getTopPosition(IWorldReader world, int x, int y, int z, MovementLimitations limitations) {
+    @Nullable
+    BlockPos getTopPosition(int x, int y, int z, MovementLimitations limitations) {
+        // TODO null will be a problem on too big amount of high heights (because it is not cached)
         Map<String, BlockPos> cache = limitations.canSwim ? this.swimmingTopPositionCache : this.notSwimmingTopPositionCache;
         String originalPositionKey = ToStringHelper.toString(x, y, z);
         if (cache.get(originalPositionKey) != null) {
@@ -46,13 +61,48 @@ class NextStepVariator {
 
         BlockPos position = new MyMutableBlockPos(x, y, z);
 
-        if (this.isSolid(world, position, limitations)) {
-            while (this.isSolid(world, position, limitations)) {
+        int diffInHeight = 0;
+        while (this.isSolid(position, limitations) && diffInHeight < limitations.jumHeight) {
+            position = position.up();
+            diffInHeight++;
+        }
+
+        if (this.isSolid(position, limitations)) {
+            return null;
+        }
+        position = position.up();
+
+        BlockPos finishedPosition = position.toImmutable();
+        cache.put(originalPositionKey, finishedPosition);
+        return finishedPosition;
+    }
+
+    BlockPos getTopOrBottomPosition(int x, int y, int z, MovementLimitations limitations) {
+        Map<String, BlockPos> cache = limitations.canSwim ? this.swimmingTopPositionCache : this.notSwimmingTopPositionCache;
+        String originalPositionKey = ToStringHelper.toString(x, y, z);
+        if (cache.get(originalPositionKey) != null) {
+            return cache.get(originalPositionKey);
+        }
+
+        BlockPos position = new MyMutableBlockPos(x, y, z);
+
+        if (this.isSolid(position, limitations)) {
+            int diffInHeight = 0;
+            while (this.isSolid(position, limitations) && diffInHeight < limitations.jumHeight) {
                 position = position.up();
+                diffInHeight++;
+            }
+            if (this.isSolid(position, limitations)) {
+                return null;
             }
         } else {
-            while (!this.isSolid(world, position, limitations)) {
+            int diffInHeight = 0;
+            while (!this.isSolid(position, limitations) && diffInHeight < limitations.maxFallHeight) {
                 position = position.down();
+                diffInHeight++;
+            }
+            if (!this.isSolid(position, limitations)) {
+                return null;
             }
             position = position.up();
         }
@@ -68,27 +118,27 @@ class NextStepVariator {
         this.canStandOnCache = Maps.newHashMap();
     }
 
-    protected List<BlockPos> getStepVariants(IWorldReader world, BlockPos start, AxisAlignedBB zone, StepHistoryKeeper stepHistory, List<BlockPos> blockedPoints, List<BlockPos> usedOnThisStepPositions, MovementLimitations limitations) {
+    protected List<BlockPos> getStepVariants(BlockPos start, AxisAlignedBB zone, StepHistoryKeeper stepHistory, List<BlockPos> blockedPoints, Map<String, Boolean> usedOnThisStepPositions, MovementLimitations limitations) {
         int x = start.getX();
         int y = start.getY();
         int z = start.getZ();
         List<BlockPos> variants = Lists.newArrayList(
-                this.getTopPosition(world, x + 1, y, z, limitations),
-                this.getTopPosition(world, x - 1, y, z, limitations),
-                this.getTopPosition(world, x, y, z + 1, limitations),
-                this.getTopPosition(world, x, y, z - 1, limitations),
+                this.getTopOrBottomPosition(x + 1, y, z, limitations),
+                this.getTopOrBottomPosition(x - 1, y, z, limitations),
+                this.getTopOrBottomPosition(x, y, z + 1, limitations),
+                this.getTopOrBottomPosition(x, y, z - 1, limitations),
 
-                this.getTopPosition(world, x + 1, y, z + 1, limitations),
-                this.getTopPosition(world, x + 1, y, z - 1, limitations),
-                this.getTopPosition(world, x - 1, y, z - 1, limitations),
-                this.getTopPosition(world, x - 1, y, z + 1, limitations)
+                this.getTopOrBottomPosition(x + 1, y, z + 1, limitations),
+                this.getTopOrBottomPosition(x + 1, y, z - 1, limitations),
+                this.getTopOrBottomPosition(x - 1, y, z - 1, limitations),
+                this.getTopOrBottomPosition(x - 1, y, z + 1, limitations)
         );
 
         List<BlockPos> filteredVariants = Lists.newArrayList();
 
         for (BlockPos variant : variants) {
             // TODO optimize usedOnThisStepPositions to map
-            if (!usedOnThisStepPositions.contains(variant) && this.isValidPosition(world, start, variant, zone, stepHistory, blockedPoints, limitations)) {
+            if (variant != null && usedOnThisStepPositions.get(ToStringHelper.toString(variant)) == null && this.isValidPosition(start, variant, zone, stepHistory, blockedPoints, limitations)) {
                 filteredVariants.add(variant);
             }
         }
@@ -96,7 +146,7 @@ class NextStepVariator {
         return filteredVariants;
     }
 
-    protected boolean isValidPosition(IWorldReader world, BlockPos previousPosition, BlockPos newPosition, AxisAlignedBB zone, StepHistoryKeeper stepHistory, List<BlockPos> blockedPoints, MovementLimitations limitations) {
+    protected boolean isValidPosition(BlockPos previousPosition, BlockPos newPosition, AxisAlignedBB zone, StepHistoryKeeper stepHistory, List<BlockPos> blockedPoints, MovementLimitations limitations) {
         boolean blockInZone = stepHistory.getPositionStep(newPosition) == null
                 && newPosition.getX() >= zone.minX - 1 && newPosition.getX() <= zone.maxX
                 && newPosition.getZ() >= zone.minZ - 1 && newPosition.getZ() <= zone.maxZ
@@ -106,7 +156,7 @@ class NextStepVariator {
             return false;
         }
 
-        if (!this.canWalkFromTo(world, previousPosition, newPosition, limitations)) {
+        if (!this.canWalkFromTo(previousPosition, newPosition, limitations)) {
             if (blockedPoints != null) {
                 blockedPoints.add(newPosition);
             }
@@ -119,23 +169,23 @@ class NextStepVariator {
             return true;
         }
 
-        BlockPos toCheckWall = this.getTopPosition(world, newPosition.getX(), previousPosition.getY(), previousPosition.getZ(), limitations);
-        BlockPos toCheckWall2 = this.getTopPosition(world, previousPosition.getX(), previousPosition.getY(), newPosition.getZ(), limitations);
+        BlockPos toCheckWall = this.getTopPosition(newPosition.getX(), previousPosition.getY(), previousPosition.getZ(), limitations);
+        BlockPos toCheckWall2 = this.getTopPosition(previousPosition.getX(), previousPosition.getY(), newPosition.getZ(), limitations);
 
-        boolean noWallOnWay = toCheckWall.getY() - previousPosition.getY() <= limitations.jumHeight && toCheckWall2.getY() - previousPosition.getY() <= limitations.jumHeight;
+        boolean noWallOnWay = toCheckWall != null || toCheckWall2 != null;
         if (noWallOnWay) {
             return true;
         }
 
-        if (blockedPoints != null) {
+        if (blockedPoints != null) { // TODO maybe delete to not check in canAttack
             blockedPoints.add(newPosition);
         }
 
         return false;
     }
 
-    protected boolean canWalkFromTo(IWorldReader world, BlockPos start, BlockPos end, MovementLimitations limitations) {
-        if (!this.fitsIn(world, end, limitations)) {
+    protected boolean canWalkFromTo(BlockPos start, BlockPos end, MovementLimitations limitations) {
+        if (!this.fitsIn(end, limitations)) {
             return false;
         }
 
@@ -167,23 +217,23 @@ class NextStepVariator {
         double diffInHeight = startY - endY;
 
         if (start.getY() > end.getY()) {
-            return diffInHeight <= limitations.maxFallHeight && this.fitsIn(world, new BlockPos(end.getX(), start.getY(), end.getZ()), limitations);
+            return diffInHeight <= limitations.maxFallHeight && this.fitsIn(new BlockPos(end.getX(), start.getY(), end.getZ()), limitations);
         } else if (start.getY() < end.getY()) {
-            return Math.abs(diffInHeight) <= limitations.jumHeight && this.fitsIn(world, new BlockPos(start.getX(), end.getY(), start.getZ()), limitations);
+            return Math.abs(diffInHeight) <= limitations.jumHeight && this.fitsIn(new BlockPos(start.getX(), end.getY(), start.getZ()), limitations);
         }
 
         return true;
     }
 
-    protected boolean fitsIn(IWorldReader world, BlockPos end, MovementLimitations limitations) {
+    protected boolean fitsIn(BlockPos end, MovementLimitations limitations) {
         float x = end.getX() + 0.5F;
         int y = end.getY();
         float z = end.getZ() + 0.5F;
 
-        boolean canStandOnPosition = this.canStandOn(world, end, limitations);
+        boolean canStandOnPosition = this.canStandOn(end, limitations);
         if (canStandOnPosition && limitations.modelWidth > 1) {
             List<List<BlockPos>> blocksToCheck = this.mapAllBlocksBetweenTwoPoints(limitations, x, y, z);
-            if (!this.samePatternOfBlocks(world, blocksToCheck, limitations)) {
+            if (!this.samePatternOfBlocks(blocksToCheck, limitations)) {
                 return false;
             }
         }
@@ -209,7 +259,7 @@ class NextStepVariator {
         return downBlocks;
     }
 
-    protected boolean canStandOn(IWorldReader world, BlockPos position, MovementLimitations limitations) {
+    protected boolean canStandOn(BlockPos position, MovementLimitations limitations) {
         String cacheKey = ToStringHelper.toString(position);
         int maxHeightToCheck = (int) Math.ceil(position.getY() + limitations.modelHeight);
         if (this.canStandOnCache.get(cacheKey) != null && this.canStandOnCache.get(cacheKey) >= maxHeightToCheck) { // todo optimize to not recache if it was not high because of block
@@ -217,7 +267,7 @@ class NextStepVariator {
         }
 
         for (int y = position.getY(); y < maxHeightToCheck; y++) {
-            if (this.isSolid(world, new BlockPos(position.getX(), y, position.getZ()), limitations)) {
+            if (this.isSolid(new BlockPos(position.getX(), y, position.getZ()), limitations)) {
                 this.canStandOnCache.put(cacheKey, y - 1);
                 return false;
             }
@@ -227,13 +277,13 @@ class NextStepVariator {
         return true;
     }
 
-    protected boolean samePatternOfBlocks(IWorldReader world, List<List<BlockPos>> blocksToCheck, MovementLimitations limitations) {
+    protected boolean samePatternOfBlocks(List<List<BlockPos>> blocksToCheck, MovementLimitations limitations) {
         List<List<Boolean>> checked = Lists.newArrayList();
         for (List<BlockPos> xBlockToCheck : blocksToCheck) {
             List<Boolean> xChecked = Lists.newArrayList();
 
             for (BlockPos blockToCheck : xBlockToCheck) {
-                boolean checkResult = this.canStandOn(world, blockToCheck, limitations);
+                boolean checkResult = this.canStandOn(blockToCheck, limitations);
                 xChecked.add(checkResult);
             }
             checked.add(xChecked);
@@ -263,8 +313,12 @@ class NextStepVariator {
         return true;
     }
 
-    boolean isSolid(IWorldReader world, @Nonnull BlockPos position, MovementLimitations limitations) {
+    boolean isSolid(@Nonnull BlockPos position, MovementLimitations limitations) {
         BlockState state = world.getBlockState(position);
+        if (state.isSolid()) {
+            return true;
+        }
+
         if (state.isAir(world, position)) {
             return false;
         }
@@ -274,7 +328,8 @@ class NextStepVariator {
         }
 
         Block block = state.getBlock();
-        if (block instanceof LeavesBlock
+
+        return block instanceof LeavesBlock
                 || block == Blocks.LILY_PAD
                 || block instanceof GlassBlock
                 || block instanceof BedBlock
@@ -282,11 +337,6 @@ class NextStepVariator {
                 || block instanceof HopperBlock
                 || block instanceof TrapDoorBlock
                 || block instanceof FlowerPotBlock
-                || block instanceof LanternBlock
-        ) {
-            return true;
-        }
-
-        return state.isSolid();
+                || block instanceof LanternBlock;
     }
 }
