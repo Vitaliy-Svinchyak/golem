@@ -42,8 +42,7 @@ public class PositionFinder extends AbstractTargetFinder {
         }
 
         this.positionFound = true;
-        this.searchedPosition = nearestPosition;
-        LOGGER.info(this.searchedPosition);
+        this.searchedPosition = nearestPosition; // Changing target to nearest point to make possible build next points
 
         return Lists.newArrayList(this.searchedPosition);
     }

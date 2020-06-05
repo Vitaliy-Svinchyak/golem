@@ -35,7 +35,6 @@ public class PatrolVillageGoal extends Goal {
     public List<BlockPos> angularPoints = null;
     private static Map<String, Boolean> allBlocks = Maps.newHashMap();
     public List<Path> pathParts = null;
-    public int currentPathPartNumber = 0;
 
     public PatrolVillageGoal(ShootyEntity creatureIn) {
         this.shooty = creatureIn;

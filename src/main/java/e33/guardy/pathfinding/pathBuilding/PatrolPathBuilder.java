@@ -17,10 +17,6 @@ public class PatrolPathBuilder extends AbstractPathBuilder implements IPathBuild
 
     @Override
     public Path build(MovementLimitations limitations, ITargetFinder finder) {
-        return this.buildToTheTarget(limitations, finder);
-    }
-
-    private Path buildToTheTarget(MovementLimitations limitations, ITargetFinder finder) {
         StepHistoryKeeper stepHistory = finder.getStepHistory();
         BlockPos target = finder.getTargets().get(0);
 

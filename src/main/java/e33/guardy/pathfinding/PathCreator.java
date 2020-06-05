@@ -23,10 +23,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 // TODO TreeLeaf from start. Will not need to search path after
 public class PathCreator {
@@ -97,31 +94,37 @@ public class PathCreator {
 
     public List<Path> getCycledPathsThroughPositions(List<BlockPos> positions) {
         this.nextStepVariator.clearCache();
-        List<Path> pathParts = Lists.newArrayList();
+        LinkedList<Path> pathParts = new LinkedList<>();
         MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
 
-        LOGGER.info(positions.size() + " size");
+        BlockPos currentPosition = this.getEntityStandPosition(this.shooty.getPosition(), shootyLimitations);
+        BlockPos firstPatrolPosition = positions.get(0);
+        PositionFinder firstFinder = new PositionFinder(currentPosition, firstPatrolPosition);
+
+        TimeMeter.start("findPathBetweenPoints");
+        Path routeToStart = this.findPathBetweenPoints(firstFinder, shootyLimitations);
+        positions.set(0, firstFinder.getTargets().get(0));
+        TimeMeter.end("findPathBetweenPoints");
+
         for (int i = 0; i < positions.size(); i++) {
             BlockPos startPosition = positions.get(i);
-            BlockPos endPosition;
-            if (i == positions.size() - 1) {
-                endPosition = positions.get(0);
-            } else {
-                endPosition = positions.get(i + 1);
-            }
+            int endIndex = i == positions.size() - 1 ? 0 : i + 1;
+            BlockPos endPosition = positions.get(endIndex);
 
             PositionFinder finder = new PositionFinder(startPosition, endPosition);
             TimeMeter.start("findPathBetweenPoints");
-            pathParts.add(this.findPathBetweenPoints(finder, shootyLimitations, i));
+            pathParts.add(this.findPathBetweenPoints(finder, shootyLimitations));
             TimeMeter.end("findPathBetweenPoints");
-            LOGGER.info(i + " finished");
-            break;
+
+            positions.set(endIndex, finder.getTargets().get(0)); // Because he rewrites himself in case of targetNotFound
         }
+
+        pathParts.addFirst(routeToStart);
 
         return pathParts;
     }
 
-    private Path findPathBetweenPoints(PositionFinder finder, MovementLimitations shootyLimitations, int pointNumber) {
+    private Path findPathBetweenPoints(PositionFinder finder, MovementLimitations shootyLimitations) {
         AxisAlignedBB searchZone = this.shooty.getBoundingBox().grow(150);
         StepHistoryKeeper stepHistory = finder.getStepHistory();
 
