@@ -115,13 +115,13 @@ public class PathCreator {
             pathParts.add(this.findPathBetweenPoints(finder, shootyLimitations, i));
             TimeMeter.end("findPathBetweenPoints");
             LOGGER.info(i + " finished");
+            break;
         }
 
         return pathParts;
     }
 
     private Path findPathBetweenPoints(PositionFinder finder, MovementLimitations shootyLimitations, int pointNumber) {
-        IWorldReader world = this.shooty.getEntityWorld();
         AxisAlignedBB searchZone = this.shooty.getBoundingBox().grow(150);
         StepHistoryKeeper stepHistory = finder.getStepHistory();
 
