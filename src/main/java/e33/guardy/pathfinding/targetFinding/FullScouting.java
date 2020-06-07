@@ -19,4 +19,8 @@ public class FullScouting extends AbstractTargetFinder {
     public List<BlockPos> getTargets() {
         return null;
     }
+
+    @Override
+    public void finish() {
+    }
 }

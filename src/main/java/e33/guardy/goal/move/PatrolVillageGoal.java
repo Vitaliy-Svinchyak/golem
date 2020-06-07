@@ -43,7 +43,7 @@ public class PatrolVillageGoal extends Goal {
 
     @Override
     public boolean shouldExecute() {
-        return this.world.isAreaLoaded(this.shooty.getPosition(), 150); // TODO
+        return this.world.isAreaLoaded(this.shooty.getPosition(), 150); // TODO dynamic range and only when shooty is near MEET_POINT
     }
 
     public boolean shouldContinueExecuting() {

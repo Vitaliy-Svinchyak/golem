@@ -10,12 +10,14 @@ import e33.guardy.util.ToStringHelper;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class PatrolPathBuilder extends AbstractPathBuilder implements IPathBuilder {
 
     @Override
+    @Nullable
     public Path build(MovementLimitations limitations, ITargetFinder finder) {
         StepHistoryKeeper stepHistory = finder.getStepHistory();
         BlockPos target = finder.getTargets().get(0);

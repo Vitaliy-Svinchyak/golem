@@ -7,6 +7,7 @@ import java.util.List;
 
 public class PositionFinder extends AbstractTargetFinder {
 
+    private BlockPos originalSearchedPosition;
     private BlockPos searchedPosition;
     private boolean positionFound = false;
 
@@ -14,6 +15,7 @@ public class PositionFinder extends AbstractTargetFinder {
         super(startPosition);
 
         this.searchedPosition = searchedPosition;
+        this.originalSearchedPosition = searchedPosition;
     }
 
     @Override
@@ -23,8 +25,13 @@ public class PositionFinder extends AbstractTargetFinder {
 
     @Override
     public List<BlockPos> getTargets() {
+        return Lists.newArrayList(this.searchedPosition);
+    }
+
+    @Override
+    public void finish() {
         if (this.targetFound()) {
-            return Lists.newArrayList(this.searchedPosition);
+            return;
         }
 
         double nearestDistance = Double.MAX_VALUE;
@@ -43,8 +50,6 @@ public class PositionFinder extends AbstractTargetFinder {
 
         this.positionFound = true;
         this.searchedPosition = nearestPosition; // Changing target to nearest point to make possible build next points
-
-        return Lists.newArrayList(this.searchedPosition);
     }
 
     public void nextStep(List<BlockPos> blocksInStep, int stepNumber) {
@@ -53,5 +58,11 @@ public class PositionFinder extends AbstractTargetFinder {
         if (this.getStepHistory().getPositionStep(this.searchedPosition) != null) {
             this.positionFound = true;
         }
+    }
+
+    public void clear() {
+        super.clear();
+        this.positionFound = false;
+        this.searchedPosition = this.originalSearchedPosition;
     }
 }

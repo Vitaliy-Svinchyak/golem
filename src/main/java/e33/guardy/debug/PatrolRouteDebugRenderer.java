@@ -31,7 +31,9 @@ public class PatrolRouteDebugRenderer extends AbstractDebugRenderer {
             List<BlockPos> pathPoints = this.turnPathToBlocksList(path);
             int i = 0;
             for (BlockPos pos : pathPoints) {
-                this.renderBlockWithColorAndNumber(pos, Color.PATH_GREEN, i + "");
+                if (!angularPoints.contains(pos)) {
+                    this.renderBlockWithColorAndNumber(pos, Color.PATH_GREEN, i + "");
+                }
                 i++;
             }
         }

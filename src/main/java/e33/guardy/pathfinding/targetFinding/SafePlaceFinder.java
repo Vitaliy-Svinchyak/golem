@@ -61,4 +61,9 @@ public class SafePlaceFinder extends AbstractTargetFinder {
 
         return null;
     }
+
+    @Override
+    public void finish() {
+
+    }
 }

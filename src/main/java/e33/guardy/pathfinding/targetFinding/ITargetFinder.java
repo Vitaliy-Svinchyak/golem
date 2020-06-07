@@ -15,6 +15,8 @@ public interface ITargetFinder {
 
     public List<BlockPos> getTargets();
 
+    public void finish();
+
     public void clear();
 }
 

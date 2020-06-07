@@ -13,10 +13,11 @@ public class StepHistoryKeeper {
     private Map<String, Integer> positionsToStep;
     private Map<Integer, List<BlockPos>> stepToPositions;
     private int lastStep = 0;
+    private final BlockPos startPosition;
 
     public StepHistoryKeeper(BlockPos startPosition) {
+        this.startPosition = startPosition;
         this.clear();
-        this.saveStep(Lists.newArrayList(startPosition), 0);
     }
 
     public Integer getLastStepNumber() {
@@ -55,5 +56,6 @@ public class StepHistoryKeeper {
     public void clear() {
         this.positionsToStep = Maps.newHashMap();
         this.stepToPositions = Maps.newHashMap();
+        this.saveStep(Lists.newArrayList(this.startPosition), 0);
     }
 }
