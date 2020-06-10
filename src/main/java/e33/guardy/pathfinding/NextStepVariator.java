@@ -172,16 +172,16 @@ class NextStepVariator {
         BlockPos toCheckWall = this.getTopPosition(newPosition.getX(), previousPosition.getY(), previousPosition.getZ(), limitations);
         BlockPos toCheckWall2 = this.getTopPosition(previousPosition.getX(), previousPosition.getY(), newPosition.getZ(), limitations);
 
-        boolean noWallOnWay = toCheckWall != null || toCheckWall2 != null;
-        if (noWallOnWay) {
-            return true;
+        boolean wallOnWay = (toCheckWall == null || toCheckWall2 == null) || (toCheckWall.getY() - previousPosition.getY() > limitations.jumHeight && toCheckWall2.getY() - previousPosition.getY() > limitations.jumHeight);
+        if (wallOnWay) {
+            if (blockedPoints != null) { // TODO maybe delete to not check in canAttack
+                blockedPoints.add(newPosition);
+            }
+
+            return false;
         }
 
-        if (blockedPoints != null) { // TODO maybe delete to not check in canAttack
-            blockedPoints.add(newPosition);
-        }
-
-        return false;
+        return true;
     }
 
     protected boolean canWalkFromTo(BlockPos start, BlockPos end, MovementLimitations limitations) {
@@ -344,8 +344,8 @@ class NextStepVariator {
                 || block instanceof HopperBlock
                 || block instanceof TrapDoorBlock
                 || block instanceof FlowerPotBlock
-                || block instanceof LanternBlock
-                || block instanceof DoorBlock; // TODO fix later
+                || block instanceof LanternBlock;
+//                || block instanceof DoorBlock; // TODO fix later
     }
 
     boolean isFence(BlockState state) {

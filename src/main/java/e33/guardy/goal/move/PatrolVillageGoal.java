@@ -89,13 +89,16 @@ public class PatrolVillageGoal extends Goal {
     public void startExecuting() {
         if (this.patrolPoints == null) {
             this.patrolPoints = this.getPatrolPoints();
-            this.currentPathNumber = this.getNearestAngularlPoint();
+            this.currentPathNumber = this.getNearestAngularPoint();
             Path pathToStartOfPatrol = this.shooty.pathCreator.getPathBetweenPoints(this.shooty.getPosition(), this.angularPoints.get(this.currentPathNumber));
-            PathPoint lastPathPoint = pathToStartOfPatrol.getFinalPathPoint();
-            BlockPos lastPoint = new BlockPos(lastPathPoint.x, lastPathPoint.y, lastPathPoint.z);
-            this.angularPoints.set(this.currentPathNumber, lastPoint);
-            this.shooty.getNavigator().setPath(pathToStartOfPatrol, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
-            this.move();
+
+            if (pathToStartOfPatrol != null) {
+                PathPoint lastPathPoint = pathToStartOfPatrol.getFinalPathPoint();
+                BlockPos lastPoint = new BlockPos(lastPathPoint.x, lastPathPoint.y, lastPathPoint.z);
+                this.angularPoints.set(this.currentPathNumber, lastPoint);
+                this.shooty.getNavigator().setPath(pathToStartOfPatrol, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+                this.move();
+            }
         }
     }
 
@@ -104,7 +107,7 @@ public class PatrolVillageGoal extends Goal {
         this.shooty.getNavigator().clearPath();
     }
 
-    private int getNearestAngularlPoint() {
+    private int getNearestAngularPoint() {
         int nearestPatrolPoint = 0;
         BlockPos currentPosition = this.shooty.getPosition();
 

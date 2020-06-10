@@ -3,12 +3,12 @@ package e33.guardy.entity;
 import e33.guardy.debug.PathFindingDebugRenderer;
 import e33.guardy.debug.PatrolRouteDebugRenderer;
 import e33.guardy.goal.attack.AvoidPeacefulCreaturesHelper;
-import e33.guardy.goal.move.AvoidingDangerGoal;
 import e33.guardy.goal.move.PatrolVillageGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
+import net.minecraft.entity.ai.goal.OpenDoorGoal;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.pathfinding.PathNavigator;
@@ -66,7 +66,8 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
         // TODO 2 custom priority queue
 //        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
 //        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this));
-        this.goalSelector.addGoal(1, this.patrolVillageGoal);
+        this.goalSelector.addGoal(1, new OpenDoorGoal(this, true));
+        this.goalSelector.addGoal(2, this.patrolVillageGoal);
 //        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
 //        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
 //        this.goalSelector.addGoal(2, lookGoal);

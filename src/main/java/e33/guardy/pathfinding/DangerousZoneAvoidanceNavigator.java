@@ -16,6 +16,7 @@ public class DangerousZoneAvoidanceNavigator extends GroundPathNavigator {
 
     protected PathFinder getPathFinder(int p_179679_1_) {
         this.nodeProcessor = new CarefulWalkNodeProcessor();
+        this.nodeProcessor.setCanOpenDoors(true);
         this.nodeProcessor.setCanEnterDoors(true);
         return new PathFinder(this.nodeProcessor, p_179679_1_);
     }
