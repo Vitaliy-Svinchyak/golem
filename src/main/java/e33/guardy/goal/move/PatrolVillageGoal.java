@@ -22,12 +22,12 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.GlobalPos;
-import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,7 +56,7 @@ public class PatrolVillageGoal extends Goal {
 
     public boolean shouldContinueExecuting() {
         // TODO check monsters
-        if (this.shooty.getNavigator().noPath() || !this.pathOrientationCache.pathOrientationIsTheSame(this.shooty.getNavigator().getPath(), this.world)) {
+        if (this.shooty.getNavigator().noPath() || !this.pathOrientationCache.pathOrientationIsTheSame(this.shooty.getNavigator().getPath())) {
             int nextPathNumber = this.currentPathNumber + 1;
 
             // TODO implement normally. Minecraft somewhy decides that he finished path earlier than it really was finished
@@ -98,7 +98,7 @@ public class PatrolVillageGoal extends Goal {
 
         LOGGER.info("setting path: " + path);
         this.shooty.getNavigator().setPath(path, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
-        this.pathOrientationCache = new PathOrientationCache(path, this.world);
+        this.pathOrientationCache = new PathOrientationCache(path);
 
         if (updateAngularPoint) {
             PathPoint lastPathPoint = path.getFinalPathPoint();
@@ -420,39 +420,75 @@ public class PatrolVillageGoal extends Goal {
     }
 
     class PathOrientationCache {
-        private List<PathPointOrientation> states = Lists.newArrayList();
+        private List<List<PathPointOrientation>> states = Lists.newArrayList();
 
-        PathOrientationCache(Path path, IWorldReader world) {
+        PathOrientationCache(Path path) {
             for (int i = 0; i < path.getCurrentPathLength(); i++) {
                 PathPoint pathPoint = path.getPathPointFromIndex(i);
+                PathPoint nexPathPoint = null;
+                if (i < path.getCurrentPathLength() - 1) {
+                    nexPathPoint = path.getPathPointFromIndex(i + 1);
+                }
+
                 this.states.add(
-                        new PathPointOrientation(
-                                world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y, pathPoint.z)),
-                                world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 1, pathPoint.z)),
-                                world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 2, pathPoint.z))
-                        )
+                        this.createOrientations(pathPoint, nexPathPoint)
                 );
             }
         }
 
-        public boolean pathOrientationIsTheSame(Path path, IWorldReader world) {
+        boolean pathOrientationIsTheSame(Path path) {
             if (path == null) {
                 return false;
             }
 
-            for (int i = path.getCurrentPathIndex(); i < path.getCurrentPathLength(); i++) {
-                PathPoint pathPoint = path.getPathPointFromIndex(i);
-
-                if (!this.states.get(i).equals(new PathPointOrientation(
-                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y, pathPoint.z)),
-                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 1, pathPoint.z)),
-                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 2, pathPoint.z))
-                ))) {
-                    return false;
+            for (int pathIndex = path.getCurrentPathIndex(); pathIndex < path.getCurrentPathLength(); pathIndex++) {
+                PathPoint pathPoint = path.getPathPointFromIndex(pathIndex);
+                PathPoint nexPathPoint = null;
+                if (pathIndex < path.getCurrentPathLength() - 1) {
+                    nexPathPoint = path.getPathPointFromIndex(pathIndex + 1);
                 }
+
+                List<PathPointOrientation> orientations = this.createOrientations(pathPoint, nexPathPoint);
+
+                for (int orientationNumber = 0; orientationNumber < 3; orientationNumber++) {
+                    PathPointOrientation originalOrientation = this.states.get(pathIndex).get(orientationNumber);
+                    PathPointOrientation currentOrientation = orientations.get(orientationNumber);
+
+                    if (originalOrientation == null ^ currentOrientation == null) {
+                        return false;
+                    } else if (originalOrientation != null && !originalOrientation.equals(currentOrientation)) {
+                        return false;
+                    }
+                }
+
             }
 
             return true;
+        }
+
+        private List<PathPointOrientation> createOrientations(PathPoint pathPoint, @Nullable PathPoint nexPathPoint) {
+            PathPointOrientation centralOrientation = new PathPointOrientation(
+                    world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y - 1, pathPoint.z)),
+                    world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y, pathPoint.z)),
+                    world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 1, pathPoint.z))
+            );
+            PathPointOrientation leftOrientation = null;
+            PathPointOrientation rightOrientation = null;
+
+            if (nexPathPoint != null && pathPoint.x != nexPathPoint.x && pathPoint.z != nexPathPoint.z) {
+                leftOrientation = new PathPointOrientation(
+                        world.getBlockState(new BlockPos(nexPathPoint.x, pathPoint.y - 1, pathPoint.z)),
+                        world.getBlockState(new BlockPos(nexPathPoint.x, pathPoint.y, pathPoint.z)),
+                        world.getBlockState(new BlockPos(nexPathPoint.x, pathPoint.y + 1, pathPoint.z))
+                );
+                rightOrientation = new PathPointOrientation(
+                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y - 1, nexPathPoint.z)),
+                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y, nexPathPoint.z)),
+                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 1, nexPathPoint.z))
+                );
+            }
+
+            return Lists.newArrayList(leftOrientation, centralOrientation, rightOrientation);
         }
     }
 
