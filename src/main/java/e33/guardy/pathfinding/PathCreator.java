@@ -120,6 +120,7 @@ public class PathCreator {
     }
 
     public Path getPathBetweenPoints(BlockPos start, BlockPos finish) {
+        this.nextStepVariator.clearCache();
         MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
         PositionFinder finder = new PositionFinder(start, finish);
 

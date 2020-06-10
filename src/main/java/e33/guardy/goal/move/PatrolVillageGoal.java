@@ -22,6 +22,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.GlobalPos;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +42,7 @@ public class PatrolVillageGoal extends Goal {
     public List<BlockPos> angularPoints = null;
     private static Map<String, Boolean> allBlocks = Maps.newHashMap();
     private int currentPathNumber;
+    private PathOrientationCache pathOrientationCache;
 
     public PatrolVillageGoal(ShootyEntity creatureIn) {
         this.shooty = creatureIn;
@@ -54,9 +56,8 @@ public class PatrolVillageGoal extends Goal {
 
     public boolean shouldContinueExecuting() {
         // TODO check monsters
-        if (this.shooty.getNavigator().noPath()) {
+        if (this.shooty.getNavigator().noPath() || !this.pathOrientationCache.pathOrientationIsTheSame(this.shooty.getNavigator().getPath(), this.world)) {
             int nextPathNumber = this.currentPathNumber + 1;
-            LOGGER.info(this.currentPathNumber);
 
             // TODO implement normally. Minecraft somewhy decides that he finished path earlier than it really was finished
             boolean forceToFinish = false;
@@ -69,43 +70,43 @@ public class PatrolVillageGoal extends Goal {
                 nextPathNumber = 0;
             }
             this.currentPathNumber = nextPathNumber;
-            LOGGER.info(nextPathNumber);
-            LOGGER.info("--------------");
 
             Path pathToStartOfPatrol = this.shooty.pathCreator.getPathBetweenPoints(this.shooty.getPosition(), this.angularPoints.get(this.currentPathNumber));
-            this.shooty.getNavigator().setPath(pathToStartOfPatrol, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
-
-            if (!forceToFinish) {
-                PathPoint lastPathPoint = pathToStartOfPatrol.getFinalPathPoint();
-                BlockPos lastPoint = new BlockPos(lastPathPoint.x, lastPathPoint.y, lastPathPoint.z);
-                this.angularPoints.set(this.currentPathNumber, lastPoint);
-            }
-
+            this.setPath(pathToStartOfPatrol, !forceToFinish);
         }
 
         return true;
     }
 
     public void startExecuting() {
-        if (this.patrolPoints == null) {
-            this.patrolPoints = this.getPatrolPoints();
-            this.currentPathNumber = this.getNearestAngularPoint();
-            Path pathToStartOfPatrol = this.shooty.pathCreator.getPathBetweenPoints(this.shooty.getPosition(), this.angularPoints.get(this.currentPathNumber));
-
-            if (pathToStartOfPatrol != null) {
-                PathPoint lastPathPoint = pathToStartOfPatrol.getFinalPathPoint();
-                BlockPos lastPoint = new BlockPos(lastPathPoint.x, lastPathPoint.y, lastPathPoint.z);
-                this.angularPoints.set(this.currentPathNumber, lastPoint);
-                this.shooty.getNavigator().setPath(pathToStartOfPatrol, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
-                this.move();
-            }
-        }
+        this.patrolPoints = this.getPatrolPoints();
+        this.currentPathNumber = this.getNearestAngularPoint();
+        Path pathToStartOfPatrol = this.shooty.pathCreator.getPathBetweenPoints(this.shooty.getPosition(), this.angularPoints.get(this.currentPathNumber));
+        this.setPath(pathToStartOfPatrol, true);
+        this.move();
     }
 
     public void resetTask() {
         this.stop();
         this.shooty.getNavigator().clearPath();
     }
+
+    private void setPath(Path path, boolean updateAngularPoint) {
+        if (path == null) {
+            return;
+        }
+
+        LOGGER.info("setting path: " + path);
+        this.shooty.getNavigator().setPath(path, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+        this.pathOrientationCache = new PathOrientationCache(path, this.world);
+
+        if (updateAngularPoint) {
+            PathPoint lastPathPoint = path.getFinalPathPoint();
+            BlockPos lastPoint = new BlockPos(lastPathPoint.x, lastPathPoint.y, lastPathPoint.z);
+            this.angularPoints.set(this.currentPathNumber, lastPoint);
+        }
+    }
+
 
     private int getNearestAngularPoint() {
         int nearestPatrolPoint = 0;
@@ -415,6 +416,61 @@ public class PatrolVillageGoal extends Goal {
         LOGGER.info("stop");
         if (AnimationStateListener.getAnimationState(this.shooty) == AnimationState.MOVE) {
             E33.internalEventBus.post(new NoActionEvent(this.shooty));
+        }
+    }
+
+    class PathOrientationCache {
+        private List<PathPointOrientation> states = Lists.newArrayList();
+
+        PathOrientationCache(Path path, IWorldReader world) {
+            for (int i = 0; i < path.getCurrentPathLength(); i++) {
+                PathPoint pathPoint = path.getPathPointFromIndex(i);
+                this.states.add(
+                        new PathPointOrientation(
+                                world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y, pathPoint.z)),
+                                world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 1, pathPoint.z)),
+                                world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 2, pathPoint.z))
+                        )
+                );
+            }
+        }
+
+        public boolean pathOrientationIsTheSame(Path path, IWorldReader world) {
+            if (path == null) {
+                return false;
+            }
+
+            for (int i = path.getCurrentPathIndex(); i < path.getCurrentPathLength(); i++) {
+                PathPoint pathPoint = path.getPathPointFromIndex(i);
+
+                if (!this.states.get(i).equals(new PathPointOrientation(
+                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y, pathPoint.z)),
+                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 1, pathPoint.z)),
+                        world.getBlockState(new BlockPos(pathPoint.x, pathPoint.y + 2, pathPoint.z))
+                ))) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    class PathPointOrientation {
+        final BlockState ground;
+        final BlockState legsBlock;
+        final BlockState headBlock;
+
+        PathPointOrientation(BlockState ground, BlockState legsBlock, BlockState headBlock) {
+            this.ground = ground;
+            this.legsBlock = legsBlock;
+            this.headBlock = headBlock;
+        }
+
+        boolean equals(PathPointOrientation another) {
+            return this.ground.equals(another.ground)
+                    && this.legsBlock.equals(another.legsBlock)
+                    && this.headBlock.equals(another.headBlock);
         }
     }
 }
