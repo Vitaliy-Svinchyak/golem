@@ -214,6 +214,13 @@ class NextStepVariator {
             endY = endY - 1 + endShape.getEnd(Direction.Axis.Y);
         }
 
+        if (this.isFence(endState)) {
+            endY += 0.5D;
+        }
+        if (this.isFence(startState)) {
+            endY += 0.5D;
+        }
+
         double diffInHeight = startY - endY;
 
         if (start.getY() > end.getY()) {
@@ -337,6 +344,12 @@ class NextStepVariator {
                 || block instanceof HopperBlock
                 || block instanceof TrapDoorBlock
                 || block instanceof FlowerPotBlock
-                || block instanceof LanternBlock;
+                || block instanceof LanternBlock
+                || block instanceof DoorBlock; // TODO fix later
+    }
+
+    boolean isFence(BlockState state) {
+        Block block = state.getBlock();
+        return block instanceof FenceBlock || block instanceof FenceGateBlock || block instanceof WallBlock;
     }
 }

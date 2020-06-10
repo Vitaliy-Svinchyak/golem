@@ -16,25 +16,26 @@ public class PatrolRouteDebugRenderer extends AbstractDebugRenderer {
     @Override
     void renderEntities(List<ShootyEntity> entities) {
         for (ShootyEntity entity : entities) {
-            if (entity.patrolVillageGoal != null && entity.patrolVillageGoal.patrolPoints != null && entity.patrolVillageGoal.pathParts != null) {
-                this.renderRoutes(entity.patrolVillageGoal.patrolPoints, entity.patrolVillageGoal.angularPoints, entity.patrolVillageGoal.pathParts);
+            if (entity.patrolVillageGoal != null && entity.patrolVillageGoal.patrolPoints != null) {
+                this.renderRoutes(entity.patrolVillageGoal.patrolPoints, entity.patrolVillageGoal.angularPoints, entity.getNavigator().getPath());
             }
         }
     }
 
-    private void renderRoutes(List<BlockPos> patrolPoints, List<BlockPos> angularPoints, List<Path> pathParts) {
+    private void renderRoutes(List<BlockPos> patrolPoints, List<BlockPos> angularPoints, Path path) {
         for (BlockPos pos : patrolPoints) {
             this.renderBlockWithColor(pos, Color.VILLAGE_BLACK);
         }
 
-        for (Path path : pathParts) {
+
+        if (path != null) {
             List<BlockPos> pathPoints = this.turnPathToBlocksList(path);
-            int i = 0;
+            int pathStep = 0;
             for (BlockPos pos : pathPoints) {
                 if (!angularPoints.contains(pos)) {
-                    this.renderBlockWithColorAndNumber(pos, Color.PATH_GREEN, i + "");
+                    this.renderBlockWithColorAndNumber(pos, Color.PATH_GREEN, pathStep + "");
                 }
-                i++;
+                pathStep++;
             }
         }
 

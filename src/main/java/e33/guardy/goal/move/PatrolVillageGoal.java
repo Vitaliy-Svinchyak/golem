@@ -2,16 +2,22 @@ package e33.guardy.goal.move;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import e33.guardy.debug.TimeMeter;
+import e33.guardy.E33;
+import e33.guardy.client.detail.AnimationState;
+import e33.guardy.client.listener.AnimationStateListener;
 import e33.guardy.entity.ShootyEntity;
+import e33.guardy.event.MoveEvent;
+import e33.guardy.event.NoActionEvent;
 import e33.guardy.pathfinding.MyMutableBlockPos;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.block.*;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -34,7 +40,7 @@ public class PatrolVillageGoal extends Goal {
     public List<BlockPos> patrolPoints = null;
     public List<BlockPos> angularPoints = null;
     private static Map<String, Boolean> allBlocks = Maps.newHashMap();
-    public List<Path> pathParts = null;
+    private int currentPathNumber;
 
     public PatrolVillageGoal(ShootyEntity creatureIn) {
         this.shooty = creatureIn;
@@ -47,18 +53,69 @@ public class PatrolVillageGoal extends Goal {
     }
 
     public boolean shouldContinueExecuting() {
+        // TODO check monsters
+        if (this.shooty.getNavigator().noPath()) {
+            int nextPathNumber = this.currentPathNumber + 1;
+            LOGGER.info(this.currentPathNumber);
 
-        return !this.shooty.getNavigator().noPath(); // TODO
+            // TODO implement normally. Minecraft somewhy decides that he finished path earlier than it really was finished
+            boolean forceToFinish = false;
+            if (this.shooty.getPosition().distanceSq(this.angularPoints.get(this.currentPathNumber)) > 4D) {
+                nextPathNumber = this.currentPathNumber;
+                forceToFinish = true;
+            }
+
+            if (nextPathNumber > this.angularPoints.size() - 1) {
+                nextPathNumber = 0;
+            }
+            this.currentPathNumber = nextPathNumber;
+            LOGGER.info(nextPathNumber);
+            LOGGER.info("--------------");
+
+            Path pathToStartOfPatrol = this.shooty.pathCreator.getPathBetweenPoints(this.shooty.getPosition(), this.angularPoints.get(this.currentPathNumber));
+            this.shooty.getNavigator().setPath(pathToStartOfPatrol, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+
+            if (!forceToFinish) {
+                PathPoint lastPathPoint = pathToStartOfPatrol.getFinalPathPoint();
+                BlockPos lastPoint = new BlockPos(lastPathPoint.x, lastPathPoint.y, lastPathPoint.z);
+                this.angularPoints.set(this.currentPathNumber, lastPoint);
+            }
+
+        }
+
+        return true;
     }
 
     public void startExecuting() {
         if (this.patrolPoints == null) {
-            TimeMeter.moduleStart(TimeMeter.MODULE_PATROL_PATH_BUILDING);
             this.patrolPoints = this.getPatrolPoints();
-            this.pathParts = this.shooty.pathCreator.getCycledPathsThroughPositions(angularPoints);
-            TimeMeter.moduleEnd(TimeMeter.MODULE_PATROL_PATH_BUILDING);
-//            this.shooty.getNavigator().setPath(this.pathParts.get(0), this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+            this.currentPathNumber = this.getNearestAngularlPoint();
+            Path pathToStartOfPatrol = this.shooty.pathCreator.getPathBetweenPoints(this.shooty.getPosition(), this.angularPoints.get(this.currentPathNumber));
+            PathPoint lastPathPoint = pathToStartOfPatrol.getFinalPathPoint();
+            BlockPos lastPoint = new BlockPos(lastPathPoint.x, lastPathPoint.y, lastPathPoint.z);
+            this.angularPoints.set(this.currentPathNumber, lastPoint);
+            this.shooty.getNavigator().setPath(pathToStartOfPatrol, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
+            this.move();
         }
+    }
+
+    public void resetTask() {
+        this.stop();
+        this.shooty.getNavigator().clearPath();
+    }
+
+    private int getNearestAngularlPoint() {
+        int nearestPatrolPoint = 0;
+        BlockPos currentPosition = this.shooty.getPosition();
+
+        for (int i = 1; i < this.angularPoints.size(); i++) {
+            BlockPos patrolPoint = this.angularPoints.get(i);
+            if (currentPosition.distanceSq(patrolPoint) < currentPosition.distanceSq(this.angularPoints.get(nearestPatrolPoint))) {
+                nearestPatrolPoint = i;
+            }
+        }
+
+        return nearestPatrolPoint;
     }
 
     protected List<BlockPos> getPatrolPoints() {
@@ -295,6 +352,7 @@ public class PatrolVillageGoal extends Goal {
         return knownPositions;
     }
 
+    // TODO remove it
     private int getTopPosition(int x, int y, int z) {
         String cacheKey = ToStringHelper.toString(x, y, z);
         if (this.topPositionCache.get(cacheKey) != null) {
@@ -343,5 +401,17 @@ public class PatrolVillageGoal extends Goal {
         }
 
         return state.isSolid();
+    }
+
+    private void move() {
+        LOGGER.info("move");
+        E33.internalEventBus.post(new MoveEvent(this.shooty));
+    }
+
+    private void stop() {
+        LOGGER.info("stop");
+        if (AnimationStateListener.getAnimationState(this.shooty) == AnimationState.MOVE) {
+            E33.internalEventBus.post(new NoActionEvent(this.shooty));
+        }
     }
 }

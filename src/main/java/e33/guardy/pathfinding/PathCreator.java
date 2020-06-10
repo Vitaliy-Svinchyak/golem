@@ -2,8 +2,6 @@ package e33.guardy.pathfinding;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mojang.datafixers.kinds.Const;
-import e33.guardy.debug.TimeMeter;
 import e33.guardy.entity.ShootyEntity;
 import e33.guardy.pathfinding.pathBuilding.PatrolPathBuilder;
 import e33.guardy.pathfinding.pathBuilding.SafePathBuilder;
@@ -19,7 +17,6 @@ import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IWorldReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -103,10 +100,8 @@ public class PathCreator {
         BlockPos firstPatrolPosition = positions.get(0);
         PositionFinder firstFinder = new PositionFinder(currentPosition, firstPatrolPosition);
 
-        TimeMeter.start("findPathBetweenPoints");
         Path routeToStart = this.findPathBetweenPoints(firstFinder, shootyLimitations);
         positions.set(0, firstFinder.getTargets().get(0));
-        TimeMeter.end("findPathBetweenPoints");
 
         for (int i = 0; i < positions.size(); i++) {
             BlockPos startPosition = positions.get(i);
@@ -114,9 +109,7 @@ public class PathCreator {
             BlockPos endPosition = positions.get(endIndex);
 
             PositionFinder finder = new PositionFinder(startPosition, endPosition);
-            TimeMeter.start("findPathBetweenPoints " + i);
             pathParts.add(this.findPathBetweenPoints(finder, shootyLimitations));
-            TimeMeter.end("findPathBetweenPoints " + i);
 
             positions.set(endIndex, finder.getTargets().get(0)); // Because he rewrites himself in case of targetNotFound
         }
@@ -126,28 +119,21 @@ public class PathCreator {
         return pathParts;
     }
 
+    public Path getPathBetweenPoints(BlockPos start, BlockPos finish) {
+        MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
+        PositionFinder finder = new PositionFinder(start, finish);
+
+        return this.findPathBetweenPoints(finder, shootyLimitations);
+    }
+
     private Path findPathBetweenPoints(PositionFinder finder, MovementLimitations shootyLimitations) {
         BlockPos startPosition = finder.getStepHistory().getLastStepPositions().get(0);
         BlockPos finishPosition = finder.getTargets().get(0);
         double distanceBetweenStartAndFinish = Math.sqrt(
                 startPosition.distanceSq(finishPosition)
         );
-        int minX = Math.min(startPosition.getX(), finishPosition.getX());
-        int minY = Math.min(startPosition.getY(), finishPosition.getY());
-        int minZ = Math.min(startPosition.getZ(), finishPosition.getZ());
-        int maxX = Math.max(startPosition.getX(), finishPosition.getX());
-        int maxY = Math.max(startPosition.getY(), finishPosition.getY());
-        int maxZ = Math.max(startPosition.getZ(), finishPosition.getZ());
 
-        AxisAlignedBB smallSearchZone = new AxisAlignedBB(
-                minX - 5,
-                Math.max(Constants.MIN_BUILD_HEIGHT, minY - 5),
-                minZ - 5,
-
-                maxX + 5,
-                Math.min(Constants.MAX_BUILD_HEIGHT, maxY + 5),
-                maxZ + 5
-        );
+        AxisAlignedBB smallSearchZone = this.getSearchZoneBetweenPoints(startPosition, finishPosition, 5);
 
         Path path = this.findPathBetweenPointsInArea(finder, shootyLimitations, smallSearchZone);
 
@@ -165,16 +151,8 @@ public class PathCreator {
         }
 
         if (rebuildPathWithBiggerSearchArea && distanceBetweenStartAndFinish / 2 > 5D) {
-            double additionalSearchRadius = distanceBetweenStartAndFinish / 2;
-            AxisAlignedBB bigSearchZone = new AxisAlignedBB(
-                    minX - additionalSearchRadius,
-                    Math.max(Constants.MIN_BUILD_HEIGHT, minY - additionalSearchRadius),
-                    minZ - additionalSearchRadius,
-
-                    maxX + additionalSearchRadius,
-                    Math.min(Constants.MAX_BUILD_HEIGHT, maxY + additionalSearchRadius),
-                    maxZ + additionalSearchRadius
-            );
+            double additionalSearchRadius = Math.min(15D, distanceBetweenStartAndFinish / 2);
+            AxisAlignedBB bigSearchZone = this.getSearchZoneBetweenPoints(startPosition, finishPosition, (int) additionalSearchRadius);
             finder.clear();
             path = this.findPathBetweenPointsInArea(finder, shootyLimitations, bigSearchZone);
         }
@@ -195,11 +173,29 @@ public class PathCreator {
         finder.finish();
         PatrolPathBuilder builder = new PatrolPathBuilder();
 
-        TimeMeter.start("build PathBetweenPoints");
-        Path path = builder.build(shootyLimitations, finder);
-        TimeMeter.end("build PathBetweenPoints");
-        return path;
+        return builder.build(shootyLimitations, finder);
     }
+
+    private AxisAlignedBB getSearchZoneBetweenPoints(BlockPos startPosition, BlockPos finishPosition, int gap) {
+        int minX = Math.min(startPosition.getX(), finishPosition.getX());
+        int minY = Math.min(startPosition.getY(), finishPosition.getY());
+        int minZ = Math.min(startPosition.getZ(), finishPosition.getZ());
+        int maxX = Math.max(startPosition.getX(), finishPosition.getX());
+        int maxY = Math.max(startPosition.getY(), finishPosition.getY());
+        int maxZ = Math.max(startPosition.getZ(), finishPosition.getZ());
+
+        return new AxisAlignedBB(
+                minX - gap,
+                Math.max(Constants.MIN_BUILD_HEIGHT, minY - gap),
+                minZ - gap,
+
+                maxX + gap,
+                Math.min(Constants.MAX_BUILD_HEIGHT, maxY + gap),
+                maxZ + gap
+        );
+
+    }
+
 
     @Nullable
     protected BlockPos getTopOrBottomPosition(@Nonnull BlockPos originalPosition, MovementLimitations limitations) {
