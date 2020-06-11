@@ -56,6 +56,7 @@ public class PatrolVillageGoal extends Goal {
 
     public boolean shouldContinueExecuting() {
         // TODO check monsters
+        // TODO recheck chunks
         if (this.shooty.getNavigator().noPath() || !this.pathOrientationCache.pathOrientationIsTheSame(this.shooty.getNavigator().getPath())) {
             int nextPathNumber = this.currentPathNumber + 1;
 
@@ -96,7 +97,6 @@ public class PatrolVillageGoal extends Goal {
             return;
         }
 
-        LOGGER.info("setting path: " + path);
         this.shooty.getNavigator().setPath(path, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
         this.pathOrientationCache = new PathOrientationCache(path);
 
@@ -408,12 +408,10 @@ public class PatrolVillageGoal extends Goal {
     }
 
     private void move() {
-        LOGGER.info("move");
         E33.internalEventBus.post(new MoveEvent(this.shooty));
     }
 
     private void stop() {
-        LOGGER.info("stop");
         if (AnimationStateListener.getAnimationState(this.shooty) == AnimationState.MOVE) {
             E33.internalEventBus.post(new NoActionEvent(this.shooty));
         }

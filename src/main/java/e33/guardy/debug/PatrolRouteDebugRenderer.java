@@ -27,7 +27,6 @@ public class PatrolRouteDebugRenderer extends AbstractDebugRenderer {
             this.renderBlockWithColor(pos, Color.VILLAGE_BLACK);
         }
 
-
         if (path != null) {
             List<BlockPos> pathPoints = this.turnPathToBlocksList(path);
             int pathStep = 0;

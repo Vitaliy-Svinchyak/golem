@@ -1,8 +1,10 @@
 package e33.guardy.entity;
 
+import e33.guardy.debug.AvoidBulletDebugRenderer;
 import e33.guardy.debug.PathFindingDebugRenderer;
 import e33.guardy.debug.PatrolRouteDebugRenderer;
 import e33.guardy.goal.attack.AvoidPeacefulCreaturesHelper;
+import e33.guardy.goal.move.AvoidBulletGoal;
 import e33.guardy.goal.move.PatrolVillageGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.*;
@@ -32,6 +34,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     public final PathCreator pathCreator;
     public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesHelper = new AvoidPeacefulCreaturesHelper(this);
     public PatrolVillageGoal patrolVillageGoal;
+    public AvoidBulletGoal avoidBulletGoal;
 
     public ShootyEntity(EntityType<? extends ShootyEntity> shooty, World world) {
         super(shooty, world);
@@ -41,6 +44,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
         this.pathCreator = new PathCreator(this);
         PathFindingDebugRenderer.addEntity(this);
         PatrolRouteDebugRenderer.addEntity(this);
+        AvoidBulletDebugRenderer.addEntity(this);
         this.setPathPriority(PathNodeType.WATER, -1.0F);
     }
 
@@ -63,11 +67,13 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     @Override
     protected void registerGoals() {
         this.patrolVillageGoal = new PatrolVillageGoal(this);
+        this.avoidBulletGoal = new AvoidBulletGoal(this);
         // TODO 2 custom priority queue
 //        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
 //        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this));
         this.goalSelector.addGoal(1, new OpenDoorGoal(this, true));
-        this.goalSelector.addGoal(2, this.patrolVillageGoal);
+        this.goalSelector.addGoal(1, this.avoidBulletGoal);
+//        this.goalSelector.addGoal(2, this.patrolVillageGoal);
 //        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
 //        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
 //        this.goalSelector.addGoal(2, lookGoal);
@@ -76,6 +82,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
 //        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
 //        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
 //        this.goalSelector.addGoal(10, new ShootBadGuysGoal(this, lookGoal));
+        // TODO HurtByTargetGoal
     }
 
     // TODO 2 teams implementation (isOnSameTeam method)

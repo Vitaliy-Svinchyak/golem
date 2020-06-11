@@ -3,6 +3,7 @@ package e33.guardy;
 import e33.guardy.client.renderer.entity.BulletRenderer;
 import e33.guardy.client.renderer.entity.ShootyRenderer;
 import e33.guardy.client.listener.AnimationStateListener;
+import e33.guardy.debug.AvoidBulletDebugRenderer;
 import e33.guardy.debug.PathFindingDebugRenderer;
 import e33.guardy.debug.PatrolRouteDebugRenderer;
 import e33.guardy.entity.BulletEntity;
@@ -39,6 +40,7 @@ public class E33 {
     public static final IEventBus internalEventBus = BusBuilder.builder().setTrackPhases(false).build();
     public static final PathFindingDebugRenderer PATH_FINDING_DEBUG_RENDERER = new PathFindingDebugRenderer(Minecraft.getInstance());
     public static final PatrolRouteDebugRenderer PATROL_ROUTE_DEBUG_RENDERER = new PatrolRouteDebugRenderer(Minecraft.getInstance());
+    public static final AvoidBulletDebugRenderer AVOID_BULLET_DEBUG_RENDERER = new AvoidBulletDebugRenderer(Minecraft.getInstance());
     private static DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
     private final static Logger LOGGER = LogManager.getLogger();
 
@@ -64,6 +66,7 @@ public class E33 {
             //        E33.renderer.pathfinding.render(50);
             E33.PATH_FINDING_DEBUG_RENDERER.render(50);
             E33.PATROL_ROUTE_DEBUG_RENDERER.render(50);
+            E33.AVOID_BULLET_DEBUG_RENDERER.render(50);
         }
     }
 

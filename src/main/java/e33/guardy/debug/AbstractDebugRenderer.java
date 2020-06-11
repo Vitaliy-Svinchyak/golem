@@ -136,6 +136,33 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
         );
     }
 
+    void renderAirBlockWithColor(BlockPos block, Color color) {
+        ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
+        double offsetX = activeRenderInfo.getProjectedView().x;
+        double offsetY = activeRenderInfo.getProjectedView().y;
+        double offsetZ = activeRenderInfo.getProjectedView().z;
+
+        BlockState state = this.minecraft.world.getBlockState(block.down());
+        double topY = block.getY();
+
+        DebugRenderer.func_217730_a(
+                (
+                        new AxisAlignedBB(
+                                block.getX() + 0.01,
+                                block.getY() - 0.01,
+                                block.getZ() + 0.01,
+                                block.getX() + 0.99,
+                                topY + 1.01,
+                                block.getZ() + 0.99
+                        )
+                ).offset(-offsetX, -offsetY, -offsetZ),
+                color.red,
+                color.green,
+                color.blue,
+                color.alpha
+        );
+    }
+
     private ActiveRenderInfo getActiveRenderInfo() {
         return this.minecraft.gameRenderer.getActiveRenderInfo();
     }
