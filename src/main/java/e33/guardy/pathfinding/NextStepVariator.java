@@ -77,6 +77,10 @@ class NextStepVariator {
         return finishedPosition;
     }
 
+    BlockPos getTopOrBottomPosition(BlockPos position, MovementLimitations limitations) {
+        return this.getTopOrBottomPosition(position.getX(), position.getY(), position.getZ(), limitations);
+    }
+
     BlockPos getTopOrBottomPosition(int x, int y, int z, MovementLimitations limitations) {
         Map<String, BlockPos> cache = limitations.canSwim ? this.swimmingTopPositionCache : this.notSwimmingTopPositionCache;
         String originalPositionKey = ToStringHelper.toString(x, y, z);

@@ -75,7 +75,7 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
         entitiesToAdd = Lists.newArrayList();
     }
 
-    void renderBlockWithColorAndNumber(BlockPos block, Color color, String text) {
+    void renderBlockWithColorAndText(BlockPos block, Color color, String text) {
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double offsetX = activeRenderInfo.getProjectedView().x;
         double offsetY = activeRenderInfo.getProjectedView().y;
@@ -100,13 +100,7 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
                 color.alpha
         );
 
-        DebugRenderer.func_217732_a(
-                "." + text + ".",
-                (double) block.getX() + 0.5D,
-                (double) topY + 0.35D,
-                (double) block.getZ() + 0.5D,
-                -1
-        );
+        this.renderText(block, topY, text);
     }
 
     void renderBlockWithColor(BlockPos block, Color color) {
@@ -136,13 +130,21 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
         );
     }
 
-    void renderAirBlockWithColor(BlockPos block, Color color) {
+    void renderText(BlockPos block, double y, String text) {
+        DebugRenderer.func_217732_a(
+                "." + text + ".",
+                (double) block.getX() + 0.5D,
+                y + 0.35D,
+                (double) block.getZ() + 0.5D,
+                -1
+        );
+    }
+
+    void renderAirBlockWithColorAndText(BlockPos block, Color color, String text) {
         ActiveRenderInfo activeRenderInfo = this.getActiveRenderInfo();
         double offsetX = activeRenderInfo.getProjectedView().x;
         double offsetY = activeRenderInfo.getProjectedView().y;
         double offsetZ = activeRenderInfo.getProjectedView().z;
-
-        BlockState state = this.minecraft.world.getBlockState(block.down());
         double topY = block.getY();
 
         DebugRenderer.func_217730_a(
@@ -161,6 +163,8 @@ abstract public class AbstractDebugRenderer implements DebugRenderer.IDebugRende
                 color.blue,
                 color.alpha
         );
+
+        this.renderText(block, topY + 0.75D, text);
     }
 
     private ActiveRenderInfo getActiveRenderInfo() {

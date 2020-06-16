@@ -32,7 +32,7 @@ public class PatrolRouteDebugRenderer extends AbstractDebugRenderer {
             int pathStep = 0;
             for (BlockPos pos : pathPoints) {
                 if (!angularPoints.contains(pos)) {
-                    this.renderBlockWithColorAndNumber(pos, Color.PATH_GREEN, pathStep + "");
+                    this.renderBlockWithColorAndText(pos, Color.PATH_GREEN, pathStep + "");
                 }
                 pathStep++;
             }
@@ -40,7 +40,7 @@ public class PatrolRouteDebugRenderer extends AbstractDebugRenderer {
 
         for (int i = 0; i < angularPoints.size(); i++) {
             BlockPos pos = angularPoints.get(i);
-            this.renderBlockWithColorAndNumber(pos, Color.VILLAGE_RED, i + "");
+            this.renderBlockWithColorAndText(pos, Color.VILLAGE_RED, i + "");
         }
     }
 }

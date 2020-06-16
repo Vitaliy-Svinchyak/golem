@@ -1,6 +1,5 @@
 package e33.guardy.debug;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import e33.guardy.entity.ShootyEntity;
 import e33.guardy.pathfinding.PathCreator;
@@ -8,14 +7,10 @@ import e33.guardy.pathfinding.StepHistoryKeeper;
 import e33.guardy.pathfinding.targetFinding.ITargetFinder;
 import e33.guardy.util.ToStringHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.BlockPos;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.*;
 
 public class PathFindingDebugRenderer extends AbstractDebugRenderer implements DebugRenderer.IDebugRenderer {
@@ -89,7 +84,7 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
             }
 
 //            if (color != Color.SHOOTY && color != Color.ROUTE_VIOLET) {
-            this.renderBlockWithColorAndNumber(point, color, text);
+            this.renderBlockWithColorAndText(point, color, text);
 //            }
         }
     }

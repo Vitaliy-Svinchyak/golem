@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.List;
+import java.util.Map;
 
 public class AvoidBulletDebugRenderer extends AbstractDebugRenderer {
     public AvoidBulletDebugRenderer(Minecraft minecraft) {
@@ -20,9 +21,10 @@ public class AvoidBulletDebugRenderer extends AbstractDebugRenderer {
         }
     }
 
-    private void renderTrajectories(List<BlockPos> allBlocksOnWay) {
-        for (BlockPos pos : allBlocksOnWay) {
-            this.renderAirBlockWithColor(pos, Color.TRAJECTORY_VIOLET);
+    private void renderTrajectories(Map<BlockPos, Integer> allBlocksOnWay) {
+        for (BlockPos pos : allBlocksOnWay.keySet()) {
+            String tick = allBlocksOnWay.get(pos) + "";
+            this.renderAirBlockWithColorAndText(pos, Color.TRAJECTORY_VIOLET, tick);
         }
     }
 }

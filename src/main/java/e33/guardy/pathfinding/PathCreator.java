@@ -14,6 +14,7 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNodeType;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -29,7 +30,7 @@ public class PathCreator {
     final static Logger LOGGER = LogManager.getLogger();
 
     protected final ShootyEntity shooty;
-    private final NextStepVariator nextStepVariator;
+    public final NextStepVariator nextStepVariator;
 
     public Path currentPath;
     public SafePlaceFinder safePlaceFinder;
@@ -39,6 +40,57 @@ public class PathCreator {
     public PathCreator(ShootyEntity shooty) {
         this.shooty = shooty;
         this.nextStepVariator = new NextStepVariator(this.shooty.getEntityWorld());
+    }
+
+    public @Nullable
+    Path getSafestPositionNearby(Map<BlockPos, Integer> bulletPositions) {
+        MovementLimitations shootyLimitations = this.createLimitations(this.shooty);
+        List<BlockPos> safePositions = this.shooty.pathCreator.nextStepVariator.makeSteps(
+                new FullScouting(this.getEntityStandPosition(this.shooty.getPosition(), shootyLimitations)),
+                this.shooty.getBoundingBox().grow(2),
+                null,
+                shootyLimitations
+        );
+        int leastDangerousTick = 0;
+        BlockPos safestPosition = null;
+        for (BlockPos position : safePositions) {
+            if (position == null) {
+                continue;
+            }
+
+            List<BlockPos> busyPoints = Lists.newArrayList(position, position.up(), position.up(2));
+            int mostDangerousTickForPoint = Integer.MAX_VALUE;
+
+            for (BlockPos busyPosition : busyPoints) {
+                if (bulletPositions.get(busyPosition) != null) {
+                    int tick = bulletPositions.get(busyPosition);
+                    if (tick < mostDangerousTickForPoint) {
+                        mostDangerousTickForPoint = tick;
+                    }
+                }
+            }
+
+            if (mostDangerousTickForPoint == Integer.MAX_VALUE) {
+                return new Path(
+                        Lists.newArrayList(new PathPoint(position.getX(), position.getY(), position.getZ())),
+                        position,
+                        true
+                );
+            } else if (mostDangerousTickForPoint > leastDangerousTick) {
+                leastDangerousTick = mostDangerousTickForPoint;
+                safestPosition = position;
+            }
+        }
+
+        if (safestPosition == null) {
+            return null;
+        }
+
+        return new Path(
+                Lists.newArrayList(new PathPoint(safestPosition.getX(), safestPosition.getY(), safestPosition.getZ())),
+                safestPosition,
+                true
+        );
     }
 
     public Path getSafePath(List<MobEntity> enemies) {
