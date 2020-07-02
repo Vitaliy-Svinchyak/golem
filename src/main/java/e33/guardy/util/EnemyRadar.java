@@ -8,16 +8,23 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.math.AxisAlignedBB;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class EnemyRadar {
+    final static Logger LOGGER = LogManager.getLogger();
 
     public static List<MobEntity> getHostileEnemies(ShootyEntity shooty, Double range) {
         return getAvailableEnemies(shooty, range).stream()
                 .filter(mobEntity -> mobEntity.getAttackTarget() == shooty)
                 .collect(Collectors.toList());
+    }
+
+    public static List<MobEntity> getAvailableEnemies(ShootyEntity shooty) {
+        return getAvailableEnemies(shooty, null);
     }
 
     public static List<MobEntity> getAvailableEnemies(ShootyEntity shooty, Double range) {

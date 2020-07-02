@@ -52,7 +52,6 @@ public class AvoidBulletGoal extends MovementGoal {
 
     @Override
     public void startExecuting() {
-        LOGGER.info("avoiding");
         Path path = this.shooty.pathCreator.getSafestPositionNearby(this.allBlocksOnWay);
         this.shooty.getNavigator().setPath(path, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
         super.startExecuting();
@@ -84,7 +83,7 @@ public class AvoidBulletGoal extends MovementGoal {
 
         for (DamagingProjectileEntity bullet : bullets) {
             Map<BlockPos, Integer> blocksOnWay = Maps.newHashMap();
-            if (bullet instanceof AbstractFireballEntity || bullet instanceof BulletEntity) {
+            if (bullet instanceof AbstractFireballEntity) { // TODO 2 Avoid bullets too
                 blocksOnWay = this.getBlocksOnWay(bullet);
             }
 

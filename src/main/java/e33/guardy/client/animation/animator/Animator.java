@@ -19,7 +19,7 @@ import static e33.guardy.client.detail.AnimationState.*;
 abstract public class Animator {
     final static Logger LOGGER = LogManager.getLogger();
 
-    protected boolean log = true;
+    protected boolean log = false;
     private Map<UUID, List<Animation>> animations = Maps.newHashMap();
     private Map<UUID, UniqueAnimationState> lastAnimationState = Maps.newHashMap();
     private Map<UUID, Map<Class, Animation>> animationCache = Maps.newHashMap();

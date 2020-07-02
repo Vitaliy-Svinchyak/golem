@@ -40,7 +40,7 @@ public class PatrolVillageGoal extends MovementGoal {
 
     @Override
     public boolean shouldExecute() {
-        if (EnemyRadar.getAvailableEnemies(this.shooty, null).size() > 0) {
+        if (EnemyRadar.getAvailableEnemies(this.shooty).size() > 0) {
             return false;
         }
 
@@ -59,9 +59,10 @@ public class PatrolVillageGoal extends MovementGoal {
     }
 
     public boolean shouldContinueExecuting() {
-        if (EnemyRadar.getAvailableEnemies(this.shooty, null).size() > 0) {
+        if (EnemyRadar.getAvailableEnemies(this.shooty).size() > 0) {
             return false;
         }
+
         // TODO 2 check monsters
         // TODO 2 recheck chunks
         if (this.shooty.getNavigator().noPath() || !this.pathOrientationCache.pathOrientationIsTheSame(this.shooty.getNavigator().getPath())) {

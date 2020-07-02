@@ -63,6 +63,7 @@ public class LookAtTargetGoal extends Goal {
     }
 
     public void startExecuting() {
+        LOGGER.info("start looking");
         if (AnimationStateListener.getAnimationState(this.entity) == AnimationState.DEFAULT) {
             this.ticksForAnimation = 10;
         } else {
@@ -73,10 +74,9 @@ public class LookAtTargetGoal extends Goal {
     }
 
     public void resetTask() {
-//        LOGGER.info("reset");
+        LOGGER.info("reset");
         this.target = null;
         this.ticksForAnimation = 0;
-//        this.animationStarted = false;
     }
 
     public void tick() {
