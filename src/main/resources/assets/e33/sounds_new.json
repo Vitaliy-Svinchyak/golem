@@ -2,15 +2,19 @@
   "entity_shooty_hurt": {
     "category": "animal",
     "sounds": [
-      "e33:entity/hurt/punch"
+      "e33:entity/hurt/Punch"
+    ]
+  },
+  "entity_shooty_hurt_arrow": {
+    "category": "animal",
+    "sounds": [
+      "e33:entity/hurt/ArrowHit"
     ]
   },
   "entity_shooty_shot": {
     "category": "animal",
     "sounds": [
-      "e33:entity/shot/1",
-      "e33:entity/shot/2",
-      "e33:entity/shot/3"
+      "e33:entity/shot/PlasmaGun"
     ]
   },
   "entity_shooty_death": {
@@ -22,7 +26,7 @@
   "entity_shooty_step": {
     "category": "animal",
     "sounds": [
-      "e33:entity/step/step"
+      "e33:entity/step/Step"
     ]
   }
 }

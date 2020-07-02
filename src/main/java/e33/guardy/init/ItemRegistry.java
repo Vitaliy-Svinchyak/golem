@@ -10,7 +10,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
 
-@Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+//@Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ItemRegistry {
     public final static Item stickItem = new BlockItem(BlockRegistry.stickBlock, (new Item.Properties()).group(ItemGroup.DECORATIONS)).setRegistryName(ItemDangerousStick.registryName);
 

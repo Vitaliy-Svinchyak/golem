@@ -10,7 +10,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
 
-@Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+//@Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class BlockRegistry {
     public final static Block stickBlock = new ItemDangerousStick(Block.Properties.create(Material.MISCELLANEOUS).doesNotBlockMovement().lightValue(14).sound(SoundType.WOOD)).setRegistryName(ItemDangerousStick.registryName);
 

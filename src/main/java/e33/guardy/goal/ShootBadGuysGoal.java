@@ -10,8 +10,6 @@ import e33.guardy.event.ShotEvent;
 import e33.guardy.fight.ShootExpectations;
 import e33.guardy.fight.ShootingNavigator;
 import e33.guardy.init.SoundsRegistry;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.goal.Goal;
@@ -44,7 +42,9 @@ public class ShootBadGuysGoal extends Goal {
      * Returns whether the EntityAIBase should begin execution.
      */
     public boolean shouldExecute() {
+//        LOGGER.info("shouldExecute");
         if (!this.lookGoal.isAlreadyLookingOnTarget()) {
+//            LOGGER.info("no, look first");
             return false;
         }
 
@@ -69,6 +69,7 @@ public class ShootBadGuysGoal extends Goal {
      * Execute a one shot task or start executing a continuous task
      */
     public void startExecuting() {
+//        LOGGER.info("bobooo");
         this.attackStep = 0;
     }
 
@@ -83,7 +84,7 @@ public class ShootBadGuysGoal extends Goal {
 
         LivingEntity attackTarget = this.entity.getAttackTarget();
 
-        if (!this.entity.avoidPeacefulCreaturesGoal.bulletPathIsClear(attackTarget)) {
+        if (!this.entity.avoidPeacefulCreaturesHelper.bulletPathIsClear(attackTarget)) {
             LOGGER.error("I can't!!!!!!");
             this.entity.setAttackTarget(null);
             return;
@@ -103,10 +104,10 @@ public class ShootBadGuysGoal extends Goal {
 
         if (this.ticksToNextAttack <= 0) {
             this.attackStep++;
-            this.ticksToNextAttack = 20;
+            this.ticksToNextAttack = 10;
 
             if (this.attackStep > this.bulletsToShoot) {
-                this.ticksToNextAttack = 30;
+                this.ticksToNextAttack = 20;
                 this.attackStep = 0;
             }
 
@@ -116,9 +117,9 @@ public class ShootBadGuysGoal extends Goal {
 
             // Last shot
             if (this.attackStep == this.bulletsToShoot) {
-                if (mustBeDead) {
-                    ShootExpectations.markAsDead(attackTarget);
-                }
+//                if (mustBeDead) {
+//                    ShootExpectations.markAsDead(attackTarget);
+//                }
                 this.entity.setAttackTarget(null);
             }
         }
@@ -128,7 +129,7 @@ public class ShootBadGuysGoal extends Goal {
         float targetHealth = attackTarget.getHealth();
 
         if (targetHealth > attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue()) {
-            LOGGER.info("ooooops");
+//            LOGGER.info("ooooops");
             targetHealth = (float) attackTarget.getAttribute(SharedMonsterAttributes.MAX_HEALTH).getValue();
         }
 
@@ -145,7 +146,7 @@ public class ShootBadGuysGoal extends Goal {
     }
 
     private void noTarget() {
-        LOGGER.info("no target");
+//        LOGGER.info("no target");
         E33.internalEventBus.post(new NoActionEvent(this.entity));
         this.ticksToNextAttack = 10;
     }

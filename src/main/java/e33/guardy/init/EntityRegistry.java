@@ -25,13 +25,13 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = E33.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class EntityRegistry {
     private final static Logger LOGGER = LogManager.getLogger();
-    public static EntityType<ShootyEntity> SHOOTY;
+    public static EntityType<ShootyEntity> SHOOTY = createShooty();
     public static EntityType<BulletEntity> BULLET;
 
     private static <T extends AnimalEntity> EntityType<ShootyEntity> createShooty() {
         ResourceLocation location = new ResourceLocation(E33.MOD_ID, classToString(ShootyEntity.class));
         EntityType<ShootyEntity> entity = EntityType.Builder
-                .create(ShootyEntity::new, EntityClassification.CREATURE)
+                .create(ShootyEntity::new, EntityClassification.MISC)
                 .setTrackingRange(128)
                 .build(location.toString());
         entity.setRegistryName(location);
@@ -65,7 +65,6 @@ public class EntityRegistry {
     public static void onRegisterEntities(RegistryEvent.Register<EntityType<?>> event) {
         IForgeRegistry registry = event.getRegistry();
 
-        SHOOTY = createShooty();
         registry.register(SHOOTY);
         EntitySpawnPlacementRegistry.register(SHOOTY, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, ShootyEntity::func_223316_b);
 

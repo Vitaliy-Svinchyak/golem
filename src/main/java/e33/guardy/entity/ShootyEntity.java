@@ -1,17 +1,24 @@
 package e33.guardy.entity;
 
+import e33.guardy.debug.AvoidBulletDebugRenderer;
+import e33.guardy.debug.PathFindingDebugRenderer;
+import e33.guardy.debug.PatrolRouteDebugRenderer;
 import e33.guardy.goal.LookAtTargetGoal;
 import e33.guardy.goal.ShootBadGuysGoal;
-import e33.guardy.goal.attack.AvoidPeacefulCreaturesHelper;
-import e33.guardy.goal.attack.NearestAttackableTargetGoal;
-import e33.guardy.goal.move.PatrollingGoal;
+import e33.guardy.goal.attack.*;
+import e33.guardy.goal.move.AvoidBulletGoal;
+import e33.guardy.goal.move.AvoidingDangerGoal;
+import e33.guardy.goal.move.PatrolVillageGoal;
 import e33.guardy.init.SoundsRegistry;
-import net.minecraft.block.AnvilBlock;
+import e33.guardy.pathfinding.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
-import net.minecraft.entity.item.ArmorStandEntity;
+import net.minecraft.entity.ai.goal.HurtByTargetGoal;
+import net.minecraft.entity.ai.goal.OpenDoorGoal;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
@@ -25,20 +32,28 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 // TODO 2 implement IRangedAttackMob?
-// TODO don't drop weapon when die
-public class ShootyEntity extends AnimalEntity {
+public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordinates {
 
-    public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesGoal = new AvoidPeacefulCreaturesHelper(this);
+    public final PathCreator pathCreator;
+    public AvoidPeacefulCreaturesHelper avoidPeacefulCreaturesHelper = new AvoidPeacefulCreaturesHelper(this);
+    public PatrolVillageGoal patrolVillageGoal;
+    public AvoidBulletGoal avoidBulletGoal;
 
     public ShootyEntity(EntityType<? extends ShootyEntity> shooty, World world) {
         super(shooty, world);
         this.setBoundingBox(new AxisAlignedBB(3, 3, 3, 3, 3, 3));
         this.stepHeight = 1.0F;
+
+        this.pathCreator = new PathCreator(this);
+        PathFindingDebugRenderer.addEntity(this);
+        PatrolRouteDebugRenderer.addEntity(this);
+        AvoidBulletDebugRenderer.addEntity(this);
+        this.setPathPriority(PathNodeType.WATER, -1.0F);
     }
 
     @Override
     public void tick() {
-        this.avoidPeacefulCreaturesGoal.findPeacefulCreatures();
+        this.avoidPeacefulCreaturesHelper.findPeacefulCreatures();// TODO 2 not every tick
         super.tick();
     }
 
@@ -54,17 +69,20 @@ public class ShootyEntity extends AnimalEntity {
 
     @Override
     protected void registerGoals() {
-        // TODO 2 custom priority queue
-//        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
-//        this.goalSelector.addGoal(1, new AvoidingZombieGoal(this, 0.5F));
-        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
+        this.patrolVillageGoal = new PatrolVillageGoal(this);
+        this.avoidBulletGoal = new AvoidBulletGoal(this);
+        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this));
+        this.goalSelector.addGoal(1, new OpenDoorGoal(this, true));
+        this.goalSelector.addGoal(1, this.avoidBulletGoal);
         LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
         this.goalSelector.addGoal(2, lookGoal);
-//        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
-//        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
-//        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
-//        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
-        this.goalSelector.addGoal(10, new ShootBadGuysGoal(this, lookGoal));
+        this.goalSelector.addGoal(4, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
+        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
+        this.targetSelector.addGoal(5, new AttackCreeperGoal(this));
+//        this.targetSelector.addGoal(5, new AttackSlimeGoal(this));
+        this.goalSelector.addGoal(6, new ShootBadGuysGoal(this, lookGoal));
+        this.goalSelector.addGoal(7, this.patrolVillageGoal);
     }
 
     // TODO 2 teams implementation (isOnSameTeam method)
@@ -89,6 +107,10 @@ public class ShootyEntity extends AnimalEntity {
     }
 
     protected SoundEvent getHurtSound(DamageSource damageSourceIn) {
+//        if (damageSourceIn.isProjectile()) {
+//            return SoundsRegistry.SHOOTY_HURT_ARROW;
+//        }
+
         return SoundsRegistry.SHOOTY_HURT;
     }
 
@@ -117,11 +139,29 @@ public class ShootyEntity extends AnimalEntity {
     public ILivingEntityData onInitialSpawn(IWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
         spawnDataIn = super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
 
+        LOGGER.info("spawned!");
 //        this.setItemStackToSlot(EquipmentSlotType.MAINHAND, new ItemStack(ItemRegistry.stickItem));
         return spawnDataIn;
     }
 
+    @Override
+    public void onDeath(DamageSource damageSource) {
+        super.onDeath(damageSource);
+    }
+
     public int getHorizontalFaceSpeed() {
         return 150;
+    }
+
+    /**
+     * Returns new PathNavigateGround instance
+     */
+    protected PathNavigator createNavigator(World worldIn) {
+        return new DangerousZoneAvoidanceNavigator(this, worldIn);
+    }
+
+    @Override
+    public float getPathPriority(PathNodeType nodeType, BlockPos position) {
+        return super.getPathPriority(nodeType);
     }
 }

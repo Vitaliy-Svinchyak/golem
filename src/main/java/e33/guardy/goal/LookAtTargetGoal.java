@@ -19,7 +19,7 @@ public class LookAtTargetGoal extends Goal {
     protected final double maxDistance;
     private int ticksForAnimation;
     private boolean animationStarted = false;
-    private boolean newLookTarget;
+    private boolean newLookTarget = true;
     private UUID lastTargetUUID;
 
     public LookAtTargetGoal(MobEntity goalOwner) {
@@ -29,6 +29,7 @@ public class LookAtTargetGoal extends Goal {
     }
 
     public boolean shouldExecute() {
+//        LOGGER.info("shouldExecute");
         if (this.entity.getAttackTarget() != null) {
             this.target = this.entity.getAttackTarget();
         }
@@ -43,6 +44,7 @@ public class LookAtTargetGoal extends Goal {
             this.newTarget();
         }
 
+//        LOGGER.info(!this.isAlreadyLookingOnTarget());
         return !this.isAlreadyLookingOnTarget();
     }
 
@@ -55,12 +57,13 @@ public class LookAtTargetGoal extends Goal {
             return false;
         } else if (this.entity.getDistanceSq(this.target) > (this.maxDistance * this.maxDistance)) {
             return false;
-        } else {
-            return this.ticksForAnimation > 0;
         }
+
+        return this.ticksForAnimation > 0;
     }
 
     public void startExecuting() {
+        LOGGER.info("start looking");
         if (AnimationStateListener.getAnimationState(this.entity) == AnimationState.DEFAULT) {
             this.ticksForAnimation = 10;
         } else {
@@ -71,7 +74,9 @@ public class LookAtTargetGoal extends Goal {
     }
 
     public void resetTask() {
+        LOGGER.info("reset");
         this.target = null;
+        this.ticksForAnimation = 0;
     }
 
     public void tick() {
