@@ -35,7 +35,7 @@ public class BulletSSpawnObjectPacket extends SSpawnObjectPacket implements IPac
     public void processPacket() {
         Minecraft mine = Minecraft.getInstance();
         BulletSSpawnObjectPacket packetIn = this;
-//        PacketThreadUtil.checkThreadAndEnqueue(packetIn, this, mine); TODO maybe needed
+//        PacketThreadUtil.checkThreadAndEnqueue(packetIn, this, mine); TODO 2 maybe needed
         double d0 = packetIn.getX();
         double d1 = packetIn.getY();
         double d2 = packetIn.getZ();

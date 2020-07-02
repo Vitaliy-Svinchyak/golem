@@ -28,8 +28,8 @@ public class TimeMeter {
         List<FunctionCall> calls = new ArrayList<>(measuring.values());
         List<FunctionCall> treeCalls = new ArrayList<>(measuringTree.values());
 
-        printCalls(calls);
-        printCalls(treeCalls);
+//        printCalls(calls);
+//        printCalls(treeCalls);
 
         measuring = Maps.newLinkedHashMap();
         measuringTree = Maps.newLinkedHashMap();

@@ -58,7 +58,7 @@ public class SafePathBuilder extends AbstractPathBuilder implements IPathBuilder
             for (DangerousTreeLeaf leaf : leafs) {
                 List<BlockPos> newSteps = this.getNextStepsFromCurrentPosition(
                         leaf.getBlockPos(),
-                        // TODO maybe allow intersections, but optimize leafs on intersections(select safer etc)
+                        // TODO 2 maybe allow intersections, but optimize leafs on intersections(select safer etc)
                         this.filterByVisitedPoints(stepHistory.getStepPositions(stepNumber), visitedPoints),
                         limitations
                 );
@@ -97,8 +97,8 @@ public class SafePathBuilder extends AbstractPathBuilder implements IPathBuilder
 
         DangerousTreeLeaf safestLeaf = safeLeafs.get(0);
         for (DangerousTreeLeaf leaf : safeLeafs) {
-            // TODO compare length
-            // TODO try to find another way between dangerous parts (with lower maxEnemies)
+            // TODO 2 compare length
+            // TODO 2 try to find another way between dangerous parts (with lower maxEnemies)
             if (leaf.enemiesCount < safestLeaf.enemiesCount) {
                 safestLeaf = leaf;
             }
@@ -115,7 +115,7 @@ public class SafePathBuilder extends AbstractPathBuilder implements IPathBuilder
 
         for (BlockPos point : points) {
             DangerousTreeLeaf leaf = this.calculateTreeLeaf(point, parent);
-            // TODO can cache to not recalculate each time the same points
+            // TODO 2 can cache to not recalculate each time the same points
             if (parent.enemiesCount - leaf.enemiesCount <= maxEnemiesOnPoint) {
                 filteredPoints.add(leaf);
             }

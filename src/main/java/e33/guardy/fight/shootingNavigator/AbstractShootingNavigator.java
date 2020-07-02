@@ -57,7 +57,6 @@ abstract class AbstractShootingNavigator {
     }
 
     static double getLowestBlockY(@Nonnull MobEntity target) {
-        // TODO use 1 cycle
         BlockPos position = target.getPosition();
         World world = target.getEntityWorld();
         while (!world.getBlockState(position).isSolid()) {
@@ -151,7 +150,7 @@ abstract class AbstractShootingNavigator {
         if (target.getNavigator().getPath() != null && showedPaths.get(target.getNavigator().getPath().hashCode()) == null) {
             DebugRenderer renderer = Minecraft.getInstance().debugRenderer;
             renderer.pathfinding.addPath(target.getUniqueID().hashCode(), target.getNavigator().getPath(), 0);
-            // TODO clear cache after enemy die (memory leak)
+            // TODO 2 clear cache after enemy die (memory leak)
             showedPaths.put(target.getNavigator().getPath().hashCode(), true);
         }
     }

@@ -19,7 +19,7 @@ import static e33.guardy.client.detail.AnimationState.*;
 abstract public class Animator {
     final static Logger LOGGER = LogManager.getLogger();
 
-    protected boolean log = false;
+    protected boolean log = true;
     private Map<UUID, List<Animation>> animations = Maps.newHashMap();
     private Map<UUID, UniqueAnimationState> lastAnimationState = Maps.newHashMap();
     private Map<UUID, Map<Class, Animation>> animationCache = Maps.newHashMap();
@@ -32,7 +32,7 @@ abstract public class Animator {
 
     public void animate(LivingEntity entity) {
         UniqueAnimationState animationState = AnimationStateListener.getUniqueAnimationState(entity);
-        this.log(" have " + this.getAnimationsFor(entity).size() + " animations " + animationState.state);
+//        this.log(" have " + this.getAnimationsFor(entity).size() + " animations " + animationState.state);
         boolean rendered = false;
         UniqueAnimationState lastAnimationState = this.getLastAnimationState(entity);
 
@@ -69,7 +69,7 @@ abstract public class Animator {
     }
 
     void animateAll(LivingEntity entity) {
-        this.log(" animateAll " + this.getAnimationsFor(entity).size());
+//        this.log(" animateAll " + this.getAnimationsFor(entity).size());
         List<Integer> animationsToRemove = Lists.newArrayList();
         List<Animation> entityAnimations = this.getAnimationsFor(entity);
 
@@ -90,7 +90,7 @@ abstract public class Animator {
     }
 
     void renderCurrentPose(LivingEntity entity) {
-        this.log("renderCurrentPose");
+//        this.log("renderCurrentPose");
 
         switch (AnimationStateListener.getAnimationState(entity)) {
             case DEFAULT:
@@ -110,21 +110,21 @@ abstract public class Animator {
     }
 
     void renderAimed(LivingEntity entity) {
-        this.log(" renderAimed");
+//        this.log(" renderAimed");
         Animation animation = this.createAimingAnimation(entity).lastFrame().create();
 
         this.addAnimation(entity, animation);
     }
 
     void renderDefaultPose(LivingEntity entity) {
-        this.log(" renderDefaultPose");
+//        this.log(" renderDefaultPose");
         Animation animation = this.createAimingAnimation(entity).firstFrame().create();
 
         this.addAnimation(entity, animation);
     }
 
     void animateDefaultPose(LivingEntity entity) {
-        this.log(" animateDefaultPose");
+//        this.log(" animateDefaultPose");
         Animation animation;
 
         if (this.getLastAnimationState(entity).state == AIM) {
@@ -178,6 +178,10 @@ abstract public class Animator {
 
     void setLastAnimationState(LivingEntity entity, UniqueAnimationState state) {
         this.lastAnimationState.put(entity.getUniqueID(), state);
+    }
+
+    boolean removeAnimation(LivingEntity entity, Animation animation) {
+        return this.getAnimationsFor(entity).remove(animation);
     }
 
     boolean addAnimation(LivingEntity entity, Animation animation) {

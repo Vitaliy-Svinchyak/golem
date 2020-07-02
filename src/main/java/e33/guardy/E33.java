@@ -61,10 +61,10 @@ public class E33 {
 
     @SubscribeEvent
     public void renderWorldLastEvent(RenderWorldLastEvent event) {
-        // TODO prevent HashMap null exception
+        // TODO 2 prevent HashMap null exception
         if (DEBUG) {
             //        E33.renderer.pathfinding.render(50);
-            E33.PATH_FINDING_DEBUG_RENDERER.render(50);
+//            E33.PATH_FINDING_DEBUG_RENDERER.render(50);
             E33.PATROL_ROUTE_DEBUG_RENDERER.render(50);
             E33.AVOID_BULLET_DEBUG_RENDERER.render(50);
         }

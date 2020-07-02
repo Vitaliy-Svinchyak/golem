@@ -31,6 +31,10 @@ public class ShootyAnimator<T extends ShootyEntity> extends Animator {
 
     @Override
     Animation createMoveAnimation(LivingEntity entity) {
+        Animation aimAnimation = this.getAnimationCacheFor(entity).get(AimingAnimation.class);
+        Animation movingAnimation = this.getAnimationCacheFor(entity).get(MoveAnimation.class);
+        this.removeAnimation(entity, aimAnimation); // TODO 2 avoid this shit
+        this.removeAnimation(entity, movingAnimation); // TODO 2 avoid this shit
         Map<Class, Animation> animationCache = this.getAnimationCacheFor(entity);
 
         if (animationCache.get(MoveAnimation.class) == null) {
@@ -41,6 +45,9 @@ public class ShootyAnimator<T extends ShootyEntity> extends Animator {
     }
 
     Animation createAimingAnimation(LivingEntity entity) {
+        Animation movingAnimation = this.getAnimationCacheFor(entity).get(MoveAnimation.class);
+        this.removeAnimation(entity, movingAnimation); // TODO 2 avoid this shit
+
         Map<Class, Animation> animationCache = this.getAnimationCacheFor(entity);
 
         if (animationCache.get(AimingAnimation.class) == null) {

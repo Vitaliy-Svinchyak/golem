@@ -23,23 +23,17 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.Map;
 
-// TODO jump or crouch to avoid
-public class AvoidBulletGoal extends Goal {
-
-    private World world;
-    private ShootyEntity shooty;
-
-    private final static Logger LOGGER = LogManager.getLogger();
+// TODO 2 jump or crouch to avoid
+public class AvoidBulletGoal extends MovementGoal {
     public Map<BlockPos, Integer> allBlocksOnWay = Maps.newHashMap();
 
-    public AvoidBulletGoal(ShootyEntity creatureIn) {
-        this.shooty = creatureIn;
-        this.world = this.shooty.getEntityWorld();
+    public AvoidBulletGoal(ShootyEntity shooty) {
+        super(shooty);
     }
 
     @Override
     public boolean shouldExecute() {
-        // TODO cache which arrows were tracked and which are new (check only new)
+        // TODO 2 cache which arrows were tracked and which are new (check only new)
         return this.shooty.getNavigator().noPath()
                 && (
                 this.world.getEntitiesWithinAABB(
@@ -57,15 +51,11 @@ public class AvoidBulletGoal extends Goal {
     }
 
     @Override
-    public boolean shouldContinueExecuting() {
-        return super.shouldContinueExecuting();
-    }
-
-    @Override
     public void startExecuting() {
+        LOGGER.info("avoiding");
         Path path = this.shooty.pathCreator.getSafestPositionNearby(this.allBlocksOnWay);
         this.shooty.getNavigator().setPath(path, this.shooty.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getValue());
-//        this.allBlocksOnWay = Maps.newHashMap();
+        super.startExecuting();
     }
 
     private boolean isOnDangerousPosition() {
@@ -105,8 +95,6 @@ public class AvoidBulletGoal extends Goal {
                 }
             }
         }
-
-        LOGGER.info(allBlocksOnWay.size());
 
         this.allBlocksOnWay = allBlocksOnWay;
 
@@ -151,7 +139,7 @@ public class AvoidBulletGoal extends Goal {
         int tick = 1;
         while (!this.world.getBlockState(arrowPosition).isSolid()) {
             float f1 = 0.99F;
-            // TODO check water
+            // TODO 2 check water
 
             motion = motion.scale(f1);
             if (!arrow.hasNoGravity() && !flag) {
@@ -198,7 +186,7 @@ public class AvoidBulletGoal extends Goal {
             y += motion.y;
             z += motion.z;
             motion = motion.add(bullet.accelerationX, bullet.accelerationY, bullet.accelerationZ).scale(motionFactor);
-            // TODO check water
+            // TODO 2 check water
             bulletPosition = new BlockPos(x, y, z);
 
             blocksOnWay.putIfAbsent(bulletPosition, tick);

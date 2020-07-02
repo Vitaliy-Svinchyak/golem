@@ -52,7 +52,7 @@ class NextStepVariator {
 
     @Nullable
     BlockPos getTopPosition(int x, int y, int z, MovementLimitations limitations) {
-        // TODO null will be a problem on too big amount of high heights (because it is not cached)
+        // TODO 2 null will be a problem on too big amount of high heights (because it is not cached)
         Map<String, BlockPos> cache = limitations.canSwim ? this.swimmingTopPositionCache : this.notSwimmingTopPositionCache;
         String originalPositionKey = ToStringHelper.toString(x, y, z);
         if (cache.get(originalPositionKey) != null) {
@@ -141,7 +141,6 @@ class NextStepVariator {
         List<BlockPos> filteredVariants = Lists.newArrayList();
 
         for (BlockPos variant : variants) {
-            // TODO optimize usedOnThisStepPositions to map
             if (variant != null && usedOnThisStepPositions.get(ToStringHelper.toString(variant)) == null && this.isValidPosition(start, variant, zone, stepHistory, blockedPoints, limitations)) {
                 filteredVariants.add(variant);
             }
@@ -178,7 +177,7 @@ class NextStepVariator {
 
         boolean wallOnWay = (toCheckWall == null || toCheckWall2 == null) || (toCheckWall.getY() - previousPosition.getY() > limitations.jumHeight && toCheckWall2.getY() - previousPosition.getY() > limitations.jumHeight);
         if (wallOnWay) {
-            if (blockedPoints != null) { // TODO maybe delete to not check in canAttack
+            if (blockedPoints != null) { // TODO 2 maybe delete to not check in canAttack
                 blockedPoints.add(newPosition);
             }
 
@@ -349,7 +348,6 @@ class NextStepVariator {
                 || block instanceof TrapDoorBlock
                 || block instanceof FlowerPotBlock
                 || block instanceof LanternBlock;
-//                || block instanceof DoorBlock; // TODO fix later
     }
 
     boolean isFence(BlockState state) {

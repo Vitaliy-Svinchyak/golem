@@ -3,13 +3,17 @@ package e33.guardy.entity;
 import e33.guardy.debug.AvoidBulletDebugRenderer;
 import e33.guardy.debug.PathFindingDebugRenderer;
 import e33.guardy.debug.PatrolRouteDebugRenderer;
-import e33.guardy.goal.attack.AvoidPeacefulCreaturesHelper;
+import e33.guardy.goal.LookAtTargetGoal;
+import e33.guardy.goal.ShootBadGuysGoal;
+import e33.guardy.goal.attack.*;
 import e33.guardy.goal.move.AvoidBulletGoal;
+import e33.guardy.goal.move.AvoidingDangerGoal;
 import e33.guardy.goal.move.PatrolVillageGoal;
 import e33.guardy.init.SoundsRegistry;
 import e33.guardy.pathfinding.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
+import net.minecraft.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.entity.ai.goal.OpenDoorGoal;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -28,7 +32,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 // TODO 2 implement IRangedAttackMob?
-// TODO don't drop weapon when die
 public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordinates {
 
     public final PathCreator pathCreator;
@@ -50,7 +53,7 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
 
     @Override
     public void tick() {
-        this.avoidPeacefulCreaturesHelper.findPeacefulCreatures();// TODO not every tick
+        this.avoidPeacefulCreaturesHelper.findPeacefulCreatures();// TODO 2 not every tick
         super.tick();
     }
 
@@ -68,21 +71,18 @@ public class ShootyEntity extends AnimalEntity implements PathPriorityByCoordina
     protected void registerGoals() {
         this.patrolVillageGoal = new PatrolVillageGoal(this);
         this.avoidBulletGoal = new AvoidBulletGoal(this);
-        // TODO 2 custom priority queue
-//        this.goalSelector.addGoal(1, new PatrollingGoal(this, 0.5F, AnvilBlock.class));
-//        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this));
+        this.goalSelector.addGoal(1, new AvoidingDangerGoal(this));
         this.goalSelector.addGoal(1, new OpenDoorGoal(this, true));
         this.goalSelector.addGoal(1, this.avoidBulletGoal);
-//        this.goalSelector.addGoal(2, this.patrolVillageGoal);
-//        this.goalSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, ArmorStandEntity.class));
-//        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
-//        this.goalSelector.addGoal(2, lookGoal);
-//        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
-//        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
-//        this.targetSelector.addGoal(6, new AttackCreeperGoal(this));
-//        this.targetSelector.addGoal(7, new AttackSlimeGoal(this));
-//        this.goalSelector.addGoal(10, new ShootBadGuysGoal(this, lookGoal));
-        // TODO HurtByTargetGoal
+        LookAtTargetGoal lookGoal = new LookAtTargetGoal(this);
+        this.goalSelector.addGoal(2, lookGoal);
+        this.goalSelector.addGoal(4, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(5, new AttackZombieGoal(this));
+        this.targetSelector.addGoal(5, new AttackSpiderGoal(this));
+        this.targetSelector.addGoal(5, new AttackCreeperGoal(this));
+//        this.targetSelector.addGoal(5, new AttackSlimeGoal(this));
+        this.goalSelector.addGoal(6, new ShootBadGuysGoal(this, lookGoal));
+        this.goalSelector.addGoal(7, this.patrolVillageGoal);
     }
 
     // TODO 2 teams implementation (isOnSameTeam method)

@@ -83,9 +83,9 @@ public class PathFindingDebugRenderer extends AbstractDebugRenderer implements D
                 color = Color.PATH_GREEN;
             }
 
-//            if (color != Color.SHOOTY && color != Color.ROUTE_VIOLET) {
-            this.renderBlockWithColorAndText(point, color, text);
-//            }
+            if (color != Color.SHOOTY && color != Color.ROUTE_VIOLET) {
+                this.renderBlockWithColorAndText(point, color, text);
+            }
         }
     }
 

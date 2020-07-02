@@ -29,7 +29,7 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+// TODO 2 remove it at all?
 public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
     final static Logger LOGGER = LogManager.getLogger();
 
@@ -84,7 +84,7 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
             for (BlockPos blockpos1 : set) {
                 PathNodeType pathnodetype = this.getPathNodeType(this.shooty, blockpos1);
                 // don't try all points, just use first one
-                // TODO maybe fix it
+                // TODO 2 maybe fix it
                 if (this.shooty.getPathPriority(pathnodetype, blockpos1) >= 0.0F) {
                     return this.openPoint(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ());
                 }
@@ -377,7 +377,7 @@ public class CarefulWalkNodeProcessor extends WalkNodeProcessor {
     public PathNodeType getPathNodeType(IBlockReader blockaccessIn, int x, int y, int z) {
         PathNodeType pathnodetype = this.getPathNodeTypeRaw(blockaccessIn, x, y, z);
         // checking block under the current(f.e. current is air, but under him is lava)
-        // TODO very strange that we don't check blocks till the surface
+        // TODO 2 very strange that we don't check blocks till the surface
         if (pathnodetype == PathNodeType.OPEN && y >= 1) {
             Block block = blockaccessIn.getBlockState(new BlockPos(x, y - 1, z)).getBlock();
             PathNodeType pathnodetype1 = this.getPathNodeTypeRaw(blockaccessIn, x, y - 1, z);
